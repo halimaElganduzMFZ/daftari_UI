@@ -1,0 +1,73 @@
+import '../models/employee.dart';
+
+/// بيانات ثابتة — تُستبدل لاحقاً بمصدر API دون تغيير الشاشات.
+abstract final class StaticEmployees {
+  static final List<Employee> all = List<Employee>.unmodifiable([
+    Employee(
+      id: 'e1',
+      employeeNumber: 'FZ-10021',
+      fullName: 'أحمد محمد العلي',
+      jobTitle: 'أخصائي موارد بشرية',
+      department: 'شؤون الموظفين',
+      phone: '0501234567',
+      email: 'ahmad.ali@freezone.local',
+      hireDate: DateTime(2021, 3, 14),
+      status: EmploymentStatus.active,
+    ),
+    Employee(
+      id: 'e2',
+      employeeNumber: 'FZ-10045',
+      fullName: 'سارة خالد المنصور',
+      jobTitle: 'محاسبة رواتب',
+      department: 'المالية',
+      phone: '0559876543',
+      email: 'sara.mansour@freezone.local',
+      hireDate: DateTime(2020, 8, 2),
+      status: EmploymentStatus.active,
+    ),
+    Employee(
+      id: 'e3',
+      employeeNumber: 'FZ-10078',
+      fullName: 'يوسف إبراهيم الحربي',
+      jobTitle: 'مشرف عمليات',
+      department: 'التشغيل',
+      phone: '0532221188',
+      email: 'yousef.harbi@freezone.local',
+      hireDate: DateTime(2019, 1, 20),
+      status: EmploymentStatus.onLeave,
+    ),
+    Employee(
+      id: 'e4',
+      employeeNumber: 'FZ-10102',
+      fullName: 'نورة فهد الشمري',
+      jobTitle: 'منسقة تراخيص',
+      department: 'خدمات المستثمرين',
+      phone: '0547003311',
+      email: 'noura.shamri@freezone.local',
+      hireDate: DateTime(2022, 11, 6),
+      status: EmploymentStatus.active,
+    ),
+    Employee(
+      id: 'e5',
+      employeeNumber: 'FZ-10130',
+      fullName: 'ماجد عبدالعزيز القحطاني',
+      jobTitle: 'فني أنظمة',
+      department: 'تقنية المعلومات',
+      phone: '0564412099',
+      email: 'majed.qahtani@freezone.local',
+      hireDate: DateTime(2023, 5, 18),
+      status: EmploymentStatus.active,
+    ),
+    Employee(
+      id: 'e6',
+      employeeNumber: 'FZ-10155',
+      fullName: 'هند سليمان الدوسري',
+      jobTitle: 'أخصائية علاقات موظفين',
+      department: 'شؤون الموظفين',
+      phone: '0581190044',
+      email: 'hind.dosari@freezone.local',
+      hireDate: DateTime(2024, 2, 1),
+      status: EmploymentStatus.suspended,
+    ),
+  ]);
+}
