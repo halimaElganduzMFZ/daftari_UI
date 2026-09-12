@@ -1,18 +1,33 @@
 import 'package:flutter/material.dart';
 
-/// لوحة ألوان مؤسسية للمنطقة الحرة — ثابتة لتجنب إعادة الحساب.
+/// ذهب + رمادي هادئ — مريح للعين واحترافي للاستخدام اليومي.
 abstract final class AppColors {
-  static const navy = Color(0xFF0B1F33);
-  static const navySoft = Color(0xFF16324A);
-  static const teal = Color(0xFF0F7B6C);
-  static const tealLight = Color(0xFF1AA891);
-  static const mist = Color(0xFFF3F6F9);
-  static const surface = Color(0xFFFFFFFF);
-  static const line = Color(0xFFD9E2EC);
-  static const textPrimary = Color(0xFF102A43);
-  static const textSecondary = Color(0xFF627D98);
-  static const success = Color(0xFF2F9E44);
-  static const warning = Color(0xFFD9480F);
-  static const danger = Color(0xFFC92A2A);
-  static const info = Color(0xFF1C7ED6);
+  /// خلفية عامة فاتحة مائلة للرمادي الدافئ (ليست كريمية صاخبة).
+  static const background = Color(0xFFF3F3F1);
+
+  /// سطح البطاقات والحقول.
+  static const surface = Color(0xFFFAFAF9);
+
+  /// رمادي داكن للعناوين.
+  static const charcoal = Color(0xFF2F2F2F);
+
+  /// رمادي متوسط للنصوص الثانوية.
+  static const slate = Color(0xFF6F6F6F);
+
+  /// خطوط فاصلة ناعمة.
+  static const line = Color(0xFFE2E0DC);
+
+  /// ذهب هادئ (أساسي للتفاعل والتمييز).
+  static const gold = Color(0xFFB08D57);
+
+  /// ذهب أعمق للعناوين/الحالات المحددة.
+  static const goldDeep = Color(0xFF8F7043);
+
+  /// لمسة ذهبية خفيفة للخلفيات.
+  static const goldSoft = Color(0xFFF3EADA);
+
+  static const success = Color(0xFF4F7A5A);
+  static const warning = Color(0xFFB8860B);
+  static const danger = Color(0xFFA15C5C);
+  static const info = Color(0xFF5C738A);
 }
