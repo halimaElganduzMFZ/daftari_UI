@@ -7,7 +7,9 @@ plugins {
 android {
     namespace = "com.freezone.employee_affairs"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // لا نفرض NDK محدد هنا — طلب flutter.ndkVersion كان يفشل عندك
+    // لأن sdkmanager يتعطل قبل تثبيت الحزمة 28.2.13676358.
+    // التطبيق حالياً واجهات فقط ولا يحتاج NDK للتشغيل التجريبي.
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
