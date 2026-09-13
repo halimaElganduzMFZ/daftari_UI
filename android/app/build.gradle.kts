@@ -9,9 +9,10 @@ android {
     // نثبت 34 مؤقتاً لأن android-35/36 غير مثبتين عندك
     // وsdkmanager CLI يتعطل — ثبّتي Platform من Android Studio ثم ارفعي الرقم لاحقاً.
     compileSdk = 34
-    // لا نفرض NDK محدد هنا — طلب flutter.ndkVersion كان يفشل عندك
-    // لأن sdkmanager يتعطل قبل تثبيت الحزمة 28.2.13676358.
-    // التطبيق حالياً واجهات فقط ولا يحتاج NDK للتشغيل التجريبي.
+    // نثبت نفس إصدار Flutter NDK محلياً عبر stub/تثبيت Studio
+    // حتى لا يستدعي Gradle sdkmanager المعطوب عندك.
+    ndkVersion = "28.2.13676358"
+    // التطبيق حالياً واجهات فقط؛ الـ stub يكفي للتشغيل التجريبي.
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
