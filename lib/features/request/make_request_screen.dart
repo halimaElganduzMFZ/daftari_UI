@@ -289,7 +289,7 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
                     children: [
                       FaIcon(FontAwesomeIcons.paperPlane, size: 16),
                       SizedBox(width: 10),
-                      Text('3. تأكيد وإرسال الطلب'),
+                      Text('تأكيد وإرسال الطلب'),
                     ],
                   ),
           ),
