@@ -32,6 +32,10 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // تأكيد تضمين مكتبات Flutter native داخل الـ APK (مهم للمحاكي x86_64)
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
+        }
     }
 
     buildTypes {
@@ -42,10 +46,11 @@ android {
         }
     }
 
-    // تجنّب llvm-strip عندما يكون مجلد NDK ناقصاً/وهمياً عند المطوّر المحلي
+    // تجنّب llvm-strip + ضمان استخراج .so بشكل صحيح على المحاكي
     packaging {
         jniLibs {
             keepDebugSymbols += "**/*.so"
+            useLegacyPackaging = true
         }
     }
 }
