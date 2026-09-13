@@ -40,6 +40,22 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // تجنّب llvm-strip عندما يكون مجلد NDK ناقصاً/وهمياً عند المطوّر المحلي
+    packaging {
+        jniLibs {
+            keepDebugSymbols += "**/*.so"
+        }
+    }
+}
+
+// عطّل مهمة strip إن ظهرت — تفشل إذا NDK غير مكتمل التثبيت
+tasks.configureEach {
+    if (name.contains("stripDebugDebugSymbols", ignoreCase = true) ||
+        name.contains("stripReleaseDebugSymbols", ignoreCase = true)
+    ) {
+        enabled = false
+    }
 }
 
 kotlin {
