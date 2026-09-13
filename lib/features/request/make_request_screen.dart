@@ -8,6 +8,8 @@ import '../../core/widgets/section_header.dart';
 import '../../data/models/permission_type.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_permission_types.dart';
+import 'widgets/all_regulations_sheet.dart';
+import 'widgets/single_regulation_sheet.dart';
 
 /// شاشة تقديم طلب جديد — من makeRequest.php بنمط أنظف وأكثر هدوءاً.
 class MakeRequestScreen extends StatefulWidget {
@@ -114,102 +116,11 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
   }
 
   void _openFullRegulation(PermissionType type) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.72,
-          minChildSize: 0.45,
-          maxChildSize: 0.92,
-          builder: (context, controller) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: ListView(
-                controller: controller,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 42,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.line,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Container(
-                        width: 42,
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: AppColors.goldSoft,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        alignment: Alignment.center,
-                        child: FaIcon(
-                          type.icon,
-                          size: 18,
-                          color: AppColors.goldDeep,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              type.title,
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.charcoal,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'اللائحة الكاملة المتعلقة بهذا النوع',
-                              style: TextStyle(
-                                color: AppColors.slate,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  for (final point in type.points) ...[
-                    _RegulationPointTile(point: point),
-                    const SizedBox(height: 10),
-                  ],
-                  const SizedBox(height: 8),
-                  AppSurface(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      type.fullText,
-                      style: const TextStyle(
-                        height: 1.65,
-                        color: AppColors.charcoal,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+    showSingleRegulationSheet(context, type: type);
+  }
+
+  void _openAllRegulations() {
+    showAllRegulationsSheet(context, initialTabId: 'permissions');
   }
 
   @override
@@ -244,7 +155,20 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      onPressed: _openAllRegulations,
+                      icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 14),
+                      label: const Text('مركز اللوائح والمخالفات'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.goldDeep,
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   _EmployeeStrip(
                     name: employee?.fullName ?? 'الموظف',
                     number: employee?.employeeNumber ?? '—',
@@ -312,6 +236,7 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
                           setState(() => _acceptedRules = value);
                         },
                         onOpenFull: () => _openFullRegulation(_selected!),
+                        onOpenAll: _openAllRegulations,
                       ),
               ),
             ),
@@ -567,12 +492,14 @@ class _RulesPanel extends StatelessWidget {
     required this.accepted,
     required this.onAcceptedChanged,
     required this.onOpenFull,
+    required this.onOpenAll,
   });
 
   final PermissionType type;
   final bool accepted;
   final ValueChanged<bool> onAcceptedChanged;
   final VoidCallback onOpenFull;
+  final VoidCallback onOpenAll;
 
   @override
   Widget build(BuildContext context) {
@@ -622,21 +549,36 @@ class _RulesPanel extends StatelessWidget {
             _RegulationPointTile(point: point, compact: true),
             const SizedBox(height: 8),
           ],
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: TextButton(
-              onPressed: onOpenFull,
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.goldDeep,
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(0, 36),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          Wrap(
+            spacing: 8,
+            children: [
+              TextButton(
+                onPressed: onOpenFull,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.goldDeep,
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 36),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  'عرض اللائحة كاملة',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-              child: const Text(
-                'عرض اللائحة كاملة',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              TextButton(
+                onPressed: onOpenAll,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.slate,
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 36),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  'كل اللوائح والمخالفات',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
+            ],
           ),
           const SizedBox(height: 4),
           InkWell(
