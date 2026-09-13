@@ -6,10 +6,9 @@ plugins {
 
 android {
     namespace = "com.freezone.employee_affairs"
-    // 34 لأن منصات 35/36 غير مثبتة عند المطوّر حالياً
     compileSdk = 34
-    // لا نحدد ndkVersion هنا عمداً:
-    // NDK الوهمي كان ينتج APK بدون libflutter.so فيسبب انهيار التطبيق فور الفتح.
+    // مطلوب لأن Flutter يحدد هذا الإصدار؛ نضع stub محلي أو NDK حقيقي من Android Studio
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -32,9 +31,17 @@ android {
 
     packaging {
         jniLibs {
-            // ضمان استخراج .so عند التثبيت على المحاكي
+            // لا تُفرَّغ مكتبات Flutter أثناء التعبئة
+            keepDebugSymbols += listOf("**/*.so")
             useLegacyPackaging = true
         }
+    }
+}
+
+// امنع strip من إتلاف libflutter.so إذا كان llvm-strip غير حقيقي
+tasks.configureEach {
+    if (name.contains("strip", ignoreCase = true) && name.contains("DebugSymbols", ignoreCase = true)) {
+        enabled = false
     }
 }
 
