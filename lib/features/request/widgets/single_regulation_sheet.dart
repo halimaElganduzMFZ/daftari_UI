@@ -6,10 +6,14 @@ import '../../../core/widgets/app_surface.dart';
 import '../../../data/models/permission_type.dart';
 import 'all_regulations_sheet.dart';
 
-/// ورقة اللائحة لنوع إذن واحد — تظهر من الأسفل بحجم ثابت وواضح.
-Future<void> showSingleRegulationSheet(
+/// ورقة لائحة عامة (إذن أو إجازة) — من single-reg-modal.php.
+Future<void> showRegulationDetailSheet(
   BuildContext context, {
-  required PermissionType type,
+  required String title,
+  required FaIconData icon,
+  required List<RegulationPoint> points,
+  required String fullText,
+  String allRegsTabId = 'permissions',
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -51,7 +55,7 @@ Future<void> showSingleRegulationSheet(
                         ),
                         alignment: Alignment.center,
                         child: FaIcon(
-                          type.icon,
+                          icon,
                           size: 18,
                           color: AppColors.goldDeep,
                         ),
@@ -62,7 +66,7 @@ Future<void> showSingleRegulationSheet(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${type.title} — اللائحة الكاملة',
+                              '$title — اللائحة الكاملة',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
@@ -92,7 +96,7 @@ Future<void> showSingleRegulationSheet(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
                     children: [
-                      for (final point in type.points) ...[
+                      for (final point in points) ...[
                         Container(
                           width: double.infinity,
                           margin: const EdgeInsets.only(bottom: 8),
@@ -154,7 +158,7 @@ Future<void> showSingleRegulationSheet(
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              type.fullText,
+                              fullText,
                               style: const TextStyle(
                                 height: 1.65,
                                 color: AppColors.charcoal,
@@ -177,7 +181,7 @@ Future<void> showSingleRegulationSheet(
                             Navigator.of(context).pop();
                             showAllRegulationsSheet(
                               context,
-                              initialTabId: 'permissions',
+                              initialTabId: allRegsTabId,
                             );
                           },
                           style: OutlinedButton.styleFrom(
@@ -213,5 +217,20 @@ Future<void> showSingleRegulationSheet(
         ),
       );
     },
+  );
+}
+
+/// توافق خلفي لشاشة الأذونات.
+Future<void> showSingleRegulationSheet(
+  BuildContext context, {
+  required PermissionType type,
+}) {
+  return showRegulationDetailSheet(
+    context,
+    title: type.title,
+    icon: type.icon,
+    points: type.points,
+    fullText: type.fullText,
+    allRegsTabId: 'permissions',
   );
 }
