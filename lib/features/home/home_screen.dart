@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
@@ -55,6 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'رصيد السنوية',
                       value: '${data.annualBalance}',
                       unit: 'يوم',
+                      icon: FontAwesomeIcons.calendarDays,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -63,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'رصيد الطارئة',
                       value: '${data.emergencyBalance}',
                       unit: 'يوم',
+                      icon: FontAwesomeIcons.circleExclamation,
                     ),
                   ),
                 ],
@@ -83,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
               child: FilledButton.icon(
                 onPressed: widget.onNewRequest,
-                icon: const Icon(Icons.add_circle_outline),
+                icon: const FaIcon(FontAwesomeIcons.plus, size: 16),
                 label: const Text('تقديم طلب جديد'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
@@ -112,19 +115,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: const [
                       _ServiceTile(
                         title: 'عرض التايم شيت',
-                        icon: Icons.calendar_today_outlined,
+                        icon: FontAwesomeIcons.clock,
                       ),
                       _ServiceTile(
                         title: 'الأصول المسجلة',
-                        icon: Icons.inventory_2_outlined,
+                        icon: FontAwesomeIcons.laptop,
                       ),
                       _ServiceTile(
                         title: 'عرض قصاصاتك',
-                        icon: Icons.description_outlined,
+                        icon: FontAwesomeIcons.fileLines,
                       ),
                       _ServiceTile(
                         title: 'المستشفيات',
-                        icon: Icons.local_hospital_outlined,
+                        icon: FontAwesomeIcons.hospital,
                       ),
                     ],
                   ),
@@ -154,18 +157,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       _SummaryStat(
                         label: 'إذن تأخير',
                         value: '${data.delayPermissionCount}',
+                        icon: FontAwesomeIcons.hourglassHalf,
                       ),
                       _SummaryStat(
                         label: 'خروج مبكر',
                         value: '${data.earlyLeaveCount}',
+                        icon: FontAwesomeIcons.doorOpen,
                       ),
                       _SummaryStat(
                         label: 'طارئة معلّقة',
                         value: '${data.pendingEmergencyCount}',
+                        icon: FontAwesomeIcons.triangleExclamation,
                       ),
                       _SummaryStat(
                         label: 'سنوية معلّقة',
                         value: '${data.pendingAnnualCount}',
+                        icon: FontAwesomeIcons.calendarCheck,
                       ),
                     ],
                   ),
@@ -276,13 +283,23 @@ class _WelcomeHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'مرحباً بك عزيزي الموظف / ة',
-            style: TextStyle(
-              color: AppColors.slate,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+          const Row(
+            children: [
+              FaIcon(
+                FontAwesomeIcons.handSparkles,
+                size: 14,
+                color: AppColors.goldDeep,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'مرحباً بك عزيزي الموظف / ة',
+                style: TextStyle(
+                  color: AppColors.slate,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 6),
           Text(
@@ -313,11 +330,13 @@ class _BalanceCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.unit,
+    required this.icon,
   });
 
   final String title;
   final String value;
   final String unit;
+  final FaIconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -326,6 +345,8 @@ class _BalanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          FaIcon(icon, color: AppColors.goldDeep, size: 18),
+          const SizedBox(height: 12),
           Text(
             title,
             style: const TextStyle(
@@ -334,7 +355,7 @@ class _BalanceCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -373,6 +394,12 @@ class _PermissionBalanceBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
+          const FaIcon(
+            FontAwesomeIcons.userClock,
+            color: AppColors.goldDeep,
+            size: 16,
+          ),
+          const SizedBox(width: 10),
           const Expanded(
             child: Text(
               'رصيد الأذونات المتبقي لهذا الشهر',
@@ -397,12 +424,12 @@ class _PermissionBalanceBar extends StatelessWidget {
   }
 }
 
-/// روابط الخدمات — بطاقات أيقونة أنيقة، جاهزة للنقر لاحقاً.
+/// روابط الخدمات — بطاقات Font Awesome أنيقة، جاهزة للنقر لاحقاً.
 class _ServiceTile extends StatelessWidget {
   const _ServiceTile({required this.title, required this.icon});
 
   final String title;
-  final IconData icon;
+  final FaIconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -421,7 +448,8 @@ class _ServiceTile extends StatelessWidget {
               color: AppColors.goldSoft,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: AppColors.goldDeep, size: 22),
+            alignment: Alignment.center,
+            child: FaIcon(icon, color: AppColors.goldDeep, size: 18),
           ),
           const Spacer(),
           Text(
@@ -442,33 +470,40 @@ class _ServiceTile extends StatelessWidget {
 }
 
 class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({required this.label, required this.value});
+  const _SummaryStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
 
   final String label;
   final String value;
+  final FaIconData icon;
 
   @override
   Widget build(BuildContext context) {
     return AppSurface(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
+          FaIcon(icon, color: AppColors.goldDeep, size: 14),
+          const SizedBox(width: 8),
           Text(
             value,
             style: const TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 22,
+              fontSize: 20,
               color: AppColors.goldDeep,
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
               style: const TextStyle(
                 color: AppColors.charcoal,
                 fontWeight: FontWeight.w600,
-                fontSize: 13,
+                fontSize: 12.5,
               ),
             ),
           ),
@@ -495,9 +530,9 @@ class _EmptyHint extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 28, 18, 24),
       child: Column(
         children: [
-          const Icon(
-            Icons.inbox_outlined,
-            size: 36,
+          const FaIcon(
+            FontAwesomeIcons.inbox,
+            size: 30,
             color: AppColors.goldDeep,
           ),
           const SizedBox(height: 12),
@@ -549,7 +584,12 @@ class _RequestTile extends StatelessWidget {
               color: AppColors.goldSoft,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(_kindIcon(request.kind), color: AppColors.goldDeep),
+            alignment: Alignment.center,
+            child: FaIcon(
+              _kindIcon(request.kind),
+              color: AppColors.goldDeep,
+              size: 18,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -589,12 +629,12 @@ class _RequestTile extends StatelessWidget {
     );
   }
 
-  static IconData _kindIcon(RequestKind kind) => switch (kind) {
-        RequestKind.delayPermission => Icons.schedule_outlined,
-        RequestKind.earlyLeavePermission => Icons.logout_outlined,
-        RequestKind.emergencyLeave => Icons.warning_amber_outlined,
-        RequestKind.annualLeave => Icons.event_available_outlined,
-        RequestKind.other => Icons.description_outlined,
+  static FaIconData _kindIcon(RequestKind kind) => switch (kind) {
+        RequestKind.delayPermission => FontAwesomeIcons.hourglassHalf,
+        RequestKind.earlyLeavePermission => FontAwesomeIcons.doorOpen,
+        RequestKind.emergencyLeave => FontAwesomeIcons.triangleExclamation,
+        RequestKind.annualLeave => FontAwesomeIcons.calendarCheck,
+        RequestKind.other => FontAwesomeIcons.fileLines,
       };
 
   static String _kindLabel(RequestKind kind) => switch (kind) {
