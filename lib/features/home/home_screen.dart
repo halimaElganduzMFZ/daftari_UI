@@ -387,15 +387,16 @@ class _PermissionBalanceBar extends StatelessWidget {
 
 /// روابط الخدمات — جاهزة للنقر لاحقاً عند ربط الصفحات.
 class _ServiceTile extends StatelessWidget {
-  const _ServiceTile({required this.title, this.onTap});
+  const _ServiceTile({required this.title});
 
   final String title;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AppSurface(
-      onTap: onTap ?? () {},
+      onTap: () {
+        // سيتم ربط الصفحات لاحقاً (تايم شيت، أصول، قصاصات، مستشفيات).
+      },
       padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
       child: Row(
         children: [
