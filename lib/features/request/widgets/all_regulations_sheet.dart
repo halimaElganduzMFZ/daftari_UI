@@ -14,12 +14,22 @@ Future<void> showAllRegulationsSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
     builder: (context) {
-      return _AllRegulationsSheet(initialTabId: initialTabId);
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: Material(
+          color: AppColors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            height: MediaQuery.sizeOf(context).height * 0.9,
+            width: double.infinity,
+            child: _AllRegulationsSheet(initialTabId: initialTabId),
+          ),
+        ),
+      );
     },
   );
 }
