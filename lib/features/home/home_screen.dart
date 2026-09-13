@@ -55,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'رصيد السنوية',
                       value: '${data.annualBalance}',
                       unit: 'يوم',
-                      icon: Icons.beach_access_outlined,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -64,7 +63,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: 'رصيد الطارئة',
                       value: '${data.emergencyBalance}',
                       unit: 'يوم',
-                      icon: Icons.flash_on_outlined,
                     ),
                   ),
                 ],
@@ -110,24 +108,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisCount: 2,
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    childAspectRatio: 1.45,
+                    childAspectRatio: 3.2,
                     children: const [
-                      _ServiceTile(
-                        title: 'عرض التايم شيت',
-                        icon: Icons.calendar_month_outlined,
-                      ),
-                      _ServiceTile(
-                        title: 'الأصول المسجلة',
-                        icon: Icons.laptop_mac_outlined,
-                      ),
-                      _ServiceTile(
-                        title: 'عرض قصاصاتك',
-                        icon: Icons.picture_as_pdf_outlined,
-                      ),
-                      _ServiceTile(
-                        title: 'المستشفيات المتعاقدة',
-                        icon: Icons.local_hospital_outlined,
-                      ),
+                      _ServiceTile(title: 'عرض التايم شيت'),
+                      _ServiceTile(title: 'الأصول المسجلة'),
+                      _ServiceTile(title: 'عرض قصاصاتك'),
+                      _ServiceTile(title: 'المستشفيات المتعاقدة'),
                     ],
                   ),
                 ],
@@ -315,13 +301,11 @@ class _BalanceCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.unit,
-    required this.icon,
   });
 
   final String title;
   final String value;
   final String unit;
-  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -330,8 +314,6 @@ class _BalanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: AppColors.goldDeep, size: 22),
-          const SizedBox(height: 12),
           Text(
             title,
             style: const TextStyle(
@@ -340,7 +322,7 @@ class _BalanceCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -379,8 +361,6 @@ class _PermissionBalanceBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          const Icon(Icons.timer_outlined, color: AppColors.goldDeep, size: 20),
-          const SizedBox(width: 10),
           const Expanded(
             child: Text(
               'رصيد الأذونات المتبقي لهذا الشهر',
@@ -405,29 +385,35 @@ class _PermissionBalanceBar extends StatelessWidget {
   }
 }
 
+/// روابط الخدمات — جاهزة للنقر لاحقاً عند ربط الصفحات.
 class _ServiceTile extends StatelessWidget {
-  const _ServiceTile({required this.title, required this.icon});
+  const _ServiceTile({required this.title, this.onTap});
 
   final String title;
-  final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AppSurface(
-      onTap: () {},
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      onTap: onTap ?? () {},
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      child: Row(
         children: [
-          Icon(icon, color: AppColors.goldDeep),
-          const Spacer(),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              height: 1.3,
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                height: 1.35,
+                color: AppColors.charcoal,
+              ),
             ),
+          ),
+          const Icon(
+            Icons.chevron_left_rounded,
+            color: AppColors.goldDeep,
+            size: 22,
           ),
         ],
       ),
