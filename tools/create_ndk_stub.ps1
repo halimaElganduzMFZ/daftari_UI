@@ -1,48 +1,43 @@
-# ينشئ NDK stub مكتمل يمنع sdkmanager من الانهيار
-# شغّليه مرة واحدة ثم flutter run
-
+# إنشاء NDK stub يمنع انهيار sdkmanager وفشل llvm-strip
 $ErrorActionPreference = "Stop"
 $ver = "28.2.13676358"
 $ndk = Join-Path $env:LOCALAPPDATA "Android\sdk\ndk\$ver"
-$prebuilt = Join-Path $ndk "toolchains\llvm\prebuilt\windows-x86_64\bin"
+$bin = Join-Path $ndk "toolchains\llvm\prebuilt\windows-x86_64\bin"
 
-Write-Host "Creating NDK stub at: $ndk" -ForegroundColor Cyan
-New-Item -ItemType Directory -Force -Path $prebuilt | Out-Null
+Write-Host "Creating NDK stub: $ndk" -ForegroundColor Cyan
+New-Item -ItemType Directory -Force -Path $bin | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $ndk "sources") | Out-Null
 
 @"
 Pkg.Desc = Android NDK
 Pkg.Revision = $ver
-"@ | Set-Content -Path (Join-Path $ndk "source.properties") -Encoding ASCII
+"@ | Set-Content (Join-Path $ndk "source.properties") -Encoding ASCII
 
-# no-op strip tools (Windows)
-$noop = "@echo off`r`nexit /b 0`r`n"
-@(
-  "llvm-strip.cmd",
-  "llvm-strip.bat",
-  "llvm-strip.exe.bat",
-  "strip.cmd",
-  "strip.bat"
-) | ForEach-Object {
-  Set-Content -Path (Join-Path $prebuilt $_) -Value $noop -Encoding ASCII
+$noopBat = "@echo off`r`nexit /b 0`r`n"
+Set-Content (Join-Path $bin "llvm-strip.cmd") -Value $noopBat -Encoding ASCII
+Set-Content (Join-Path $bin "llvm-strip.bat") -Value $noopBat -Encoding ASCII
+Set-Content (Join-Path $ndk "ndk-build.cmd") -Value $noopBat -Encoding ASCII
+
+# أنشئ llvm-strip.exe حقيقي بسيط (exit 0) عبر .NET
+$exe = Join-Path $bin "llvm-strip.exe"
+$src = Join-Path $env:TEMP "llvm_strip_stub.cs"
+@"
+using System;
+class Program { static int Main(string[] args) { return 0; } }
+"@ | Set-Content $src -Encoding ASCII
+
+$csc = @(
+  "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
+  "$env:WINDIR\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+) | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+if ($csc) {
+  & $csc /nologo /out:$exe $src
+  Write-Host "Created llvm-strip.exe" -ForegroundColor Green
+} else {
+  Write-Host "csc.exe not found; bat/cmd stubs only" -ForegroundColor Yellow
 }
 
-# Gradle on Windows often invokes `llvm-strip` without extension.
-# Create a tiny .exe launcher via PowerShell shim is hard; use PATHEXT-friendly cmd copy named llvm-strip.com alternative:
-# Instead write llvm-strip without extension as a .cmd and also a powershell-based exe using cmd /c.
-# Best reliable approach: copy cmd.exe to llvm-strip.exe is unsafe.
-# Use a VBScript-generated exe? Too heavy.
-# Create llvm-strip as a .cmd and set a wrapper script named llvm-strip (no ext) for Git bash only.
-# For ProcessBuilder, Windows searches PATHEXT=.COM;.EXE;.BAT;.CMD
-# So llvm-strip.bat / .cmd is enough IF the command is `llvm-strip`.
-Set-Content -Path (Join-Path $prebuilt "llvm-strip.cmd") -Value $noop -Encoding ASCII
-Set-Content -Path (Join-Path $prebuilt "llvm-strip.bat") -Value $noop -Encoding ASCII
-
-# Also create empty marker files some validators check
-New-Item -ItemType Directory -Force -Path (Join-Path $ndk "sources") | Out-Null
-New-Item -ItemType File -Force -Path (Join-Path $ndk "ndk-build.cmd") | Out-Null
-Set-Content -Path (Join-Path $ndk "ndk-build.cmd") -Value $noop -Encoding ASCII
-
-Write-Host "NDK stub ready." -ForegroundColor Green
-Write-Host "Files:" -ForegroundColor Green
-Get-ChildItem $prebuilt | Select-Object Name
+Write-Host "Done. Verify:" -ForegroundColor Green
 Get-Content (Join-Path $ndk "source.properties")
+Get-ChildItem $bin | Format-Table Name, Length

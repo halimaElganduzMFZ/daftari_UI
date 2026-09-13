@@ -1,17 +1,32 @@
-# employee_affairs
+# شؤون الموظفين — Daftari UI
 
-A new Flutter project.
+تطبيق Flutter (واجهة عربية RTL) لشؤون الموظفين في المنطقة الحرة بمصراتة.
 
-## Getting Started
+الواجهة حالياً ببيانات ثابتة. الربط مع الـ API لاحقاً.
 
-This project is a starting point for a Flutter application.
+## التشغيل محلياً
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter pub get
+flutter run -d chrome --web-port=43123
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+دخول تجريبي:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- المستخدم: `FZ-10021`
+- كلمة المرور: `123456`
+
+## ما هو جاهز
+
+- تسجيل الدخول (من `login.php`)
+- الصفحة الرئيسية للموظف العادي (من `index.php`) بتوزيع أقسام أوضح:
+  - ترحيب
+  - أرصدة الإجازات + رصيد الأذونات
+  - تقديم طلب جديد
+  - روابط تهمك
+  - ملخص شهري
+  - طلبات بفلتر (معلّقة / مقبولة / مرفوضة)
+
+## ملاحظة أندرويد
+
+تطوير الواجهة يتم عبر Chrome حالياً. بناء APK يحتاج إعداد NDK صحيح على الجهاز المحلي.
