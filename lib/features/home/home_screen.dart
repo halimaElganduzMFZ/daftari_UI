@@ -108,12 +108,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisCount: 2,
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    childAspectRatio: 3.2,
+                    childAspectRatio: 1.35,
                     children: const [
-                      _ServiceTile(title: 'عرض التايم شيت'),
-                      _ServiceTile(title: 'الأصول المسجلة'),
-                      _ServiceTile(title: 'عرض قصاصاتك'),
-                      _ServiceTile(title: 'المستشفيات المتعاقدة'),
+                      _ServiceTile(
+                        title: 'عرض التايم شيت',
+                        icon: Icons.calendar_today_outlined,
+                      ),
+                      _ServiceTile(
+                        title: 'الأصول المسجلة',
+                        icon: Icons.inventory_2_outlined,
+                      ),
+                      _ServiceTile(
+                        title: 'عرض قصاصاتك',
+                        icon: Icons.description_outlined,
+                      ),
+                      _ServiceTile(
+                        title: 'المستشفيات',
+                        icon: Icons.local_hospital_outlined,
+                      ),
                     ],
                   ),
                 ],
@@ -385,11 +397,12 @@ class _PermissionBalanceBar extends StatelessWidget {
   }
 }
 
-/// روابط الخدمات — جاهزة للنقر لاحقاً عند ربط الصفحات.
+/// روابط الخدمات — بطاقات أيقونة أنيقة، جاهزة للنقر لاحقاً.
 class _ServiceTile extends StatelessWidget {
-  const _ServiceTile({required this.title});
+  const _ServiceTile({required this.title, required this.icon});
 
   final String title;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -397,24 +410,30 @@ class _ServiceTile extends StatelessWidget {
       onTap: () {
         // سيتم ربط الصفحات لاحقاً (تايم شيت، أصول، قصاصات، مستشفيات).
       },
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                height: 1.35,
-                color: AppColors.charcoal,
-              ),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.goldSoft,
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Icon(icon, color: AppColors.goldDeep, size: 22),
           ),
-          const Icon(
-            Icons.chevron_left_rounded,
-            color: AppColors.goldDeep,
-            size: 22,
+          const Spacer(),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13.5,
+              height: 1.3,
+              color: AppColors.charcoal,
+            ),
           ),
         ],
       ),
