@@ -6,9 +6,9 @@ plugins {
 
 android {
     namespace = "com.freezone.employee_affairs"
-    // نثبت 35 بدل flutter.compileSdkVersion (36) لأن android-36 غير مثبت عندك
-    // وsdkmanager CLI يتعطل — يمكن رفعه لاحقاً بعد تثبيت Platform 36 من Android Studio.
-    compileSdk = 35
+    // نثبت 34 مؤقتاً لأن android-35/36 غير مثبتين عندك
+    // وsdkmanager CLI يتعطل — ثبّتي Platform من Android Studio ثم ارفعي الرقم لاحقاً.
+    compileSdk = 34
     // لا نفرض NDK محدد هنا — طلب flutter.ndkVersion كان يفشل عندك
     // لأن sdkmanager يتعطل قبل تثبيت الحزمة 28.2.13676358.
     // التطبيق حالياً واجهات فقط ولا يحتاج NDK للتشغيل التجريبي.
@@ -24,7 +24,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 35
+        targetSdk = 34
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
         // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
