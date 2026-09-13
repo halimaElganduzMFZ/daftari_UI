@@ -277,7 +277,7 @@ class _WelcomeHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'مرحباً بك عزيزي الموظف',
+            'مرحباً بك عزيزي الموظف / ة',
             style: TextStyle(
               color: AppColors.slate,
               fontSize: 14,
