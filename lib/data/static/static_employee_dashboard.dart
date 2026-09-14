@@ -92,16 +92,18 @@ abstract final class StaticEmployeeDashboard {
         );
       }
 
-      // قليل من المرفوضة وقيد المراجعة لكل سنة
-      for (var i = 0; i < 4; i++) {
+      // دفعات كافية للمعلّقة والمرفوضة ليظهر «عرض المزيد» في الرئيسية أيضاً
+      final otherCount = year == 2026 ? 14 : 10;
+      for (var i = 0; i < otherCount; i++) {
         final kind = kinds[(year + i + 3) % kinds.length];
+        final rejected = i.isEven;
         list.add(
           EmployeeRequest(
             id: 'r${id++}',
             kind: kind,
-            status: i.isEven ? RequestStatus.rejected : RequestStatus.pending,
-            requestedAt: DateTime(year, 6 + (i % 6), 5 + i * 2),
-            note: i.isEven
+            status: rejected ? RequestStatus.rejected : RequestStatus.pending,
+            requestedAt: DateTime(year, 6 + (i % 6), 5 + (i % 20)),
+            note: rejected
                 ? '${notes[i % notes.length]} — مرفوض $year'
                 : '${notes[(i + 2) % notes.length]} — قيد المراجعة $year',
           ),

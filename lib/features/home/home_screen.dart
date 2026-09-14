@@ -23,7 +23,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const _pageSize = 6;
+
   RequestStatus _filter = RequestStatus.pending;
+  int _visibleCount = _pageSize;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen> {
       for (final r in data.requests)
         if (r.status == _filter) r,
     ];
+    final visible = filtered.take(_visibleCount).toList();
+    final hasMore = _visibleCount < filtered.length;
 
     return SafeArea(
       child: CustomScrollView(
@@ -218,7 +223,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                     selected: {_filter},
                     onSelectionChanged: (value) {
-                      setState(() => _filter = value.first);
+                      setState(() {
+                        _filter = value.first;
+                        _visibleCount = _pageSize;
+                      });
                     },
                   ),
                 ],
@@ -237,23 +245,58 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             )
-          else
+          else ...[
+            if (filtered.length > _pageSize)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Text(
+                    'عرض ${visible.length} من ${filtered.length}',
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.slate,
+                    ),
+                  ),
+                ),
+              ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+              padding: EdgeInsets.fromLTRB(20, 4, 20, hasMore ? 8 : 32),
               sliver: SliverList.separated(
-                itemCount: filtered.length.clamp(0, 6),
+                itemCount: visible.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 220),
                     child: _RequestTile(
                       key: ValueKey('${_filter.name}-$index'),
-                      request: filtered[index],
+                      request: visible[index],
                     ),
                   );
                 },
               ),
             ),
+            if (hasMore)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                  child: OutlinedButton.icon(
+                    onPressed: () => setState(() {
+                      _visibleCount =
+                          (_visibleCount + _pageSize).clamp(0, filtered.length);
+                    }),
+                    icon: const Icon(Icons.expand_more_rounded),
+                    label: Text(
+                      'عرض المزيد (${filtered.length - visible.length})',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      foregroundColor: AppColors.goldDeep,
+                      side: const BorderSide(color: AppColors.gold),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ],
       ),
     );
