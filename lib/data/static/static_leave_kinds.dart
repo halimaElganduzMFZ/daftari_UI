@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../models/leave_kind.dart';
 import '../models/permission_type.dart';
 
-/// أنواع الإجازات وضوابطها — من Taking_a_day_off.php.
+/// أنواع الإجازات وضوابطها — من Taking_a_day_off.php (regulationsData).
 abstract final class StaticLeaveKinds {
   static const List<LeaveKind> all = [
     LeaveKind(
@@ -21,7 +21,17 @@ abstract final class StaticLeaveKinds {
         RegulationPoint(
           article: 'م28',
           text:
-              'يجب التمتع بـ15 يوماً على الأقل سنوياً، والحد الأقصى للحفظ 15 يوماً في السنة و180 يوماً طوال الخدمة.',
+              'لا يجوز تأجيل الإجازة أو قطعها إلا لضرورة قصوى وبموافقة رئيس لجنة الإدارة.',
+        ),
+        RegulationPoint(
+          article: 'م28',
+          text:
+              'يجب التمتع بـ15 يوماً على الأقل سنوياً، وإلا سقط الحق فيها وشُطبت من الرصيد إذا أُخطر العامل بالخروج لمصلحة العمل ولم يستجب.',
+        ),
+        RegulationPoint(
+          article: 'م28',
+          text:
+              'الحد الأقصى للحفظ: 15 يوماً في السنة، و180 يوماً طوال مدة الخدمة.',
         ),
         RegulationPoint(
           article: 'م31',
@@ -30,7 +40,7 @@ abstract final class StaticLeaveKinds {
         ),
       ],
       fullText:
-          'الإجازة السنوية 30 يوماً (45 يوماً لمن بلغ الخمسين أو أتم 20 سنة خدمة). الحد الأقصى للحفظ 15 يوماً سنوياً و180 يوماً طوال الخدمة.',
+          'الإجازة السنوية 30 يوماً (45 يوماً لمن بلغ الخمسين أو أتم 20 سنة خدمة)، تُحدَّد مواعيدها بالتنسيق مع الإدارة. الحد الأقصى للحفظ 15 يوماً سنوياً و180 يوماً طوال الخدمة، وتُعوَّض نقدياً عند انتهاء العمل أو عند الطلب.',
     ),
     LeaveKind(
       id: 'emergency',
@@ -51,7 +61,15 @@ abstract final class StaticLeaveKinds {
         RegulationPoint(
           article: 'م36',
           text:
-              'وفاة الزوج/الزوجة أو قريب حتى الدرجة الثانية: أسبوع. حتى الدرجة الرابعة: 3 أيام. يسقط الحق بمضي السنة.',
+              'حالة وفاة الزوج/الزوجة أو قريب حتى الدرجة الثانية أو أحد أبوَي الزوجين: أسبوع في المرة.',
+        ),
+        RegulationPoint(
+          article: 'م36',
+          text: 'حالة وفاة قريب حتى الدرجة الرابعة: 3 أيام في المرة.',
+        ),
+        RegulationPoint(
+          article: 'م36',
+          text: 'يسقط الحق بمضي السنة.',
         ),
       ],
       fullText:
@@ -60,7 +78,7 @@ abstract final class StaticLeaveKinds {
     LeaveKind(
       id: 'study',
       title: 'إجازة دراسية',
-      subtitle: 'امتحانات — يُرفق مستند الإثبات',
+      subtitle: 'أداء امتحانات — يُرفق مستند الإثبات',
       icon: FontAwesomeIcons.graduationCap,
       needsStudyAttachment: true,
       points: [
@@ -91,7 +109,7 @@ abstract final class StaticLeaveKinds {
         RegulationPoint(
           article: 'م32',
           text:
-              'إجازة الوضع: مرتب كامل لمدة ثلاثة أشهر، شاملة فترة الغياب قبل الوضع وبعده.',
+              'إجازة الوضع: مرتب كامل (100٪) لمدة ثلاثة أشهر، شاملة فترة الغياب قبل الوضع وبعده.',
         ),
         RegulationPoint(
           article: 'م32',

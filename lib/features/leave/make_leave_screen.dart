@@ -7,6 +7,7 @@ import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/leave_kind.dart';
 import '../../data/session/app_session.dart';
+import '../../data/static/static_employee_dashboard.dart';
 import '../../data/static/static_leave_kinds.dart';
 import '../request/widgets/all_regulations_sheet.dart';
 import '../request/widgets/single_regulation_sheet.dart';
@@ -225,7 +226,11 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
               context,
               initialTabId: 'leaves',
             ),
-            icon: const FaIcon(FontAwesomeIcons.bookOpen, size: 18),
+            icon: const FaIcon(
+              FontAwesomeIcons.bookOpen,
+              size: 18,
+              color: AppColors.goldDeep,
+            ),
           ),
         ],
       ),
@@ -250,6 +255,11 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
           ),
           const SizedBox(height: 10),
           _TypeSelector(selected: kind, onTap: _chooseType),
+          if (kind != null &&
+              (kind.id == 'annual' || kind.id == 'emergency')) ...[
+            const SizedBox(height: 10),
+            _BalanceHint(kindId: kind.id),
+          ],
           const SizedBox(height: 16),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
@@ -578,6 +588,65 @@ class _LeaveTypePickerSheet extends StatelessWidget {
 }
 
 // ─── Small widgets ───────────────────────────────────────────────────────────
+
+
+class _BalanceHint extends StatelessWidget {
+  const _BalanceHint({required this.kindId});
+
+  final String kindId;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = StaticEmployeeDashboard.data;
+    final isAnnual = kindId == 'annual';
+    final value = isAnnual ? data.annualBalance : data.emergencyBalance;
+    final label = isAnnual ? 'رصيد الإجازة السنوية المتاح' : 'رصيد الإجازة الطارئة المتاح';
+
+    return AppSurface(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.goldSoft,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: FaIcon(
+              isAnnual
+                  ? FontAwesomeIcons.calendarCheck
+                  : FontAwesomeIcons.bolt,
+              size: 14,
+              color: AppColors.goldDeep,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.slate,
+              ),
+            ),
+          ),
+          Text(
+            '$value يوم',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: AppColors.goldDeep,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 class _TypeSelector extends StatelessWidget {
   const _TypeSelector({required this.selected, required this.onTap});
