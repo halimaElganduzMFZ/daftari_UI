@@ -34,51 +34,70 @@ class PendingManagerRequest {
 }
 
 /// بيانات ثابتة لشاشة موافقات المدير (index.php).
+/// مولَّدة بحجم واقعي لإدارات تصل لمئات الطلبات المعلّقة.
 abstract final class StaticManagerApprovals {
-  static final List<PendingManagerRequest> pending = [
-    PendingManagerRequest(
-      id: 'r1',
-      employeeName: 'أحمد محمد العلي',
-      employeeNumber: 'FZ-10021',
-      kind: ManagerRequestKind.permission,
-      typeLabel: 'إذن خروج شخصي',
-      statusLabel: 'طلب من الموظف',
-      submittedAt: DateTime(2026, 9, 12, 9, 40),
-      notes: 'مراجعة طبية قصيرة',
-    ),
-    PendingManagerRequest(
-      id: 'r2',
-      employeeName: 'سارة خالد المنصور',
-      employeeNumber: 'FZ-10045',
-      kind: ManagerRequestKind.leave,
-      typeLabel: 'إجازة اعتيادية',
-      statusLabel: 'طلب من الموظف',
-      submittedAt: DateTime(2026, 9, 11, 14, 15),
-      notes: 'من 20 إلى 22 سبتمبر',
-    ),
-    PendingManagerRequest(
-      id: 'r3',
-      employeeName: 'يوسف إبراهيم الحربي',
-      employeeNumber: 'FZ-10078',
-      kind: ManagerRequestKind.permission,
-      typeLabel: 'إذن مهمة عمل',
-      statusLabel: 'طلب من الموظف',
-      submittedAt: DateTime(2026, 9, 10, 11, 5),
-    ),
-    PendingManagerRequest(
-      id: 'r4',
-      employeeName: 'نورة فهد الشمري',
-      employeeNumber: 'FZ-10102',
-      kind: ManagerRequestKind.leave,
-      typeLabel: 'إجازة مرضية',
-      statusLabel: 'طلب من الموظف',
-      submittedAt: DateTime(2026, 9, 9, 8, 20),
-      notes: 'مرفق تقرير طبي',
-    ),
-  ];
+  static final List<PendingManagerRequest> pending = _buildDemoQueue();
 
-  static int get approvedThisMonth => 12;
-  static int get rejectedThisMonth => 3;
+  static int get approvedThisMonth => 186;
+  static int get rejectedThisMonth => 24;
   static int get pendingCount =>
       pending.where((r) => r.isPending).length;
+
+  static List<PendingManagerRequest> _buildDemoQueue() {
+    const names = [
+      'أحمد محمد العلي',
+      'سارة خالد المنصور',
+      'يوسف إبراهيم الحربي',
+      'نورة فهد الشمري',
+      'ماجد عبدالعزيز القحطاني',
+      'هند سليمان الدوسري',
+      'خالد سعد المري',
+      'ريم عبدالله الشمري',
+      'عمر فيصل العتيبي',
+      'لينا عبدالرحمن الغامدي',
+      'فهد ناصر الدوسري',
+      'ميسون خالد الحربي',
+      'سلمان ماجد القحطاني',
+      'دانة يوسف الأنصاري',
+      'طلال سعيد الزهراني',
+    ];
+
+    const permissionTypes = [
+      'إذن خروج شخصي',
+      'إذن مهمة عمل',
+      'إذن مراجعة طبية',
+      'إذن ظرف طارئ',
+    ];
+    const leaveTypes = [
+      'إجازة اعتيادية',
+      'إجازة مرضية',
+      'إجازة اضطرارية',
+      'إجازة دراسية',
+    ];
+
+    final list = <PendingManagerRequest>[];
+    // عدد كافٍ لإحساس الإدارات الثقيلة دون إبطاء الواجهة.
+    for (var i = 0; i < 48; i++) {
+      final isLeave = i % 3 == 0;
+      final name = names[i % names.length];
+      final day = 12 - (i ~/ 6);
+      list.add(
+        PendingManagerRequest(
+          id: 'r$i',
+          employeeName: name,
+          employeeNumber: 'FZ-${10021 + (i % 40)}',
+          kind: isLeave
+              ? ManagerRequestKind.leave
+              : ManagerRequestKind.permission,
+          typeLabel: isLeave
+              ? leaveTypes[i % leaveTypes.length]
+              : permissionTypes[i % permissionTypes.length],
+          statusLabel: 'طلب من الموظف',
+          submittedAt: DateTime(2026, 9, day.clamp(1, 12), 8 + (i % 8), (i * 7) % 60),
+          notes: i % 4 == 0 ? 'ملاحظة مختصرة من الموظف' : null,
+        ),
+      );
+    }
+    return list;
+  }
 }
