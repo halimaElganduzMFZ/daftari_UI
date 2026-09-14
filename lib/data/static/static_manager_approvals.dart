@@ -38,48 +38,51 @@ class PendingManagerRequest {
 abstract final class StaticManagerApprovals {
   static final List<PendingManagerRequest> pending = _buildDemoQueue();
 
+  /// سجل قرارات سابقة — للشاشة «السابق» عبر عدة سنوات.
+  static final List<PendingManagerRequest> history = _buildHistory();
+
   static int get approvedThisMonth => 186;
   static int get rejectedThisMonth => 24;
   static int get pendingCount =>
       pending.where((r) => r.isPending).length;
 
+  static const _names = [
+    'أحمد محمد العلي',
+    'سارة خالد المنصور',
+    'يوسف إبراهيم الحربي',
+    'نورة فهد الشمري',
+    'ماجد عبدالعزيز القحطاني',
+    'هند سليمان الدوسري',
+    'خالد سعد المري',
+    'ريم عبدالله الشمري',
+    'عمر فيصل العتيبي',
+    'لينا عبدالرحمن الغامدي',
+    'فهد ناصر الدوسري',
+    'ميسون خالد الحربي',
+    'سلمان ماجد القحطاني',
+    'دانة يوسف الأنصاري',
+    'طلال سعيد الزهراني',
+  ];
+
+  static const _permissionTypes = [
+    'إذن خروج شخصي',
+    'إذن مهمة عمل',
+    'إذن مراجعة طبية',
+    'إذن ظرف طارئ',
+  ];
+
+  static const _leaveTypes = [
+    'إجازة اعتيادية',
+    'إجازة مرضية',
+    'إجازة اضطرارية',
+    'إجازة دراسية',
+  ];
+
   static List<PendingManagerRequest> _buildDemoQueue() {
-    const names = [
-      'أحمد محمد العلي',
-      'سارة خالد المنصور',
-      'يوسف إبراهيم الحربي',
-      'نورة فهد الشمري',
-      'ماجد عبدالعزيز القحطاني',
-      'هند سليمان الدوسري',
-      'خالد سعد المري',
-      'ريم عبدالله الشمري',
-      'عمر فيصل العتيبي',
-      'لينا عبدالرحمن الغامدي',
-      'فهد ناصر الدوسري',
-      'ميسون خالد الحربي',
-      'سلمان ماجد القحطاني',
-      'دانة يوسف الأنصاري',
-      'طلال سعيد الزهراني',
-    ];
-
-    const permissionTypes = [
-      'إذن خروج شخصي',
-      'إذن مهمة عمل',
-      'إذن مراجعة طبية',
-      'إذن ظرف طارئ',
-    ];
-    const leaveTypes = [
-      'إجازة اعتيادية',
-      'إجازة مرضية',
-      'إجازة اضطرارية',
-      'إجازة دراسية',
-    ];
-
     final list = <PendingManagerRequest>[];
-    // عدد كافٍ لإحساس الإدارات الثقيلة دون إبطاء الواجهة.
     for (var i = 0; i < 48; i++) {
       final isLeave = i % 3 == 0;
-      final name = names[i % names.length];
+      final name = _names[i % _names.length];
       final day = 12 - (i ~/ 6);
       list.add(
         PendingManagerRequest(
@@ -90,14 +93,50 @@ abstract final class StaticManagerApprovals {
               ? ManagerRequestKind.leave
               : ManagerRequestKind.permission,
           typeLabel: isLeave
-              ? leaveTypes[i % leaveTypes.length]
-              : permissionTypes[i % permissionTypes.length],
+              ? _leaveTypes[i % _leaveTypes.length]
+              : _permissionTypes[i % _permissionTypes.length],
           statusLabel: 'طلب من الموظف',
-          submittedAt: DateTime(2026, 9, day.clamp(1, 12), 8 + (i % 8), (i * 7) % 60),
+          submittedAt:
+              DateTime(2026, 9, day.clamp(1, 12), 8 + (i % 8), (i * 7) % 60),
           notes: i % 4 == 0 ? 'ملاحظة مختصرة من الموظف' : null,
         ),
       );
     }
     return list;
+  }
+
+  static List<PendingManagerRequest> _buildHistory() {
+    final list = <PendingManagerRequest>[];
+    var id = 0;
+    for (var year = 2026; year >= 2023; year--) {
+      final count = year == 2026 ? 28 : 22;
+      for (var i = 0; i < count; i++) {
+        final isLeave = i % 2 == 0;
+        final approved = i % 5 != 0;
+        final month = 1 + ((i * 2) % 12);
+        final day = 1 + ((i * 3) % 27);
+        list.add(
+          PendingManagerRequest(
+            id: 'h${id++}',
+            employeeName: _names[(year + i) % _names.length],
+            employeeNumber: 'FZ-${10021 + ((year + i) % 40)}',
+            kind: isLeave
+                ? ManagerRequestKind.leave
+                : ManagerRequestKind.permission,
+            typeLabel: isLeave
+                ? _leaveTypes[i % _leaveTypes.length]
+                : _permissionTypes[i % _permissionTypes.length],
+            statusLabel: approved ? 'معتمد' : 'مرفوض',
+            submittedAt: DateTime(year, month, day, 9 + (i % 6), (i * 11) % 60),
+            notes: i % 3 == 0 ? 'تمت المعالجة ضمن الهيكل' : null,
+            decision:
+                approved ? ManagerDecision.approved : ManagerDecision.rejected,
+            rejectReason: approved ? null : 'نقص في المستندات',
+          ),
+        );
+      }
+    }
+    list.sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
+    return List<PendingManagerRequest>.unmodifiable(list);
   }
 }

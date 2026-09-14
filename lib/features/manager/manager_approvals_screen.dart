@@ -27,11 +27,14 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
   final _searchController = TextEditingController();
   final _dateFormat = DateFormat('yyyy/MM/dd — HH:mm', 'ar');
 
+  static const _listPageSize = 15;
+
   _InboxTab _tab = _InboxTab.all;
   _ViewMode _mode = _ViewMode.focus;
   int _focusIndex = 0;
   String _query = '';
   final Set<String> _selectedIds = {};
+  int _listVisibleCount = _listPageSize;
 
   @override
   void initState() {
@@ -46,6 +49,8 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
     _searchController.dispose();
     super.dispose();
   }
+
+  void _resetListPaging() => _listVisibleCount = _listPageSize;
 
   List<PendingManagerRequest> get _pendingFiltered {
     var list = _requests.where((r) => r.isPending).toList();
@@ -256,6 +261,7 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
               onChanged: (value) => setState(() {
                 _query = value;
                 _focusIndex = 0;
+                _resetListPaging();
               }),
               decoration: InputDecoration(
                 hintText: 'بحث بالاسم أو الرقم الوظيفي',
@@ -271,6 +277,7 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                           setState(() {
                             _query = '';
                             _focusIndex = 0;
+                            _resetListPaging();
                           });
                         },
                         icon: const Icon(Icons.close_rounded),
@@ -291,6 +298,7 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                     onTap: () => setState(() {
                       _tab = _InboxTab.all;
                       _focusIndex = 0;
+                      _resetListPaging();
                     }),
                   ),
                 ),
@@ -303,6 +311,7 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                     onTap: () => setState(() {
                       _tab = _InboxTab.permissions;
                       _focusIndex = 0;
+                      _resetListPaging();
                     }),
                   ),
                 ),
@@ -315,6 +324,7 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                     onTap: () => setState(() {
                       _tab = _InboxTab.leaves;
                       _focusIndex = 0;
+                      _resetListPaging();
                     }),
                   ),
                 ),
@@ -328,13 +338,19 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                 ChoiceChip(
                   label: const Text('طلب فردي'),
                   selected: _mode == _ViewMode.focus,
-                  onSelected: (_) => setState(() => _mode = _ViewMode.focus),
+                  onSelected: (_) => setState(() {
+                    _mode = _ViewMode.focus;
+                    _resetListPaging();
+                  }),
                 ),
                 const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('قائمة'),
                   selected: _mode == _ViewMode.list,
-                  onSelected: (_) => setState(() => _mode = _ViewMode.list),
+                  onSelected: (_) => setState(() {
+                    _mode = _ViewMode.list;
+                    _resetListPaging();
+                  }),
                 ),
                 const Spacer(),
                 if (_selectedIds.isNotEmpty)
@@ -369,33 +385,62 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                         onApprove: () => _approve(focusItem),
                         onReject: () => _reject(focusItem),
                       )
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                        itemCount: pending.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final request = pending[index];
-                          final selected = _selectedIds.contains(request.id);
-                          return _CompactRequestTile(
-                            request: request,
-                            dateLabel:
-                                _dateFormat.format(request.submittedAt),
-                            selected: selected,
-                            onToggleSelect: () {
-                              setState(() {
-                                if (selected) {
-                                  _selectedIds.remove(request.id);
-                                } else {
-                                  _selectedIds.add(request.id);
-                                }
-                              });
+                    : Builder(
+                        builder: (context) {
+                          final visible = pending.take(_listVisibleCount).toList();
+                          final hasMore = _listVisibleCount < pending.length;
+                          return ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                            itemCount: visible.length + (hasMore ? 1 : 0),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              if (hasMore && index == visible.length) {
+                                return OutlinedButton.icon(
+                                  onPressed: () => setState(() {
+                                    _listVisibleCount = (_listVisibleCount +
+                                            _listPageSize)
+                                        .clamp(0, pending.length);
+                                  }),
+                                  icon: const Icon(Icons.expand_more_rounded),
+                                  label: Text(
+                                    'عرض المزيد (${pending.length - visible.length})',
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(48),
+                                    foregroundColor: AppColors.goldDeep,
+                                    side: const BorderSide(
+                                      color: AppColors.gold,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final request = visible[index];
+                              final selected =
+                                  _selectedIds.contains(request.id);
+                              return _CompactRequestTile(
+                                request: request,
+                                dateLabel: _dateFormat
+                                    .format(request.submittedAt),
+                                selected: selected,
+                                onToggleSelect: () {
+                                  setState(() {
+                                    if (selected) {
+                                      _selectedIds.remove(request.id);
+                                    } else {
+                                      _selectedIds.add(request.id);
+                                    }
+                                  });
+                                },
+                                onApprove: () => _approve(request),
+                                onReject: () => _reject(request),
+                                onOpenFocus: () => setState(() {
+                                  _mode = _ViewMode.focus;
+                                  _focusIndex = pending.indexOf(request);
+                                }),
+                              );
                             },
-                            onApprove: () => _approve(request),
-                            onReject: () => _reject(request),
-                            onOpenFocus: () => setState(() {
-                              _mode = _ViewMode.focus;
-                              _focusIndex = index;
-                            }),
                           );
                         },
                       ),

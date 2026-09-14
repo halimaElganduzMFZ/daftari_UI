@@ -8,7 +8,7 @@ import '../../core/widgets/status_pill.dart';
 import '../../data/models/employee_dashboard.dart';
 import '../../data/static/static_employee_dashboard.dart';
 
-/// تبويب «طلباتي» — طلبات إجازة وأذونات للموظف الحالي.
+/// تبويب «طلباتي» — فلاتر سنة/نوع/حالة + عرض المزيد.
 class LeavesScreen extends StatefulWidget {
   const LeavesScreen({super.key});
 
@@ -16,10 +16,32 @@ class LeavesScreen extends StatefulWidget {
   State<LeavesScreen> createState() => _LeavesScreenState();
 }
 
-enum _RequestFilter { all, leaves, permissions }
+enum _TypeFilter { all, leaves, permissions }
+
+enum _StatusFilter { all, pending, approved, rejected }
 
 class _LeavesScreenState extends State<LeavesScreen> {
-  _RequestFilter _filter = _RequestFilter.all;
+  static const _pageSize = 8;
+
+  _TypeFilter _typeFilter = _TypeFilter.all;
+  _StatusFilter _statusFilter = _StatusFilter.all;
+  late int _year;
+  int _visibleCount = _pageSize;
+
+  @override
+  void initState() {
+    super.initState();
+    final years = _availableYears;
+    _year = years.isEmpty ? DateTime.now().year : years.first;
+  }
+
+  List<int> get _availableYears {
+    final years = {
+      for (final r in StaticEmployeeDashboard.data.requests) r.requestedAt.year,
+    }.toList()
+      ..sort((a, b) => b.compareTo(a));
+    return years;
+  }
 
   static bool _isLeave(RequestKind kind) => switch (kind) {
         RequestKind.annualLeave || RequestKind.emergencyLeave => true,
@@ -29,20 +51,36 @@ class _LeavesScreenState extends State<LeavesScreen> {
           false,
       };
 
+  List<EmployeeRequest> get _filtered {
+    return [
+      for (final r in StaticEmployeeDashboard.data.requests)
+        if (r.requestedAt.year == _year)
+          if (_typeFilter == _TypeFilter.all ||
+              (_typeFilter == _TypeFilter.leaves && _isLeave(r.kind)) ||
+              (_typeFilter == _TypeFilter.permissions && !_isLeave(r.kind)))
+            if (_statusFilter == _StatusFilter.all ||
+                (_statusFilter == _StatusFilter.pending &&
+                    r.status == RequestStatus.pending) ||
+                (_statusFilter == _StatusFilter.approved &&
+                    r.status == RequestStatus.approved) ||
+                (_statusFilter == _StatusFilter.rejected &&
+                    r.status == RequestStatus.rejected))
+              r,
+    ];
+  }
+
+  void _resetPaging() => _visibleCount = _pageSize;
+
   @override
   Widget build(BuildContext context) {
     final data = StaticEmployeeDashboard.data;
-    final filtered = [
-      for (final r in data.requests)
-        if (_filter == _RequestFilter.all ||
-            (_filter == _RequestFilter.leaves && _isLeave(r.kind)) ||
-            (_filter == _RequestFilter.permissions && !_isLeave(r.kind)))
-          r,
-    ];
+    final filtered = _filtered;
+    final visible = filtered.take(_visibleCount).toList();
+    final hasMore = _visibleCount < filtered.length;
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
         children: [
           const Text(
             'طلباتي',
@@ -54,7 +92,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'متابعة طلبات الإجازة والأذونات وحالاتها',
+            'تصفّح سجلك بالسنة والنوع — بدون صفحات مرقّمة',
             style: TextStyle(color: AppColors.slate),
           ),
           const SizedBox(height: 14),
@@ -86,29 +124,114 @@ class _LeavesScreenState extends State<LeavesScreen> {
             ],
           ),
           const SizedBox(height: 14),
+          const Text(
+            'السنة',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: AppColors.charcoal,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (final year in _availableYears) ...[
+                  _FilterChip(
+                    label: '$year',
+                    selected: _year == year,
+                    onTap: () => setState(() {
+                      _year = year;
+                      _resetPaging();
+                    }),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
               _FilterChip(
                 label: 'الكل',
-                selected: _filter == _RequestFilter.all,
-                onTap: () => setState(() => _filter = _RequestFilter.all),
+                selected: _typeFilter == _TypeFilter.all,
+                onTap: () => setState(() {
+                  _typeFilter = _TypeFilter.all;
+                  _resetPaging();
+                }),
               ),
               _FilterChip(
                 label: 'إجازات',
-                selected: _filter == _RequestFilter.leaves,
-                onTap: () => setState(() => _filter = _RequestFilter.leaves),
+                selected: _typeFilter == _TypeFilter.leaves,
+                onTap: () => setState(() {
+                  _typeFilter = _TypeFilter.leaves;
+                  _resetPaging();
+                }),
               ),
               _FilterChip(
                 label: 'أذونات',
-                selected: _filter == _RequestFilter.permissions,
-                onTap: () =>
-                    setState(() => _filter = _RequestFilter.permissions),
+                selected: _typeFilter == _TypeFilter.permissions,
+                onTap: () => setState(() {
+                  _typeFilter = _TypeFilter.permissions;
+                  _resetPaging();
+                }),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _FilterChip(
+                label: 'كل الحالات',
+                selected: _statusFilter == _StatusFilter.all,
+                onTap: () => setState(() {
+                  _statusFilter = _StatusFilter.all;
+                  _resetPaging();
+                }),
+              ),
+              _FilterChip(
+                label: 'معلّقة',
+                selected: _statusFilter == _StatusFilter.pending,
+                onTap: () => setState(() {
+                  _statusFilter = _StatusFilter.pending;
+                  _resetPaging();
+                }),
+              ),
+              _FilterChip(
+                label: 'مقبولة',
+                selected: _statusFilter == _StatusFilter.approved,
+                onTap: () => setState(() {
+                  _statusFilter = _StatusFilter.approved;
+                  _resetPaging();
+                }),
+              ),
+              _FilterChip(
+                label: 'مرفوضة',
+                selected: _statusFilter == _StatusFilter.rejected,
+                onTap: () => setState(() {
+                  _statusFilter = _StatusFilter.rejected;
+                  _resetPaging();
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            filtered.isEmpty
+                ? 'لا نتائج لهذا الفلتر'
+                : 'عرض ${visible.length} من ${filtered.length} طلب',
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: AppColors.slate,
+            ),
+          ),
+          const SizedBox(height: 10),
           if (filtered.isEmpty)
             const AppSurface(
               child: Padding(
@@ -130,7 +253,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'قدّم طلباً جديداً من تبويب تقديم أو الرئيسية',
+                      'جرّب سنة أو تصنيفاً آخر',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.slate, fontSize: 13),
                     ),
@@ -138,9 +261,9 @@ class _LeavesScreenState extends State<LeavesScreen> {
                 ),
               ),
             )
-          else
-            ...filtered.map((request) {
-              return Padding(
+          else ...[
+            for (final request in visible)
+              Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: AppSurface(
                   child: Column(
@@ -213,8 +336,24 @@ class _LeavesScreenState extends State<LeavesScreen> {
                     ],
                   ),
                 ),
-              );
-            }),
+              ),
+            if (hasMore)
+              OutlinedButton.icon(
+                onPressed: () => setState(() {
+                  _visibleCount =
+                      (_visibleCount + _pageSize).clamp(0, filtered.length);
+                }),
+                icon: const Icon(Icons.expand_more_rounded),
+                label: Text(
+                  'عرض المزيد (${filtered.length - visible.length})',
+                ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: AppColors.goldDeep,
+                  side: const BorderSide(color: AppColors.gold),
+                ),
+              ),
+          ],
         ],
       ),
     );
