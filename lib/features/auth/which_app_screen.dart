@@ -7,7 +7,8 @@ import '../../data/session/app_session.dart';
 import '../shell/main_shell.dart';
 import '../shell/manager_shell.dart';
 
-/// مقابلة whichApp.php — اختيار الدخول كموظف أو مسؤول هيكل.
+/// مقابلة whichApp.php — اختيار الوحدة/الإدارة للمسؤول.
+/// الموظفون العاديون لا يمرّون من هنا (يدخلون مباشرة من تسجيل الدخول).
 class WhichAppScreen extends StatelessWidget {
   const WhichAppScreen({super.key});
 
@@ -25,6 +26,17 @@ class WhichAppScreen extends StatelessWidget {
     );
   }
 
+  IconData _iconForType(String typeLabel) {
+    switch (typeLabel) {
+      case 'إدارة':
+        return Icons.apartment_rounded;
+      case 'قسم':
+        return Icons.account_tree_outlined;
+      default:
+        return Icons.business_outlined;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final account = AppSession.demoAccount;
@@ -32,138 +44,213 @@ class WhichAppScreen extends StatelessWidget {
     final name = employee?.fullName ?? 'موظف';
     final structures = account?.managedStructures ?? const <ManagedStructure>[];
 
+    // لو فُتحت الشاشة بدون هياكل — ادخل كموظف مباشرة.
+    if (structures.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) _enterEmployee(context);
+      });
+    }
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
             colors: [
-              Color(0xFFEDEDEB),
+              Color(0xFFEAE8E3),
               AppColors.background,
-              Color(0xFFE8E6E1),
+              Color(0xFFE4E2DC),
             ],
           ),
         ),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 440),
+                constraints: const BoxConstraints(maxWidth: 460),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       AppStrings.orgName,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.3,
+                        color: AppColors.slate.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: AppColors.goldSoft,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: AppColors.line),
+                      ),
+                      child: const Icon(
+                        Icons.account_balance_outlined,
+                        color: AppColors.goldDeep,
+                        size: 30,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'اختر الوحدة أو الإدارة',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
                         fontWeight: FontWeight.w800,
                         color: AppColors.charcoal,
+                        height: 1.25,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      AppStrings.whichAppTitle,
+                    Text(
+                      'مرحباً $name — حدّد الهيكل الذي تديره للمتابعة',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.goldDeep,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.45,
+                        color: AppColors.slate,
                       ),
                     ),
                     const SizedBox(height: 28),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: AppColors.line),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x14000000),
-                            blurRadius: 24,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
+                    ...structures.map(
+                      (structure) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _StructureCard(
+                          name: structure.name,
+                          typeLabel: structure.typeLabel,
+                          icon: _iconForType(structure.typeLabel),
+                          onTap: () => _enterManager(context, structure),
+                        ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Text(
-                            'مرحباً عزيزي الموظف',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.charcoal,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            name,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.goldDeep,
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-                          SizedBox(
-                            height: 52,
-                            child: FilledButton(
-                              onPressed: () => _enterEmployee(context),
-                              child: const Text(AppStrings.enterAsEmployee),
-                            ),
-                          ),
-                          if (structures.isNotEmpty) ...[
-                            const SizedBox(height: 28),
-                            const Text(
-                              AppStrings.enterAsManagerOf,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.charcoal,
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            ...structures.map(
-                              (structure) => Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
-                                child: SizedBox(
-                                  height: 52,
-                                  child: OutlinedButton(
-                                    onPressed: () =>
-                                        _enterManager(context, structure),
-                                    style: OutlinedButton.styleFrom(
-                                      side: const BorderSide(
-                                        color: AppColors.gold,
-                                        width: 1.4,
-                                      ),
-                                      foregroundColor: AppColors.charcoal,
-                                    ),
-                                    child: Text(
-                                      structure.name,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      onPressed: () => _enterEmployee(context),
+                      icon: const Icon(Icons.badge_outlined, size: 18),
+                      label: const Text('المتابعة كموظف'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.slate,
                       ),
                     ),
                   ],
                 ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StructureCard extends StatefulWidget {
+  const _StructureCard({
+    required this.name,
+    required this.typeLabel,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String name;
+  final String typeLabel;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  State<_StructureCard> createState() => _StructureCardState();
+}
+
+class _StructureCardState extends State<_StructureCard> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _pressed ? 0.985 : 1,
+      duration: const Duration(milliseconds: 120),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: widget.onTap,
+          onHighlightChanged: (v) => setState(() => _pressed = v),
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.line),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x10000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 14, 16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.goldSoft,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(widget.icon, color: AppColors.goldDeep),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.line),
+                          ),
+                          child: Text(
+                            widget.typeLabel,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.goldDeep,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.charcoal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 16,
+                    color: AppColors.slate,
+                  ),
+                ],
               ),
             ),
           ),

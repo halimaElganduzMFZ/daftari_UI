@@ -38,7 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _switchRole() {
-    if (AppSession.demoAccount == null) return;
+    if (AppSession.demoAccount?.canManageStructures != true) return;
     AppSession.activeRole = null;
     AppSession.activeStructure = null;
     Navigator.of(context).pushAndRemoveUntil(
@@ -135,11 +135,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          if (AppSession.demoAccount != null) ...[
+          if (AppSession.demoAccount?.canManageStructures == true) ...[
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: _switchRole,
-              child: const Text('تغيير نوع الدخول'),
+              child: const Text('تغيير الوحدة / الإدارة'),
             ),
           ],
           const SizedBox(height: 12),

@@ -66,6 +66,16 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     AppSession.applyDemoLogin(account);
+
+    // الموظف العادي يدخل مباشرة — صفحة اختيار الهيكل للمسؤول فقط.
+    if (!account.canManageStructures) {
+      AppSession.enterAsEmployee();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      );
+      return;
+    }
+
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(builder: (_) => const WhichAppScreen()),
     );
