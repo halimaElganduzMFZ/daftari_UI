@@ -104,7 +104,7 @@ abstract final class StaticPermissionTypes {
     PermissionType(
       id: '5',
       title: 'مهمة عمل خروج',
-      icon: FontAwesomeIcons.planeDeparture,
+      icon: FontAwesomeIcons.rightFromBracket,
       points: [
         RegulationPoint(
           article: 'م51',
