@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/attachment_viewer.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_manager_approvals.dart';
@@ -346,6 +347,15 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
                             color: AppColors.danger,
                             fontWeight: FontWeight.w600,
                           ),
+                        ),
+                      ],
+                      if (request.attachment != null) ...[
+                        const SizedBox(height: 10),
+                        AttachmentChip(
+                          attachment: request.attachment!,
+                          dense: true,
+                          viewerSubtitle:
+                              '${request.employeeName} · ${request.typeLabel}',
                         ),
                       ],
                     ],

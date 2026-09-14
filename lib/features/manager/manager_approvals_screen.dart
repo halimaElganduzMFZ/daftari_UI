@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/attachment_viewer.dart';
 import '../../data/static/static_awol.dart';
 import '../../data/static/static_manager_approvals.dart';
 import 'manager_absentees_screen.dart';
@@ -714,6 +715,14 @@ class _FocusInbox extends StatelessWidget {
                       ),
                     ),
                   ],
+                  if (request.attachment != null) ...[
+                    const SizedBox(height: 14),
+                    AttachmentChip(
+                      attachment: request.attachment!,
+                      viewerSubtitle:
+                          '${request.employeeName} · ${request.typeLabel}',
+                    ),
+                  ],
                   const Spacer(),
                   Row(
                     children: [
@@ -814,6 +823,15 @@ class _CompactRequestTile extends StatelessWidget {
                       fontSize: 11,
                     ),
                   ),
+                  if (request.attachment != null) ...[
+                    const SizedBox(height: 8),
+                    AttachmentChip(
+                      attachment: request.attachment!,
+                      dense: true,
+                      viewerSubtitle:
+                          '${request.employeeName} · ${request.typeLabel}',
+                    ),
+                  ],
                 ],
               ),
             ),

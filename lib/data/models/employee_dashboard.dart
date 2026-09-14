@@ -1,8 +1,11 @@
+import 'request_attachment.dart';
+
 enum RequestKind {
   delayPermission,
   earlyLeavePermission,
   emergencyLeave,
   annualLeave,
+  studyLeave,
   other,
 }
 
@@ -15,6 +18,7 @@ class EmployeeRequest {
     required this.status,
     required this.requestedAt,
     required this.note,
+    this.attachment,
   });
 
   final String id;
@@ -22,6 +26,7 @@ class EmployeeRequest {
   final RequestStatus status;
   final DateTime requestedAt;
   final String note;
+  final RequestAttachment? attachment;
 }
 
 class EmployeeDashboardData {

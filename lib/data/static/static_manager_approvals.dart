@@ -1,3 +1,5 @@
+import '../models/request_attachment.dart';
+
 /// حالة إجراء المدير على الطلب.
 enum ManagerDecision { pending, approved, rejected }
 
@@ -17,6 +19,7 @@ class PendingManagerRequest {
     this.notes,
     this.decision = ManagerDecision.pending,
     this.rejectReason,
+    this.attachment,
   });
 
   final String id;
@@ -29,6 +32,7 @@ class PendingManagerRequest {
   final String? notes;
   ManagerDecision decision;
   String? rejectReason;
+  final RequestAttachment? attachment;
 
   bool get isPending => decision == ManagerDecision.pending;
 }
@@ -84,6 +88,10 @@ abstract final class StaticManagerApprovals {
       final isLeave = i % 3 == 0;
       final name = _names[i % _names.length];
       final day = 12 - (i ~/ 6);
+      final typeLabel = isLeave
+          ? _leaveTypes[i % _leaveTypes.length]
+          : _permissionTypes[i % _permissionTypes.length];
+      final isStudy = typeLabel == 'إجازة دراسية';
       list.add(
         PendingManagerRequest(
           id: 'r$i',
@@ -92,13 +100,19 @@ abstract final class StaticManagerApprovals {
           kind: isLeave
               ? ManagerRequestKind.leave
               : ManagerRequestKind.permission,
-          typeLabel: isLeave
-              ? _leaveTypes[i % _leaveTypes.length]
-              : _permissionTypes[i % _permissionTypes.length],
+          typeLabel: typeLabel,
           statusLabel: 'طلب من الموظف',
           submittedAt:
               DateTime(2026, 9, day.clamp(1, 12), 8 + (i % 8), (i * 7) % 60),
-          notes: i % 4 == 0 ? 'ملاحظة مختصرة من الموظف' : null,
+          notes: isStudy
+              ? 'مرفق قبول دراسي من الجهة التعليمية'
+              : (i % 4 == 0 ? 'ملاحظة مختصرة من الموظف' : null),
+          attachment: isStudy
+              ? RequestAttachment.demoStudy(
+                  fileName: 'قبول_دراسي_${name.split(' ').first}.pdf',
+                  sizeBytes: 620000 + (i * 17000),
+                )
+              : null,
         ),
       );
     }
@@ -115,6 +129,10 @@ abstract final class StaticManagerApprovals {
         final approved = i % 5 != 0;
         final month = 1 + ((i * 2) % 12);
         final day = 1 + ((i * 3) % 27);
+        final typeLabel = isLeave
+            ? _leaveTypes[i % _leaveTypes.length]
+            : _permissionTypes[i % _permissionTypes.length];
+        final isStudy = typeLabel == 'إجازة دراسية';
         list.add(
           PendingManagerRequest(
             id: 'h${id++}',
@@ -123,15 +141,21 @@ abstract final class StaticManagerApprovals {
             kind: isLeave
                 ? ManagerRequestKind.leave
                 : ManagerRequestKind.permission,
-            typeLabel: isLeave
-                ? _leaveTypes[i % _leaveTypes.length]
-                : _permissionTypes[i % _permissionTypes.length],
+            typeLabel: typeLabel,
             statusLabel: approved ? 'معتمد' : 'مرفوض',
             submittedAt: DateTime(year, month, day, 9 + (i % 6), (i * 11) % 60),
-            notes: i % 3 == 0 ? 'تمت المعالجة ضمن الهيكل' : null,
+            notes: isStudy
+                ? 'مستند الإجازة الدراسية مرفق للمراجعة'
+                : (i % 3 == 0 ? 'تمت المعالجة ضمن الهيكل' : null),
             decision:
                 approved ? ManagerDecision.approved : ManagerDecision.rejected,
             rejectReason: approved ? null : 'نقص في المستندات',
+            attachment: isStudy
+                ? RequestAttachment.demoStudy(
+                    fileName: 'مستند_دراسي_$year.pdf',
+                    sizeBytes: 540000 + (i * 12000),
+                  )
+                : null,
           ),
         );
       }

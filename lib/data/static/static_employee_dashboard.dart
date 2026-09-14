@@ -1,4 +1,5 @@
 import '../models/employee_dashboard.dart';
+import '../models/request_attachment.dart';
 
 /// بيانات ثابتة لشاشة الموظف العادي — سجل طلبات لعدة سنوات لاختبار التصفح.
 abstract final class StaticEmployeeDashboard {
@@ -29,6 +30,7 @@ abstract final class StaticEmployeeDashboard {
       RequestKind.emergencyLeave,
       RequestKind.delayPermission,
       RequestKind.earlyLeavePermission,
+      RequestKind.studyLeave,
       RequestKind.other,
     ];
     const statuses = [
@@ -42,8 +44,18 @@ abstract final class StaticEmployeeDashboard {
     final list = <EmployeeRequest>[];
     var id = 1;
 
-    // طلبات حديثة معلّقة تظهر أولاً.
     list.addAll([
+      EmployeeRequest(
+        id: 'r${id++}',
+        kind: RequestKind.studyLeave,
+        status: RequestStatus.pending,
+        requestedAt: DateTime(2026, 9, 11),
+        note: 'إجازة دراسية — فصل الخريف مع مرفق القبول',
+        attachment: RequestAttachment.demoStudy(
+          fileName: 'قبول_جامعي_خريف_2026.pdf',
+          sizeBytes: 918000,
+        ),
+      ),
       EmployeeRequest(
         id: 'r${id++}',
         kind: RequestKind.emergencyLeave,
@@ -58,23 +70,42 @@ abstract final class StaticEmployeeDashboard {
         requestedAt: DateTime(2026, 9, 8),
         note: 'مراجعة طبية صباحية',
       ),
+      EmployeeRequest(
+        id: 'r${id++}',
+        kind: RequestKind.studyLeave,
+        status: RequestStatus.approved,
+        requestedAt: DateTime(2025, 2, 14),
+        note: 'إجازة دراسية معتمدة — مرفق خطاب القبول',
+        attachment: RequestAttachment.demoStudy(
+          fileName: 'خطاب_قبول_2025.pdf',
+          sizeBytes: 704000,
+        ),
+      ),
     ]);
 
-    // سجل عبر 2023–2026 لإحساس «سنوات من الطلبات».
     for (var year = 2026; year >= 2023; year--) {
       final count = year == 2026 ? 14 : 12;
       for (var i = 0; i < count; i++) {
         final month = 1 + ((i * 3) % 12);
         final day = 2 + ((i * 2) % 26);
+        final kind = kinds[(year + i) % kinds.length];
         list.add(
           EmployeeRequest(
             id: 'r${id++}',
-            kind: kinds[(year + i) % kinds.length],
+            kind: kind,
             status: year == 2026 && i < 2
                 ? RequestStatus.pending
                 : statuses[(year + i) % statuses.length],
             requestedAt: DateTime(year, month, day),
-            note: '${notes[(year + i) % notes.length]} — $year',
+            note: kind == RequestKind.studyLeave
+                ? 'إجازة دراسية — $year'
+                : '${notes[(year + i) % notes.length]} — $year',
+            attachment: kind == RequestKind.studyLeave
+                ? RequestAttachment.demoStudy(
+                    fileName: 'مرفق_دراسي_$year.pdf',
+                    sizeBytes: 480000 + (i * 15000),
+                  )
+                : null,
           ),
         );
       }

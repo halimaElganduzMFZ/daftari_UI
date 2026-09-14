@@ -6,8 +6,10 @@ import 'package:intl/intl.dart';
 import '../../core/services/document_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/attachment_viewer.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/leave_kind.dart';
+import '../../data/models/request_attachment.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_employee_dashboard.dart';
 import '../../data/static/static_leave_kinds.dart';
@@ -35,8 +37,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
   bool _acceptedRules = false;
   bool _rulesExpanded = false;
   bool _submitting = false;
-  String? _attachmentName;
-  int? _attachmentSize;
+  RequestAttachment? _attachment;
   bool _fileAccessHintShown = false;
   bool _pickingAttachment = false;
 
@@ -71,8 +72,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       _selected = picked;
       _acceptedRules = false;
       _rulesExpanded = true;
-      _attachmentName = null;
-      _attachmentSize = null;
+      _attachment = null;
       _emergencyController.clear();
       _locationController.clear();
       if (_startDate != null && picked.fixedDays != null) {
@@ -169,8 +169,14 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
         return;
       }
       setState(() {
-        _attachmentName = picked.name;
-        _attachmentSize = picked.size;
+        _attachment = RequestAttachment(
+          fileName: picked.name,
+          fileSizeBytes: picked.size,
+          extension: picked.extension,
+          bytes: picked.bytes,
+          title: 'مستند الإجازة الدراسية',
+          uploadedAt: DateTime.now(),
+        );
       });
       _toast('تم إرفاق: ${picked.name}');
     } catch (e) {
@@ -200,7 +206,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       _toast('فضلاً اكتب سبب الإجازة الطارئة');
       return;
     }
-    if (_selected!.needsStudyAttachment && _attachmentName == null) {
+    if (_selected!.needsStudyAttachment && _attachment == null) {
       _toast('فضلاً أرفق المستند المطلوب');
       return;
     }
@@ -255,8 +261,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                     _noteController.clear();
                     _locationController.clear();
                     _emergencyController.clear();
-                    _attachmentName = null;
-                    _attachmentSize = null;
+                    _attachment = null;
                   });
                 }
               },
@@ -436,14 +441,18 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
             _AttachmentHint(),
             const SizedBox(height: 8),
             _AttachmentTile(
-              fileName: _attachmentName,
-              fileSize: _attachmentSize,
+              fileName: _attachment?.fileName,
+              fileSize: _attachment?.fileSizeBytes,
               picking: _pickingAttachment,
               onPick: _pickingAttachment ? null : _pickAttachment,
-              onClear: () => setState(() {
-                _attachmentName = null;
-                _attachmentSize = null;
-              }),
+              onOpen: _attachment == null
+                  ? null
+                  : () => AttachmentViewer.show(
+                        context,
+                        attachment: _attachment!,
+                        subtitle: _selected?.title,
+                      ),
+              onClear: () => setState(() => _attachment = null),
             ),
           ],
           const SizedBox(height: 10),
@@ -875,6 +884,7 @@ class _AttachmentTile extends StatelessWidget {
     required this.fileName,
     required this.onPick,
     required this.onClear,
+    this.onOpen,
     this.fileSize,
     this.picking = false,
   });
@@ -883,6 +893,7 @@ class _AttachmentTile extends StatelessWidget {
   final int? fileSize;
   final bool picking;
   final VoidCallback? onPick;
+  final VoidCallback? onOpen;
   final VoidCallback onClear;
 
   String get _sizeLabel {
@@ -896,7 +907,7 @@ class _AttachmentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final has = fileName != null;
     return AppSurface(
-      onTap: picking ? null : onPick,
+      onTap: picking ? null : (has ? onOpen : onPick),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
@@ -908,9 +919,9 @@ class _AttachmentTile extends StatelessWidget {
             )
           else
             FaIcon(
-              has ? FontAwesomeIcons.fileLines : FontAwesomeIcons.folderOpen,
+              has ? FontAwesomeIcons.filePdf : FontAwesomeIcons.folderOpen,
               size: 17,
-              color: has ? AppColors.success : AppColors.goldDeep,
+              color: has ? const Color(0xFF9B3B3B) : AppColors.goldDeep,
             ),
           const SizedBox(width: 12),
           Expanded(
@@ -931,11 +942,11 @@ class _AttachmentTile extends StatelessWidget {
                 ),
                 if (has)
                   Text(
-                    'تم الاختيار$_sizeLabel',
+                    'اضغط للمعاينة الاحترافية$_sizeLabel',
                     style: const TextStyle(
                       fontSize: 11.5,
-                      color: AppColors.success,
-                      fontWeight: FontWeight.w600,
+                      color: AppColors.goldDeep,
+                      fontWeight: FontWeight.w700,
                     ),
                   )
                 else if (!picking)
@@ -949,7 +960,23 @@ class _AttachmentTile extends StatelessWidget {
               ],
             ),
           ),
-          if (has)
+          if (has) ...[
+            IconButton(
+              onPressed: onOpen,
+              tooltip: 'فتح المرفق',
+              icon: const Icon(
+                Icons.visibility_rounded,
+                color: AppColors.goldDeep,
+              ),
+            ),
+            IconButton(
+              onPressed: onPick,
+              tooltip: 'تغيير الملف',
+              icon: const Icon(
+                Icons.swap_horiz_rounded,
+                color: AppColors.slate,
+              ),
+            ),
             IconButton(
               onPressed: onClear,
               tooltip: 'إزالة المرفق',
@@ -959,6 +986,7 @@ class _AttachmentTile extends StatelessWidget {
                 color: AppColors.danger,
               ),
             ),
+          ],
         ],
       ),
     );

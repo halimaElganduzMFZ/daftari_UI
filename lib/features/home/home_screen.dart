@@ -634,6 +634,7 @@ class _RequestTile extends StatelessWidget {
         RequestKind.earlyLeavePermission => FontAwesomeIcons.doorOpen,
         RequestKind.emergencyLeave => FontAwesomeIcons.triangleExclamation,
         RequestKind.annualLeave => FontAwesomeIcons.calendarCheck,
+        RequestKind.studyLeave => FontAwesomeIcons.graduationCap,
         RequestKind.other => FontAwesomeIcons.fileLines,
       };
 
@@ -642,6 +643,7 @@ class _RequestTile extends StatelessWidget {
         RequestKind.earlyLeavePermission => 'إذن خروج مبكر',
         RequestKind.emergencyLeave => 'إجازة طارئة',
         RequestKind.annualLeave => 'إجازة سنوية',
+        RequestKind.studyLeave => 'إجازة دراسية',
         RequestKind.other => 'طلب آخر',
       };
 

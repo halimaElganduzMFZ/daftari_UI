@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/attachment_viewer.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../data/models/employee_dashboard.dart';
 import '../../data/static/static_employee_dashboard.dart';
@@ -44,7 +45,10 @@ class _LeavesScreenState extends State<LeavesScreen> {
   }
 
   static bool _isLeave(RequestKind kind) => switch (kind) {
-        RequestKind.annualLeave || RequestKind.emergencyLeave => true,
+        RequestKind.annualLeave ||
+        RequestKind.emergencyLeave ||
+        RequestKind.studyLeave =>
+          true,
         RequestKind.delayPermission ||
         RequestKind.earlyLeavePermission ||
         RequestKind.other =>
@@ -333,6 +337,14 @@ class _LeavesScreenState extends State<LeavesScreen> {
                           color: AppColors.goldDeep,
                         ),
                       ),
+                      if (request.attachment != null) ...[
+                        const SizedBox(height: 10),
+                        AttachmentChip(
+                          attachment: request.attachment!,
+                          dense: true,
+                          viewerSubtitle: _kindLabel(request.kind),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -364,6 +376,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
         RequestKind.earlyLeavePermission => FontAwesomeIcons.doorOpen,
         RequestKind.emergencyLeave => FontAwesomeIcons.triangleExclamation,
         RequestKind.annualLeave => FontAwesomeIcons.calendarCheck,
+        RequestKind.studyLeave => FontAwesomeIcons.graduationCap,
         RequestKind.other => FontAwesomeIcons.fileLines,
       };
 
@@ -372,6 +385,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
         RequestKind.earlyLeavePermission => 'إذن خروج مبكر',
         RequestKind.emergencyLeave => 'إجازة طارئة',
         RequestKind.annualLeave => 'إجازة سنوية',
+        RequestKind.studyLeave => 'إجازة دراسية',
         RequestKind.other => 'طلب آخر',
       };
 
