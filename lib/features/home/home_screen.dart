@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/attachment_viewer.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../data/models/employee_dashboard.dart';
@@ -575,55 +576,69 @@ class _RequestTile extends StatelessWidget {
         '${request.requestedAt.year}/${request.requestedAt.month.toString().padLeft(2, '0')}/${request.requestedAt.day.toString().padLeft(2, '0')}';
 
     return AppSurface(
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.goldSoft,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            alignment: Alignment.center,
-            child: FaIcon(
-              _kindIcon(request.kind),
-              color: AppColors.goldDeep,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _kindLabel(request.kind),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.goldSoft,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  request.note,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.slate, fontSize: 13),
+                alignment: Alignment.center,
+                child: FaIcon(
+                  _kindIcon(request.kind),
+                  color: AppColors.goldDeep,
+                  size: 18,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  date,
-                  style: const TextStyle(
-                    color: AppColors.slate,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _kindLabel(request.kind),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      request.note,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: AppColors.slate, fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      date,
+                      style: const TextStyle(
+                        color: AppColors.slate,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
+              const SizedBox(width: 8),
+              StatusPill(
+                label: _statusLabel(request.status),
+                tone: _statusTone(request.status),
+              ),
+            ],
+          ),
+          if (request.attachment != null) ...[
+            const SizedBox(height: 10),
+            AttachmentChip(
+              attachment: request.attachment!,
+              dense: true,
+              viewerSubtitle:
+                  '${_kindLabel(request.kind)} · ${_statusLabel(request.status)}',
             ),
-          ),
-          const SizedBox(width: 8),
-          StatusPill(
-            label: _statusLabel(request.status),
-            tone: _statusTone(request.status),
-          ),
+          ],
         ],
       ),
     );

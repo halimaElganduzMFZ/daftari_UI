@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
 import '../../data/models/request_attachment.dart';
+import 'pdf_frame.dart';
 
 /// شريحة مرفق قابلة للضغط — تظهر في بطاقة الطلب.
 class AttachmentChip extends StatelessWidget {
@@ -461,7 +462,22 @@ class _StudioPreview extends StatelessWidget {
                     painter: _PaperGrainPainter(color: style.soft),
                   ),
                 ),
-                if (attachment.kind == AttachmentKind.pdf)
+                if (attachment.kind == AttachmentKind.pdf &&
+                    attachment.hasPreviewBytes)
+                  Positioned.fill(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: buildPdfFrame(
+                          bytes: attachment.bytes!,
+                          viewType:
+                              'pdf-studio-${attachment.fileName}-${attachment.bytes!.length}',
+                        ),
+                      ),
+                    ),
+                  )
+                else if (attachment.kind == AttachmentKind.pdf)
                   const _PdfPagesMock()
                 else if (attachment.kind == AttachmentKind.image)
                   _ImageMock(attachment: attachment, style: style)
@@ -507,7 +523,7 @@ class _StudioPreview extends StatelessWidget {
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'بعد ربط الخادم ستُفتح النسخة الأصلية مباشرة من المرفقات المحفوظة.',
+                  'بعد ربط الخادم يُجلب الملف من التخزين (مرفق/URL) أو يُفك Base64 عند الحاجة للمعاينة.',
                   style: TextStyle(
                     color: AppColors.goldDeep,
                     fontWeight: FontWeight.w600,
@@ -552,13 +568,23 @@ class _ImmersivePreview extends StatelessWidget {
                       fit: BoxFit.contain,
                     ),
                   )
-                : attachment.kind == AttachmentKind.pdf
-                    ? const _PdfPagesMock(dark: true)
-                    : _GenericDocMock(
-                        style: style,
-                        attachment: attachment,
-                        dark: true,
-                      ),
+                : attachment.kind == AttachmentKind.pdf &&
+                        attachment.hasPreviewBytes
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: buildPdfFrame(
+                          bytes: attachment.bytes!,
+                          viewType:
+                              'pdf-immersive-${attachment.fileName}-${attachment.bytes!.length}',
+                        ),
+                      )
+                    : attachment.kind == AttachmentKind.pdf
+                        ? const _PdfPagesMock(dark: true)
+                        : _GenericDocMock(
+                            style: style,
+                            attachment: attachment,
+                            dark: true,
+                          ),
           ),
         ),
       ),

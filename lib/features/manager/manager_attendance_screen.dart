@@ -17,6 +17,8 @@ class ManagerAttendanceScreen extends StatefulWidget {
 }
 
 class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
+  static const _pageSize = 12;
+
   final _searchController = TextEditingController();
   final _dateFormat = DateFormat('yyyy/MM/dd', 'ar');
 
@@ -27,6 +29,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
   bool _loading = false;
   String? _error;
   String _query = '';
+  int _visibleCount = _pageSize;
 
   List<Employee> get _matches =>
       StaticManagerAttendance.searchEmployees(_query);
@@ -82,6 +85,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
       _query = employee.employeeNumber;
       _error = null;
       _results = null;
+      _visibleCount = _pageSize;
     });
     FocusScope.of(context).unfocus();
   }
@@ -93,6 +97,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
       _selectedEmployee = null;
       _results = null;
       _error = null;
+      _visibleCount = _pageSize;
     });
   }
 
@@ -127,6 +132,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
     setState(() {
       _results = rows;
       _loading = false;
+      _visibleCount = _pageSize;
       if (rows.isEmpty) {
         _error = 'لا توجد بيانات لعرضها';
       }
@@ -455,8 +461,17 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                   style: TextStyle(color: AppColors.slate),
                 ),
               )
-            else
-              ...results.map((row) {
+            else ...[
+              Text(
+                'عرض ${results.take(_visibleCount).length} من ${results.length} يوم',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.slate,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...results.take(_visibleCount).map((row) {
                 final color = _statusColor(row);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -533,6 +548,23 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                   ),
                 );
               }),
+              if (_visibleCount < results.length)
+                OutlinedButton.icon(
+                  onPressed: () => setState(() {
+                    _visibleCount =
+                        (_visibleCount + _pageSize).clamp(0, results.length);
+                  }),
+                  icon: const Icon(Icons.expand_more_rounded),
+                  label: Text(
+                    'عرض المزيد (${results.length - _visibleCount})',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    foregroundColor: AppColors.goldDeep,
+                    side: const BorderSide(color: AppColors.gold),
+                  ),
+                ),
+            ],
           ],
         ],
       ),
