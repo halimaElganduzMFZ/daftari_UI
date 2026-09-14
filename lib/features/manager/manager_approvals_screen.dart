@@ -12,7 +12,7 @@ enum _InboxTab { all, permissions, leaves }
 
 enum _ViewMode { focus, list }
 
-/// صندوق وارد المدير — تبويبات + وضع تركيز يتحمّل مئات الطلبات.
+/// صندوق وارد المدير — تبويبات + طلب فردي / قائمة لمئات الطلبات.
 class ManagerApprovalsScreen extends StatefulWidget {
   const ManagerApprovalsScreen({super.key, required this.structureName});
 
@@ -320,7 +320,7 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
             child: Row(
               children: [
                 ChoiceChip(
-                  label: const Text('تركيز'),
+                  label: const Text('طلب فردي'),
                   selected: _mode == _ViewMode.focus,
                   onSelected: (_) => setState(() => _mode = _ViewMode.focus),
                 ),
