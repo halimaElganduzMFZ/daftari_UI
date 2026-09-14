@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/services/document_picker.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/request_date_bounds.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
 import '../../core/widgets/section_header.dart';
@@ -86,23 +87,31 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
 
   Future<void> _pickStart() async {
     final now = DateTime.now();
+    final first = RequestDateBounds.monthBefore(now);
+    final last = RequestDateBounds.monthAfter(now);
+    final initial = RequestDateBounds.clampToWindow(
+      _startDate ?? now,
+      now: now,
+    );
     final picked = await showDatePicker(
       context: context,
-      initialDate: _startDate ?? now.add(const Duration(days: 1)),
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
-      helpText: 'تاريخ بداية الإجازة',
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
+      helpText: 'تاريخ بداية الإجازة (شهر قبل/بعد)',
       cancelText: 'إلغاء',
       confirmText: 'تأكيد',
     );
     if (picked == null) return;
     setState(() {
       _startDate = picked;
-      if (_endDate != null && _endDate!.isBefore(picked)) {
-        _endDate = picked;
-      }
       if (_selected?.fixedDays != null) {
+        // المدة ثابتة حسب نوع الإجازة — النهاية تُحسب تلقائياً ولو تجاوزت نافذة الاختيار.
         _endDate = picked.add(Duration(days: _selected!.fixedDays! - 1));
+      } else if (_endDate != null && _endDate!.isBefore(picked)) {
+        _endDate = picked;
+      } else if (_endDate != null && _endDate!.isAfter(last)) {
+        _endDate = last;
       }
     });
   }
@@ -110,12 +119,27 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
   Future<void> _pickEnd() async {
     if (_selected?.fixedDays != null) return;
     final now = DateTime.now();
+    final windowFirst = RequestDateBounds.monthBefore(now);
+    final windowLast = RequestDateBounds.monthAfter(now);
+    final first = _startDate != null && _startDate!.isAfter(windowFirst)
+        ? _startDate!
+        : windowFirst;
+    var last = windowLast;
+    if (first.isAfter(last)) {
+      last = first;
+    }
+    final initial = RequestDateBounds.clampToWindow(
+      _endDate ?? _startDate ?? now,
+      now: now,
+    );
+    final safeInitial =
+        initial.isBefore(first) ? first : (initial.isAfter(last) ? last : initial);
     final picked = await showDatePicker(
       context: context,
-      initialDate: _endDate ?? _startDate ?? now.add(const Duration(days: 1)),
-      firstDate: _startDate ?? now,
-      lastDate: now.add(const Duration(days: 365)),
-      helpText: 'تاريخ نهاية الإجازة',
+      initialDate: safeInitial,
+      firstDate: first,
+      lastDate: last,
+      helpText: 'تاريخ نهاية الإجازة (ضمن شهر قبل/بعد)',
       cancelText: 'إلغاء',
       confirmText: 'تأكيد',
     );
@@ -387,11 +411,21 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
             const SizedBox(height: 8),
             Text(
               'المدة: $_dayCount ${_dayCount == 1 ? 'يوم' : 'أيام'}'
-              '${kind?.fixedDays != null ? ' (مدة ثابتة حسب اللائحة)' : ''}',
+              '${kind?.fixedDays != null ? ' (مدة ثابتة حسب اللائحة — تُحسب تلقائياً)' : ' · اختيار التواريخ ضمن شهر قبل/بعد اليوم'}',
               style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 color: AppColors.goldDeep,
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 8),
+            const Text(
+              'تواريخ التقديم ضمن شهر قبل وشهر بعد اليوم',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.slate,
               ),
             ),
           ],

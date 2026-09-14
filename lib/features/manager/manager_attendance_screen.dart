@@ -49,8 +49,8 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _fromDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime(2018),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
       locale: const Locale('ar'),
     );
     if (picked == null) return;
@@ -66,8 +66,8 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _toDate ?? _fromDate ?? DateTime.now(),
-      firstDate: _fromDate ?? DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: _fromDate ?? DateTime(2018),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
       locale: const Locale('ar'),
     );
     if (picked == null) return;
@@ -181,7 +181,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'ابحث بالاسم أو الرقم الوظيفي، ثم حدد الفترة واعرض السجل.',
+            'ابحث بالاسم أو الرقم الوظيفي، ثم اختر أي فترة زمنية (ليست مقيّدة بالشهر الحالي) واعرض السجل.',
             style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
           const SizedBox(height: 16),

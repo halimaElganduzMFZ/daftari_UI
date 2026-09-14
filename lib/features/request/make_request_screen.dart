@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/request_date_bounds.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/permission_type.dart';
@@ -35,12 +36,15 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
+    final first = RequestDateBounds.monthBefore(now);
+    final last = RequestDateBounds.monthAfter(now);
+    final initial = RequestDateBounds.clampToWindow(_requestDate, now: now);
     final picked = await showDatePicker(
       context: context,
-      initialDate: _requestDate,
-      firstDate: DateTime(now.year, now.month - 1, now.day),
-      lastDate: DateTime(now.year, now.month + 1, now.day),
-      helpText: 'اختر تاريخ الطلب',
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
+      helpText: 'اختر تاريخ الطلب (شهر قبل/بعد)',
       cancelText: 'إلغاء',
       confirmText: 'تأكيد',
     );
