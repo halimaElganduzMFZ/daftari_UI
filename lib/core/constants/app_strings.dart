@@ -17,7 +17,17 @@ abstract final class AppStrings {
   static const apiLoginHint = 'الدخول عبر الخادم المحلي: 127.0.0.1:3000';
   static const footerRights = 'جميع الحقوق محفوظة';
   static const footerOrg = 'إدارة تقنية المعلومات - المنطقة الحرة بمصراتة';
-  static const demoHint = 'تجريبي: FZ-10021 / 123456';
+  static const demoHint =
+      'تجريبي — موظف: FZ-10021 / 123456\nمدير: FZ-20001 / 123456';
+  static const whichAppTitle = 'تحديد نوع الدخول';
+  static const enterAsEmployee = 'الدخول كــــ موظف';
+  static const enterAsManagerOf = 'الدخول مسؤولاً عن';
+  static const managerApprovalsTitle = 'سجل الطلبات التي تنتظر الإجراء';
+  static const approve = 'موافقة';
+  static const reject = 'رفض';
+  static const rejectReasonTitle = 'تحديد سبب الرفض';
+  static const rejectReasonHint = 'اكتب سبب الرفض هنا ....';
+  static const monthlyApprovalsSummary = 'ملخص الموافقات لهذا الشهر';
   static const home = 'الرئيسية';
   static const employees = 'الموظفون';
   static const attendance = 'الحضور';

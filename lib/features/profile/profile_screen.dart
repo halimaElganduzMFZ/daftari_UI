@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../data/auth/auth_repository.dart';
 import '../../data/session/app_session.dart';
 import '../auth/login_screen.dart';
+import '../auth/which_app_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,7 +23,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_loggingOut) return;
     setState(() => _loggingOut = true);
     try {
-      await AuthRepository().logout();
+      if (ApiConfig.useRemoteApi) {
+        await AuthRepository().logout();
+      }
     } catch (_) {
       // نخرج محلياً حتى لو فشل طلب الخادم
     }
@@ -29,6 +33,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+  }
+
+  void _switchRole() {
+    if (AppSession.demoAccount == null) return;
+    AppSession.activeRole = null;
+    AppSession.activeStructure = null;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const WhichAppScreen()),
       (_) => false,
     );
   }
@@ -80,6 +94,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   employee?.department ?? user?.workplaceName ?? '—',
                 ),
                 Text(employee?.email ?? user?.email ?? '—'),
+                if (AppSession.isManagerMode) ...[
+                  const SizedBox(height: 10),
+                  _FlagChip(
+                    label:
+                        'مسؤول: ${AppSession.activeStructure?.name ?? ''}',
+                    color: AppColors.goldDeep,
+                  ),
+                ] else if (AppSession.activeRole != null) ...[
+                  const SizedBox(height: 10),
+                  const _FlagChip(
+                    label: 'دخول كموظف',
+                    color: AppColors.info,
+                  ),
+                ],
                 if (user != null) ...[
                   const SizedBox(height: 10),
                   Wrap(
@@ -87,9 +115,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     runSpacing: 8,
                     children: [
                       if (user.isAdmin)
-                        const _FlagChip(label: 'مسؤول', color: AppColors.goldDeep),
+                        const _FlagChip(
+                          label: 'مسؤول',
+                          color: AppColors.goldDeep,
+                        ),
                       if (user.isAssigner)
-                        const _FlagChip(label: 'مسؤول هيكل', color: AppColors.slate),
+                        const _FlagChip(
+                          label: 'مسؤول هيكل',
+                          color: AppColors.slate,
+                        ),
                       if (user.canChangePassword)
                         const _FlagChip(
                           label: 'يمكن تغيير كلمة المرور',
@@ -101,7 +135,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          if (AppSession.demoAccount != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: _switchRole,
+              child: const Text('تغيير نوع الدخول'),
+            ),
+          ],
+          const SizedBox(height: 12),
           FilledButton.tonal(
             onPressed: _loggingOut ? null : _logout,
             child: _loggingOut

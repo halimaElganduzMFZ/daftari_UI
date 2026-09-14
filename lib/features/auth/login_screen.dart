@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/auth/auth_repository.dart';
 import '../../data/session/app_session.dart';
+import '../../data/static/static_auth.dart';
 import '../shell/main_shell.dart';
+import 'which_app_screen.dart';
 
-/// مقابلة شاشة login.php — الدخول عبر Nest API الحقيقي.
+/// مقابلة شاشة login.php — تجريبي محلي أو Nest API حسب ApiConfig.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -38,12 +41,45 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _submitting = true);
 
     try {
+      if (ApiConfig.useRemoteApi) {
+        await _submitRemote();
+      } else {
+        await _submitDemo();
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _submitDemo() async {
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    final account = StaticAuth.login(
+      employeeNumber: _employeeNumberController.text,
+      password: _passwordController.text,
+    );
+    if (!mounted) return;
+    if (account == null) {
+      await _showError(
+        title: AppStrings.loginFailedTitle,
+        message: AppStrings.loginFailedMessage,
+      );
+      return;
+    }
+    AppSession.applyDemoLogin(account);
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const WhichAppScreen()),
+    );
+  }
+
+  Future<void> _submitRemote() async {
+    try {
       final pair = await _authRepository.login(
         employeeNumber: _employeeNumberController.text,
         password: _passwordController.text,
       );
       if (!mounted) return;
       AppSession.applyLogin(pair);
+      // مع الـ API لاحقاً: إن وُجدت هياكل نذهب لـ whichApp، وإلا الموظف مباشرة.
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(builder: (_) => const MainShell()),
       );
@@ -61,8 +97,6 @@ class _LoginScreenState extends State<LoginScreen> {
         title: AppStrings.loginFailedTitle,
         message: AppStrings.loginConnectionError,
       );
-    } finally {
-      if (mounted) setState(() => _submitting = false);
     }
   }
 
@@ -88,6 +122,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final year = DateTime.now().year;
+    final hint = ApiConfig.useRemoteApi
+        ? AppStrings.apiLoginHint
+        : AppStrings.demoHint;
 
     return Scaffold(
       body: Container(
@@ -254,12 +291,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 14),
-                            const Text(
-                              AppStrings.apiLoginHint,
+                            Text(
+                              hint,
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppColors.slate,
                                 fontSize: 12,
+                                height: 1.45,
                               ),
                             ),
                           ],
