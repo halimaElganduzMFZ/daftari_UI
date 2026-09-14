@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../data/auth/auth_repository.dart';
 import '../../data/session/app_session.dart';
-import '../../data/static/static_auth.dart';
 import '../shell/main_shell.dart';
 
-/// مقابلة شاشة login.php: ترحيب + مستخدم + كلمة مرور + دخول + تذييل.
+/// مقابلة شاشة login.php — الدخول عبر Nest API الحقيقي.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -16,14 +17,16 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+  final _employeeNumberController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authRepository = AuthRepository();
+
   bool _obscure = true;
   bool _submitting = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _employeeNumberController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -33,36 +36,52 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _submitting = true);
-    await Future<void>.delayed(const Duration(milliseconds: 220));
 
-    final employee = StaticAuth.login(
-      username: _usernameController.text,
-      password: _passwordController.text,
-    );
-
-    if (!mounted) return;
-    setState(() => _submitting = false);
-
-    if (employee == null) {
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text(AppStrings.loginFailedTitle),
-          content: const Text(AppStrings.loginFailedMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('حسناً'),
-            ),
-          ],
-        ),
+    try {
+      final pair = await _authRepository.login(
+        employeeNumber: _employeeNumberController.text,
+        password: _passwordController.text,
       );
-      return;
+      if (!mounted) return;
+      AppSession.applyLogin(pair);
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      await _showError(
+        title: error.isTooManyRequests
+            ? AppStrings.loginRateLimitedTitle
+            : AppStrings.loginFailedTitle,
+        message: error.message,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      await _showError(
+        title: AppStrings.loginFailedTitle,
+        message: AppStrings.loginConnectionError,
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
+  }
 
-    AppSession.currentEmployee = employee;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const MainShell()),
+  Future<void> _showError({
+    required String title,
+    required String message,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('حسناً'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -165,15 +184,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 8),
                             TextFormField(
-                              controller: _usernameController,
+                              controller: _employeeNumberController,
                               textInputAction: TextInputAction.next,
+                              keyboardType: TextInputType.text,
+                              autofillHints: const [AutofillHints.username],
                               decoration: const InputDecoration(
                                 hintText: AppStrings.usernameHint,
                                 prefixIcon: Icon(Icons.badge_outlined),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
-                                  return 'أدخل اسم المستخدم';
+                                  return 'أدخل رقم الموظف';
                                 }
                                 return null;
                               },
@@ -193,6 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscure,
+                              autofillHints: const [AutofillHints.password],
                               onFieldSubmitted: (_) => _submit(),
                               decoration: InputDecoration(
                                 hintText: '********',
@@ -233,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 14),
                             const Text(
-                              AppStrings.demoHint,
+                              AppStrings.apiLoginHint,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: AppColors.slate,

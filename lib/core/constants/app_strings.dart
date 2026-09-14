@@ -10,7 +10,11 @@ abstract final class AppStrings {
   static const password = 'كلمة المرور';
   static const login = 'تسجيل الدخول';
   static const loginFailedTitle = 'مع الأسف';
-  static const loginFailedMessage = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+  static const loginFailedMessage = 'رقم الموظف أو كلمة المرور غير صحيحة';
+  static const loginRateLimitedTitle = 'تنبيه';
+  static const loginConnectionError =
+      'تعذّر الاتصال بالخادم. تأكد أن الـ API يعمل على المنفذ 3000.';
+  static const apiLoginHint = 'الدخول عبر الخادم المحلي: 127.0.0.1:3000';
   static const footerRights = 'جميع الحقوق محفوظة';
   static const footerOrg = 'إدارة تقنية المعلومات - المنطقة الحرة بمصراتة';
   static const demoHint = 'تجريبي: FZ-10021 / 123456';

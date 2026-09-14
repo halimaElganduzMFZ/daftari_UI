@@ -3,15 +3,40 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../data/auth/auth_repository.dart';
 import '../../data/session/app_session.dart';
 import '../auth/login_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _loggingOut = false;
+
+  Future<void> _logout() async {
+    if (_loggingOut) return;
+    setState(() => _loggingOut = true);
+    try {
+      await AuthRepository().logout();
+    } catch (_) {
+      // نخرج محلياً حتى لو فشل طلب الخادم
+    }
+    AppSession.clear();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final employee = AppSession.currentEmployee;
+    final user = AppSession.currentUser;
 
     return SafeArea(
       child: ListView(
@@ -31,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  employee?.fullName ?? 'موظف تجريبي',
+                  employee?.fullName ?? user?.displayName ?? 'موظف',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -39,36 +64,81 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  employee?.jobTitle ?? '—',
+                  employee?.jobTitle ?? user?.displayRole ?? '—',
                   style: const TextStyle(color: AppColors.slate),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  employee?.employeeNumber ?? '—',
+                  employee?.employeeNumber ?? user?.employeeNumber ?? '—',
                   style: const TextStyle(
                     color: AppColors.goldDeep,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(employee?.department ?? '—'),
-                Text(employee?.email ?? '—'),
-                Text(employee?.phone ?? '—'),
+                Text(
+                  employee?.department ?? user?.workplaceName ?? '—',
+                ),
+                Text(employee?.email ?? user?.email ?? '—'),
+                if (user != null) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (user.isAdmin)
+                        const _FlagChip(label: 'مسؤول', color: AppColors.goldDeep),
+                      if (user.isAssigner)
+                        const _FlagChip(label: 'مسؤول هيكل', color: AppColors.slate),
+                      if (user.canChangePassword)
+                        const _FlagChip(
+                          label: 'يمكن تغيير كلمة المرور',
+                          color: AppColors.success,
+                        ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
           const SizedBox(height: 16),
           FilledButton.tonal(
-            onPressed: () {
-              AppSession.currentEmployee = null;
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
-                (_) => false,
-              );
-            },
-            child: const Text('تسجيل الخروج'),
+            onPressed: _loggingOut ? null : _logout,
+            child: _loggingOut
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2.2),
+                  )
+                : const Text('تسجيل الخروج'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FlagChip extends StatelessWidget {
+  const _FlagChip({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'auth_models.dart';
+
 enum EmploymentStatus { active, onLeave, suspended }
 
 class Employee {
@@ -22,6 +24,23 @@ class Employee {
   final String email;
   final DateTime hireDate;
   final EmploymentStatus status;
+
+  /// تحويل ملف المستخدم القادم من `/auth/login` أو `/auth/me`.
+  factory Employee.fromAuthUser(AuthUser user) {
+    return Employee(
+      id: user.id.toString(),
+      employeeNumber: user.employeeNumber,
+      fullName: user.displayName,
+      jobTitle: user.displayRole,
+      department: user.workplaceName?.trim().isNotEmpty == true
+          ? user.workplaceName!.trim()
+          : '—',
+      phone: '—',
+      email: user.email?.trim().isNotEmpty == true ? user.email!.trim() : '—',
+      hireDate: DateTime.now(),
+      status: EmploymentStatus.active,
+    );
+  }
 
   /// بحث سريع O(1) للحقل الواحد — يُستخدم مع تصفية القائمة.
   bool matchesQuery(String query) {
