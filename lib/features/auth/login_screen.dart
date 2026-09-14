@@ -18,7 +18,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _employeeNumberController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -26,9 +27,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _obscure = true;
   bool _submitting = false;
+  late final AnimationController _intro;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _intro = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _fade = CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic));
+    _intro.forward();
+  }
 
   @override
   void dispose() {
+    _intro.dispose();
     _employeeNumberController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -67,7 +87,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     AppSession.applyDemoLogin(account);
 
-    // الموظف العادي يدخل مباشرة — صفحة اختيار الهيكل للمسؤول فقط.
     if (!account.canManageStructures) {
       AppSession.enterAsEmployee();
       Navigator.of(context).pushReplacement(
@@ -89,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       AppSession.applyLogin(pair);
-      // مع الـ API لاحقاً: إن وُجدت هياكل نذهب لـ whichApp، وإلا الموظف مباشرة.
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(builder: (_) => const MainShell()),
       );
@@ -132,211 +150,345 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final year = DateTime.now().year;
-    final hint = ApiConfig.useRemoteApi
-        ? AppStrings.apiLoginHint
-        : AppStrings.demoHint;
+    final hint =
+        ApiConfig.useRemoteApi ? AppStrings.apiLoginHint : AppStrings.demoHint;
+    final size = MediaQuery.sizeOf(context);
 
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFEDEDEB),
-              AppColors.background,
-              Color(0xFFE8E6E1),
-            ],
+      body: Stack(
+        children: [
+          // Atmosphere — soft warm field + gold light pools (not purple/glow kitsch).
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Color(0xFFE9E6DF),
+                  Color(0xFFF3F3F1),
+                  Color(0xFFE4E1DA),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Column(
-                  children: [
-                    const Text(
-                      AppStrings.orgName,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.charcoal,
-                        height: 1.25,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      AppStrings.permissionsAppTitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.goldDeep,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 28, 20, 22),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(color: AppColors.line),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x14000000),
-                            blurRadius: 24,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const Text(
-                              AppStrings.welcomeEmployee,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.charcoal,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              AppStrings.loginSubtitle,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: AppColors.slate,
-                                fontSize: 13.5,
-                              ),
-                            ),
-                            const SizedBox(height: 26),
-                            const Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                AppStrings.username,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.charcoal,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _employeeNumberController,
-                              textInputAction: TextInputAction.next,
-                              keyboardType: TextInputType.text,
-                              autofillHints: const [AutofillHints.username],
-                              decoration: const InputDecoration(
-                                hintText: AppStrings.usernameHint,
-                                prefixIcon: Icon(Icons.badge_outlined),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'أدخل رقم الموظف';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                            const Align(
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                AppStrings.password,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.charcoal,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextFormField(
-                              controller: _passwordController,
-                              obscureText: _obscure,
-                              autofillHints: const [AutofillHints.password],
-                              onFieldSubmitted: (_) => _submit(),
-                              decoration: InputDecoration(
-                                hintText: '********',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  onPressed: () =>
-                                      setState(() => _obscure = !_obscure),
-                                  icon: Icon(
-                                    _obscure
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'أدخل كلمة المرور';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 22),
-                            SizedBox(
-                              height: 52,
-                              child: FilledButton(
-                                onPressed: _submitting ? null : _submit,
-                                child: _submitting
-                                    ? const SizedBox(
-                                        width: 22,
-                                        height: 22,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.4,
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Text(AppStrings.login),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-                            Text(
-                              hint,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: AppColors.slate,
-                                fontSize: 12,
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    Text(
-                      '${AppStrings.footerRights} © $year',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppColors.slate,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      AppStrings.footerOrg,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.slate,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+          Positioned(
+            top: -size.height * 0.12,
+            left: -size.width * 0.18,
+            child: _GlowOrb(
+              diameter: size.width * 0.72,
+              color: const Color(0x33B08D57),
+            ),
+          ),
+          Positioned(
+            bottom: -size.height * 0.18,
+            right: -size.width * 0.2,
+            child: _GlowOrb(
+              diameter: size.width * 0.8,
+              color: const Color(0x22A18F6A),
+            ),
+          ),
+          Positioned(
+            top: size.height * 0.28,
+            right: -40,
+            child: Transform.rotate(
+              angle: -0.35,
+              child: Container(
+                width: 140,
+                height: 280,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(80),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.14),
+                    width: 1.2,
+                  ),
                 ),
               ),
             ),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: FadeTransition(
+                    opacity: _fade,
+                    child: SlideTransition(
+                      position: _slide,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          Container(
+                            width: 78,
+                            height: 78,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFFC9A66B),
+                                  AppColors.goldDeep,
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.gold.withValues(alpha: 0.28),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'ح',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          const Text(
+                            AppStrings.orgName,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.charcoal,
+                              height: 1.2,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.goldSoft,
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: AppColors.gold.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: const Text(
+                              AppStrings.permissionsAppTitle,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.goldDeep,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          Container(
+                            width: double.infinity,
+                            padding:
+                                const EdgeInsets.fromLTRB(22, 28, 22, 22),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface.withValues(alpha: 0.94),
+                              borderRadius: BorderRadius.circular(26),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.7),
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x18000000),
+                                  blurRadius: 34,
+                                  offset: Offset(0, 16),
+                                ),
+                              ],
+                            ),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  const Text(
+                                    AppStrings.welcomeEmployee,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.charcoal,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    AppStrings.loginSubtitle,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: AppColors.slate,
+                                      fontSize: 13.5,
+                                      height: 1.45,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 26),
+                                  const Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      AppStrings.username,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.charcoal,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _employeeNumberController,
+                                    textInputAction: TextInputAction.next,
+                                    keyboardType: TextInputType.text,
+                                    autofillHints: const [
+                                      AutofillHints.username,
+                                    ],
+                                    decoration: const InputDecoration(
+                                      hintText: AppStrings.usernameHint,
+                                      prefixIcon: Icon(Icons.badge_outlined),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
+                                        return 'أدخل رقم الموظف';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      AppStrings.password,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.charcoal,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _passwordController,
+                                    obscureText: _obscure,
+                                    autofillHints: const [
+                                      AutofillHints.password,
+                                    ],
+                                    onFieldSubmitted: (_) => _submit(),
+                                    decoration: InputDecoration(
+                                      hintText: '********',
+                                      prefixIcon:
+                                          const Icon(Icons.lock_outline),
+                                      suffixIcon: IconButton(
+                                        onPressed: () => setState(
+                                          () => _obscure = !_obscure,
+                                        ),
+                                        icon: Icon(
+                                          _obscure
+                                              ? Icons.visibility_outlined
+                                              : Icons.visibility_off_outlined,
+                                        ),
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'أدخل كلمة المرور';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 22),
+                                  SizedBox(
+                                    height: 54,
+                                    child: FilledButton(
+                                      onPressed:
+                                          _submitting ? null : _submit,
+                                      child: _submitting
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child:
+                                                  CircularProgressIndicator(
+                                                strokeWidth: 2.4,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                          : const Text(AppStrings.login),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Text(
+                                    hint,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: AppColors.slate,
+                                      fontSize: 12,
+                                      height: 1.45,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          Text(
+                            '${AppStrings.footerRights} © $year',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: AppColors.slate,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            AppStrings.footerOrg,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: AppColors.slate,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.diameter, required this.color});
+
+  final double diameter;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: diameter,
+        height: diameter,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [
+              color,
+              color.withValues(alpha: 0),
+            ],
           ),
         ),
       ),

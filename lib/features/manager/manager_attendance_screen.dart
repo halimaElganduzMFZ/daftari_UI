@@ -1,18 +1,130 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../data/models/employee.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_manager_attendance.dart';
 
-/// بصمات موظفي الهيكل — مقابل time_sheet_show.php.
-class ManagerAttendanceScreen extends StatelessWidget {
+/// عرض بصمات الموظفين — مقابل time_sheet_show.php
+/// فلتر: موظف + من تاريخ + إلى تاريخ ← ثم جلب السجل.
+class ManagerAttendanceScreen extends StatefulWidget {
   const ManagerAttendanceScreen({super.key});
+
+  @override
+  State<ManagerAttendanceScreen> createState() =>
+      _ManagerAttendanceScreenState();
+}
+
+class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
+  final _employees = StaticManagerAttendance.structureEmployees;
+  final _dateFormat = DateFormat('yyyy/MM/dd', 'ar');
+
+  Employee? _selectedEmployee;
+  DateTime? _fromDate;
+  DateTime? _toDate;
+  List<EmployeeDayAttendance>? _results;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _fromDate = DateTime(now.year, now.month, 1);
+    _toDate = DateTime(now.year, now.month, now.day);
+    if (_employees.isNotEmpty) {
+      _selectedEmployee = _employees.first;
+    }
+  }
+
+  Future<void> _pickFrom() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _fromDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: const Locale('ar'),
+    );
+    if (picked == null) return;
+    setState(() {
+      _fromDate = picked;
+      if (_toDate != null && _toDate!.isBefore(picked)) {
+        _toDate = picked;
+      }
+    });
+  }
+
+  Future<void> _pickTo() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _toDate ?? _fromDate ?? DateTime.now(),
+      firstDate: _fromDate ?? DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: const Locale('ar'),
+    );
+    if (picked == null) return;
+    setState(() => _toDate = picked);
+  }
+
+  Future<void> _fetch() async {
+    if (_selectedEmployee == null) {
+      setState(() => _error = 'اختر الموظف أولاً');
+      return;
+    }
+    if (_fromDate == null || _toDate == null) {
+      setState(() => _error = 'حدد تاريخ البداية والنهاية');
+      return;
+    }
+    if (_toDate!.isBefore(_fromDate!)) {
+      setState(() => _error = 'تاريخ النهاية يجب أن يكون بعد البداية');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 420));
+    if (!mounted) return;
+
+    final rows = StaticManagerAttendance.fetchSheet(
+      employeeNumber: _selectedEmployee!.employeeNumber,
+      from: _fromDate!,
+      to: _toDate!,
+    );
+
+    setState(() {
+      _results = rows;
+      _loading = false;
+      if (rows.isEmpty) {
+        _error = 'لا توجد بيانات لعرضها';
+      }
+    });
+  }
+
+  Color _statusColor(EmployeeDayAttendance row) {
+    if (row.isPresent) return AppColors.success;
+    if (row.isAbsent) return AppColors.danger;
+    if (row.dayKind == AttendanceDayKind.weekend ||
+        row.dayKind == AttendanceDayKind.holiday) {
+      return AppColors.info;
+    }
+    if (row.dayKind == AttendanceDayKind.leave) return AppColors.goldDeep;
+    return AppColors.warning;
+  }
 
   @override
   Widget build(BuildContext context) {
     final structure = AppSession.activeStructure?.name ?? 'الهيكل';
-    final rows = StaticManagerAttendance.today;
+    final results = _results;
+    final present =
+        results?.where((r) => r.isPresent).length ?? 0;
+    final absent =
+        results?.where((r) => r.isAbsent).length ?? 0;
+    final other = (results?.length ?? 0) - present - absent;
 
     return SafeArea(
       child: ListView(
@@ -28,133 +140,311 @@ class ManagerAttendanceScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'بصمات الموظفين',
+            'عرض بصمات الموظفين',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: AppColors.charcoal,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           const Text(
-            'حضور اليوم لموظفي الهيكل الذي تديره.',
+            'اختر الموظف والفترة ثم اعرض سجل الحضور والغياب.',
             style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
           const SizedBox(height: 16),
           AppSurface(
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: _Stat(
-                    label: 'حضروا',
-                    value: '${StaticManagerAttendance.presentCount}',
-                    color: AppColors.success,
+                const Text(
+                  'اسم الموظف',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.charcoal,
                   ),
                 ),
-                Container(width: 1, height: 40, color: AppColors.line),
-                Expanded(
-                  child: _Stat(
-                    label: 'لم يحضروا',
-                    value: '${StaticManagerAttendance.missingCount}',
-                    color: AppColors.danger,
+                const SizedBox(height: 8),
+                InputDecorator(
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.person_search_outlined),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<Employee>(
+                      value: _selectedEmployee,
+                      isExpanded: true,
+                      hint: const Text('ابحث باسم الموظف'),
+                      items: _employees
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(
+                                '${e.fullName} · ${e.employeeNumber}',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => _selectedEmployee = value),
+                    ),
                   ),
                 ),
-                Container(width: 1, height: 40, color: AppColors.line),
-                Expanded(
-                  child: _Stat(
-                    label: 'الإجمالي',
-                    value: '${rows.length}',
-                    color: AppColors.goldDeep,
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _DateField(
+                        label: 'من تاريخ',
+                        value: _fromDate == null
+                            ? null
+                            : _dateFormat.format(_fromDate!),
+                        onTap: _pickFrom,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _DateField(
+                        label: 'إلى تاريخ',
+                        value: _toDate == null
+                            ? null
+                            : _dateFormat.format(_toDate!),
+                        onTap: _pickTo,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 50,
+                  child: FilledButton.icon(
+                    onPressed: _loading ? null : _fetch,
+                    icon: _loading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.search_rounded),
+                    label: Text(_loading ? 'جاري الجلب...' : 'عرض'),
                   ),
                 ),
+                if (_error != null && results == null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _error!,
+                    style: const TextStyle(
+                      color: AppColors.danger,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          ...rows.map((row) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: AppSurface(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: row.isComplete
-                            ? AppColors.success.withValues(alpha: 0.12)
-                            : AppColors.warning.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.fingerprint_rounded,
-                        color: row.isComplete
-                            ? AppColors.success
-                            : AppColors.warning,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            row.employeeName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.charcoal,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            row.employeeNumber,
-                            style: const TextStyle(
-                              color: AppColors.slate,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+          if (results != null) ...[
+            const SizedBox(height: 20),
+            Text(
+              'سجل الحضور والغياب'
+              '${_selectedEmployee == null ? '' : ' — ${_selectedEmployee!.fullName}'}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.charcoal,
+              ),
+            ),
+            const SizedBox(height: 10),
+            AppSurface(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+              child: Row(
+                children: [
+                  _SummaryChip(
+                    label: 'حاضر',
+                    value: '$present',
+                    color: AppColors.success,
+                  ),
+                  _SummaryChip(
+                    label: 'غياب',
+                    value: '$absent',
+                    color: AppColors.danger,
+                  ),
+                  _SummaryChip(
+                    label: 'أخرى',
+                    value: '$other',
+                    color: AppColors.info,
+                  ),
+                  _SummaryChip(
+                    label: 'أيام',
+                    value: '${results.length}',
+                    color: AppColors.goldDeep,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (results.isEmpty)
+              const AppSurface(
+                child: Text(
+                  'لا توجد بيانات لعرضها',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.slate),
+                ),
+              )
+            else
+              ...results.map((row) {
+                final color = _statusColor(row);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: AppSurface(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${row.checkIn}${row.checkOut != null ? ' — ${row.checkOut}' : ''}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: AppColors.charcoal,
+                        Container(
+                          width: 4,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          row.statusLabel,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: row.isComplete
-                                ? AppColors.success
-                                : AppColors.warning,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${row.weekdayLabel} — ${_dateFormat.format(row.date)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.charcoal,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                row.dayKindLabel,
+                                style: const TextStyle(
+                                  color: AppColors.slate,
+                                  fontSize: 12.5,
+                                ),
+                              ),
+                              if (row.checkIn != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'دخول ${row.checkIn}'
+                                  '${row.checkOut != null ? ' · خروج ${row.checkOut}' : ''}',
+                                  style: const TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.charcoal,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 130),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            row.statusLabel,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-            );
-          }),
+                  ),
+                );
+              }),
+          ],
         ],
       ),
     );
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({
+class _DateField extends StatelessWidget {
+  const _DateField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final String label;
+  final String? value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.charcoal,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Material(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      value ?? 'اختر التاريخ',
+                      style: TextStyle(
+                        color: value == null
+                            ? AppColors.slate
+                            : AppColors.charcoal,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const Icon(
+                    Icons.calendar_month_outlined,
+                    color: AppColors.goldDeep,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SummaryChip extends StatelessWidget {
+  const _SummaryChip({
     required this.label,
     required this.value,
     required this.color,
@@ -166,26 +456,28 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: color,
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: AppColors.slate,
-            fontWeight: FontWeight.w600,
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.slate,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
