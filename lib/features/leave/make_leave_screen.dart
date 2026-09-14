@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/services/document_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/section_header.dart';
@@ -33,7 +35,10 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
   bool _acceptedRules = false;
   bool _rulesExpanded = false;
   bool _submitting = false;
-  String? _mockAttachmentName;
+  String? _attachmentName;
+  int? _attachmentSize;
+  bool _fileAccessHintShown = false;
+  bool _pickingAttachment = false;
 
   @override
   void dispose() {
@@ -66,13 +71,17 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       _selected = picked;
       _acceptedRules = false;
       _rulesExpanded = true;
-      _mockAttachmentName = null;
+      _attachmentName = null;
+      _attachmentSize = null;
       _emergencyController.clear();
       _locationController.clear();
       if (_startDate != null && picked.fixedDays != null) {
         _endDate = _startDate!.add(Duration(days: picked.fixedDays! - 1));
       }
     });
+    if (picked.needsStudyAttachment) {
+      await _ensureFileAccessHint();
+    }
   }
 
   Future<void> _pickStart() async {
@@ -118,12 +127,60 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
     return _endDate!.difference(_startDate!).inDays + 1;
   }
 
-  Future<void> _pickMockAttachment() async {
-    setState(() {
-      _mockAttachmentName =
-          'مرفق_دراسي_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
-    });
+  Future<void> _ensureFileAccessHint() async {
+    if (_fileAccessHintShown) return;
+    _fileAccessHintShown = true;
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: const Text('الوصول إلى ملفات الجهاز'),
+          content: Text(
+            kIsWeb
+                ? 'لرفع مستند الإجازة الدراسية سيفتح المتصفح نافذة اختيار من ملفات جهازك.\n'
+                    'اضغط «متابعة» ثم اختر الملف (PDF أو Word أو صورة).\n'
+                    'ملاحظة: المتصفح لا يمنح صلاحية دائمة مسبقاً — الاختيار يتم عند كل إرفاق بموافقتك.'
+                : 'يحتاج التطبيق إذن الوصول إلى الملفات لإرفاق مستند الإجازة الدراسية.\n'
+                    'عند ظهور طلب الصلاحية اضغط «سماح» ثم اختر الملف.',
+            style: const TextStyle(height: 1.5, color: AppColors.slate),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('متابعة'),
+            ),
+          ],
+        );
+      },
+    );
   }
+
+  Future<void> _pickAttachment() async {
+    await _ensureFileAccessHint();
+    if (!mounted) return;
+    setState(() => _pickingAttachment = true);
+    try {
+      final picked = await DocumentPicker.pickStudyDocument();
+      if (!mounted) return;
+      if (picked == null) {
+        _toast('لم يتم اختيار ملف');
+        return;
+      }
+      setState(() {
+        _attachmentName = picked.name;
+        _attachmentSize = picked.size;
+      });
+      _toast('تم إرفاق: ${picked.name}');
+    } catch (e) {
+      if (!mounted) return;
+      _toast('تعذّر فتح مستعرض الملفات. حاول مرة أخرى أو اسمح بالوصول من إعدادات المتصفح.');
+    } finally {
+      if (mounted) setState(() => _pickingAttachment = false);
+    }
+  }
+
 
   Future<void> _submit() async {
     if (_selected == null) {
@@ -143,7 +200,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       _toast('فضلاً اكتب سبب الإجازة الطارئة');
       return;
     }
-    if (_selected!.needsStudyAttachment && _mockAttachmentName == null) {
+    if (_selected!.needsStudyAttachment && _attachmentName == null) {
       _toast('فضلاً أرفق المستند المطلوب');
       return;
     }
@@ -198,7 +255,8 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                     _noteController.clear();
                     _locationController.clear();
                     _emergencyController.clear();
-                    _mockAttachmentName = null;
+                    _attachmentName = null;
+                    _attachmentSize = null;
                   });
                 }
               },
@@ -375,10 +433,17 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
           ],
           if (kind?.needsStudyAttachment == true) ...[
             const SizedBox(height: 10),
+            _AttachmentHint(),
+            const SizedBox(height: 8),
             _AttachmentTile(
-              fileName: _mockAttachmentName,
-              onPick: _pickMockAttachment,
-              onClear: () => setState(() => _mockAttachmentName = null),
+              fileName: _attachmentName,
+              fileSize: _attachmentSize,
+              picking: _pickingAttachment,
+              onPick: _pickingAttachment ? null : _pickAttachment,
+              onClear: () => setState(() {
+                _attachmentName = null;
+                _attachmentSize = null;
+              }),
             ),
           ],
           const SizedBox(height: 10),
@@ -772,44 +837,122 @@ class _DateTile extends StatelessWidget {
   }
 }
 
+class _AttachmentHint extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return AppSurface(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const FaIcon(
+            FontAwesomeIcons.circleInfo,
+            size: 14,
+            color: AppColors.goldDeep,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              kIsWeb
+                  ? 'اضغط «اختيار من الجهاز» لفتح ملفات الكمبيوتر واختيار المستند (PDF / Word / صورة).'
+                  : 'سيُطلب إذن الوصول للملفات عند أول إرفاق، ثم يمكنك اختيار المستند من الجهاز.',
+              style: const TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: AppColors.slate,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _AttachmentTile extends StatelessWidget {
   const _AttachmentTile({
     required this.fileName,
     required this.onPick,
     required this.onClear,
+    this.fileSize,
+    this.picking = false,
   });
 
   final String? fileName;
-  final VoidCallback onPick;
+  final int? fileSize;
+  final bool picking;
+  final VoidCallback? onPick;
   final VoidCallback onClear;
+
+  String get _sizeLabel {
+    if (fileSize == null) return '';
+    final kb = fileSize! / 1024;
+    if (kb < 1024) return ' • ${kb.toStringAsFixed(0)} ك.ب';
+    return ' • ${(kb / 1024).toStringAsFixed(1)} م.ب';
+  }
 
   @override
   Widget build(BuildContext context) {
     final has = fileName != null;
     return AppSurface(
-      onTap: onPick,
+      onTap: picking ? null : onPick,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          FaIcon(
-            has ? FontAwesomeIcons.filePdf : FontAwesomeIcons.cloudArrowUp,
-            size: 17,
-            color: has ? AppColors.success : AppColors.goldDeep,
-          ),
+          if (picking)
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2.2),
+            )
+          else
+            FaIcon(
+              has ? FontAwesomeIcons.fileLines : FontAwesomeIcons.folderOpen,
+              size: 17,
+              color: has ? AppColors.success : AppColors.goldDeep,
+            ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              has ? fileName! : 'إرفاق مستند الامتحان (محاكاة)',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: has ? AppColors.charcoal : AppColors.slate,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  picking
+                      ? 'جاري فتح مستعرض الملفات…'
+                      : has
+                          ? fileName!
+                          : 'اختيار من الجهاز — مستند الإجازة الدراسية',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: has ? AppColors.charcoal : AppColors.slate,
+                  ),
+                ),
+                if (has)
+                  Text(
+                    'تم الاختيار$_sizeLabel',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                else if (!picking)
+                  const Text(
+                    'الأنواع: PDF, DOC, DOCX, JPG, PNG',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: AppColors.slate,
+                    ),
+                  ),
+              ],
             ),
           ),
           if (has)
             IconButton(
               onPressed: onClear,
+              tooltip: 'إزالة المرفق',
               icon: const FaIcon(
                 FontAwesomeIcons.trashCan,
                 size: 14,

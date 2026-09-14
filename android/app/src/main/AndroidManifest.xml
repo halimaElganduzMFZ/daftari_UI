@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- لرفع مرفقات الإجازة من الجهاز عند التشغيل على أندرويد (file_picker يستخدم SAF) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <application
         android:label="شؤون الموظفين"
         android:name="${applicationName}"
