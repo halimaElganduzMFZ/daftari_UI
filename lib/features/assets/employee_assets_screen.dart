@@ -328,6 +328,32 @@ class _AssetsPrintPreviewPage extends StatelessWidget {
     final dateLabel =
         '${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}';
 
+    // pdf Table يرسم الأعمدة من اليسار لليمين دائماً، لذلك نعكس الترتيب
+    // ليظهر بصرياً RTL: يمين = ر.م ، وسط = الرقم المالي ، يسار = الأصل
+    pw.Widget cell(
+      String text, {
+      pw.Font? font,
+      bool header = false,
+      pw.TextAlign align = pw.TextAlign.right,
+    }) {
+      return pw.Container(
+        padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 7),
+        alignment: align == pw.TextAlign.center
+            ? pw.Alignment.center
+            : pw.Alignment.centerRight,
+        child: pw.Text(
+          text,
+          textAlign: align,
+          textDirection: pw.TextDirection.rtl,
+          style: pw.TextStyle(
+            font: font ?? regular,
+            fontSize: header ? 10 : 10,
+            fontWeight: header ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+        ),
+      );
+    }
+
     final doc = pw.Document();
     doc.addPage(
       pw.MultiPage(
@@ -336,51 +362,93 @@ class _AssetsPrintPreviewPage extends StatelessWidget {
         theme: pw.ThemeData.withFont(base: regular, bold: bold),
         margin: const pw.EdgeInsets.all(36),
         build: (context) => [
-          pw.Text(
-            'قائمة أصول الموظف',
-            style: pw.TextStyle(font: bold, fontSize: 18),
-            textAlign: pw.TextAlign.center,
+          pw.Center(
+            child: pw.Text(
+              'قائمة أصول الموظف',
+              style: pw.TextStyle(font: bold, fontSize: 18),
+              textAlign: pw.TextAlign.center,
+              textDirection: pw.TextDirection.rtl,
+            ),
           ),
           pw.SizedBox(height: 16),
-          pw.Text('الاسم: $employeeName', style: pw.TextStyle(fontSize: 11)),
+          pw.Text(
+            'الاسم: $employeeName',
+            style: pw.TextStyle(font: regular, fontSize: 11),
+            textAlign: pw.TextAlign.right,
+            textDirection: pw.TextDirection.rtl,
+          ),
           pw.SizedBox(height: 4),
           pw.Text(
             'الرقم الوظيفي: $employeeNumber',
-            style: pw.TextStyle(fontSize: 11),
+            style: pw.TextStyle(font: regular, fontSize: 11),
+            textAlign: pw.TextAlign.right,
+            textDirection: pw.TextDirection.rtl,
           ),
           pw.SizedBox(height: 4),
-          pw.Text('الإدارة: $department', style: pw.TextStyle(fontSize: 11)),
+          pw.Text(
+            'الإدارة: $department',
+            style: pw.TextStyle(font: regular, fontSize: 11),
+            textAlign: pw.TextAlign.right,
+            textDirection: pw.TextDirection.rtl,
+          ),
           pw.SizedBox(height: 18),
-          pw.TableHelper.fromTextArray(
-            headers: const ['ر.م', 'الرقم المالي', 'الأصل'],
-            data: [
-              for (final a in assets)
-                ['${a.serial}', a.financialNumber, a.name],
-            ],
-            headerStyle: pw.TextStyle(font: bold, fontSize: 10),
-            cellStyle: const pw.TextStyle(fontSize: 10),
-            headerDecoration: const pw.BoxDecoration(
-              color: PdfColor.fromInt(0xFFF3EADA),
-            ),
+          pw.Table(
             border: pw.TableBorder.all(
               color: const PdfColor.fromInt(0xFFE2E0DC),
               width: 0.5,
             ),
-            cellAlignment: pw.Alignment.centerRight,
-            cellAlignments: {
-              0: pw.Alignment.center,
-              1: pw.Alignment.center,
-            },
             columnWidths: {
-              0: const pw.FixedColumnWidth(40),
-              1: const pw.FixedColumnWidth(90),
-              2: const pw.FlexColumnWidth(),
+              0: const pw.FlexColumnWidth(), // الأصل (يسار الصفحة)
+              1: const pw.FixedColumnWidth(95), // الرقم المالي
+              2: const pw.FixedColumnWidth(42), // ر.م (يمين الصفحة)
             },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(
+                  color: PdfColor.fromInt(0xFFF3EADA),
+                ),
+                children: [
+                  cell('الأصل', font: bold, header: true),
+                  cell(
+                    'الرقم المالي',
+                    font: bold,
+                    header: true,
+                    align: pw.TextAlign.center,
+                  ),
+                  cell(
+                    'ر.م',
+                    font: bold,
+                    header: true,
+                    align: pw.TextAlign.center,
+                  ),
+                ],
+              ),
+              for (final a in assets)
+                pw.TableRow(
+                  children: [
+                    cell(a.name),
+                    cell(
+                      a.financialNumber,
+                      align: pw.TextAlign.center,
+                    ),
+                    cell(
+                      '${a.serial}',
+                      align: pw.TextAlign.center,
+                    ),
+                  ],
+                ),
+            ],
           ),
           pw.SizedBox(height: 24),
           pw.Text(
             'تاريخ الطباعة: $dateLabel',
-            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+            style: pw.TextStyle(
+              font: regular,
+              fontSize: 9,
+              color: PdfColors.grey600,
+            ),
+            textAlign: pw.TextAlign.right,
+            textDirection: pw.TextDirection.rtl,
           ),
         ],
       ),

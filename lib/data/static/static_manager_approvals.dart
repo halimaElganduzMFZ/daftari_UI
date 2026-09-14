@@ -123,7 +123,8 @@ abstract final class StaticManagerApprovals {
     final list = <PendingManagerRequest>[];
     var id = 0;
     for (var year = 2026; year >= 2023; year--) {
-      final count = year == 2026 ? 28 : 22;
+      // عدد أكبر من المعتمدة ليظهر «عرض المزيد» عند فلتر المقبولة (صفحة = 12)
+      final count = year == 2026 ? 40 : 30;
       for (var i = 0; i < count; i++) {
         final isLeave = i % 2 == 0;
         final approved = i % 5 != 0;

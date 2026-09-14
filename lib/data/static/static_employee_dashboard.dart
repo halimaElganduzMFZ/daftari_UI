@@ -33,17 +33,11 @@ abstract final class StaticEmployeeDashboard {
       RequestKind.studyLeave,
       RequestKind.other,
     ];
-    const statuses = [
-      RequestStatus.approved,
-      RequestStatus.approved,
-      RequestStatus.pending,
-      RequestStatus.rejected,
-      RequestStatus.approved,
-    ];
 
     final list = <EmployeeRequest>[];
     var id = 1;
 
+    // طلبات حالية قيد المراجعة
     list.addAll([
       EmployeeRequest(
         id: 'r${id++}',
@@ -70,42 +64,46 @@ abstract final class StaticEmployeeDashboard {
         requestedAt: DateTime(2026, 9, 8),
         note: 'مراجعة طبية صباحية',
       ),
-      EmployeeRequest(
-        id: 'r${id++}',
-        kind: RequestKind.studyLeave,
-        status: RequestStatus.approved,
-        requestedAt: DateTime(2025, 2, 14),
-        note: 'إجازة دراسية معتمدة — مرفق خطاب القبول',
-        attachment: RequestAttachment.demoStudy(
-          fileName: 'خطاب_قبول_2025.pdf',
-          sizeBytes: 704000,
-        ),
-      ),
     ]);
 
+    // دفعة كبيرة من الطلبات المقبولة لاختبار pagination (صفحة طلباتي = 8).
     for (var year = 2026; year >= 2023; year--) {
-      final count = year == 2026 ? 14 : 12;
-      for (var i = 0; i < count; i++) {
-        final month = 1 + ((i * 3) % 12);
-        final day = 2 + ((i * 2) % 26);
+      final approvedCount = year == 2026 ? 24 : 16;
+      for (var i = 0; i < approvedCount; i++) {
+        final month = 1 + ((i * 2) % 12);
+        final day = 1 + ((i * 3) % 27);
         final kind = kinds[(year + i) % kinds.length];
         list.add(
           EmployeeRequest(
             id: 'r${id++}',
             kind: kind,
-            status: year == 2026 && i < 2
-                ? RequestStatus.pending
-                : statuses[(year + i) % statuses.length],
-            requestedAt: DateTime(year, month, day),
+            status: RequestStatus.approved,
+            requestedAt: DateTime(year, month, day, 9 + (i % 6), (i * 7) % 60),
             note: kind == RequestKind.studyLeave
-                ? 'إجازة دراسية — $year'
-                : '${notes[(year + i) % notes.length]} — $year',
+                ? 'إجازة دراسية معتمدة — $year'
+                : '${notes[(year + i) % notes.length]} — مقبول $year',
             attachment: kind == RequestKind.studyLeave
                 ? RequestAttachment.demoStudy(
-                    fileName: 'مرفق_دراسي_$year.pdf',
+                    fileName: 'مرفق_دراسي_مقبول_$year.pdf',
                     sizeBytes: 480000 + (i * 15000),
                   )
                 : null,
+          ),
+        );
+      }
+
+      // قليل من المرفوضة وقيد المراجعة لكل سنة
+      for (var i = 0; i < 4; i++) {
+        final kind = kinds[(year + i + 3) % kinds.length];
+        list.add(
+          EmployeeRequest(
+            id: 'r${id++}',
+            kind: kind,
+            status: i.isEven ? RequestStatus.rejected : RequestStatus.pending,
+            requestedAt: DateTime(year, 6 + (i % 6), 5 + i * 2),
+            note: i.isEven
+                ? '${notes[i % notes.length]} — مرفوض $year'
+                : '${notes[(i + 2) % notes.length]} — قيد المراجعة $year',
           ),
         );
       }
