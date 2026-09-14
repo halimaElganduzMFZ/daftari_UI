@@ -9,6 +9,7 @@ import '../../core/widgets/status_pill.dart';
 import '../../data/models/employee_dashboard.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_employee_dashboard.dart';
+import '../assets/employee_assets_screen.dart';
 
 /// الصفحة الرئيسية للموظف العادي — من index.php بتوزيع أوضح وأقل ازدحاماً.
 class HomeScreen extends StatefulWidget {
@@ -113,20 +114,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
                     childAspectRatio: 1.35,
-                    children: const [
-                      _ServiceTile(
+                    children: [
+                      const _ServiceTile(
                         title: 'عرض التايم شيت',
                         icon: FontAwesomeIcons.clock,
                       ),
                       _ServiceTile(
                         title: 'الأصول المسجلة',
                         icon: FontAwesomeIcons.laptop,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const EmployeeAssetsScreen(),
+                            ),
+                          );
+                        },
                       ),
-                      _ServiceTile(
+                      const _ServiceTile(
                         title: 'عرض قصاصاتك',
                         icon: FontAwesomeIcons.fileLines,
                       ),
-                      _ServiceTile(
+                      const _ServiceTile(
                         title: 'المستشفيات',
                         icon: FontAwesomeIcons.hospital,
                       ),
@@ -427,17 +435,23 @@ class _PermissionBalanceBar extends StatelessWidget {
 
 /// روابط الخدمات — بطاقات Font Awesome أنيقة، جاهزة للنقر لاحقاً.
 class _ServiceTile extends StatelessWidget {
-  const _ServiceTile({required this.title, required this.icon});
+  const _ServiceTile({
+    required this.title,
+    required this.icon,
+    this.onTap,
+  });
 
   final String title;
   final FaIconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return AppSurface(
-      onTap: () {
-        // سيتم ربط الصفحات لاحقاً (تايم شيت، أصول، قصاصات، مستشفيات).
-      },
+      onTap: onTap ??
+          () {
+            // سيتم ربط الصفحات لاحقاً (تايم شيت، قصاصات، مستشفيات).
+          },
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
