@@ -244,12 +244,13 @@ class _LoginScreenState extends State<LoginScreen>
                             ),
                             child: const Center(
                               child: Text(
-                                'ح',
+                                'MFZ',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 34,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w800,
                                   height: 1,
+                                  letterSpacing: 1.2,
                                 ),
                               ),
                             ),
@@ -317,18 +318,19 @@ class _LoginScreenState extends State<LoginScreen>
                                     AppStrings.welcomeEmployee,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: 22,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.charcoal,
+                                      letterSpacing: 0.2,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 6),
                                   const Text(
                                     AppStrings.loginSubtitle,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: AppColors.slate,
-                                      fontSize: 13.5,
+                                      fontSize: 13,
                                       height: 1.45,
                                     ),
                                   ),

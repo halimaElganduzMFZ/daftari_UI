@@ -292,7 +292,7 @@ class _WelcomeHeader extends StatelessWidget {
               ),
               SizedBox(width: 8),
               Text(
-                'مرحباً بك عزيزي الموظف / ة',
+                'أهلاً بك',
                 style: TextStyle(
                   color: AppColors.slate,
                   fontSize: 14,

@@ -3,8 +3,8 @@ abstract final class AppStrings {
   static const appName = 'شؤون الموظفين';
   static const orgName = 'المنطقة الحرة بمصراتة';
   static const permissionsAppTitle = 'تطبيق إدارة الأذونات والإجازات';
-  static const welcomeEmployee = 'مرحباً عزيزي الموظف / ة';
-  static const loginSubtitle = 'ادخل رقم الموظف وكلمة المرور للمتابعة';
+  static const welcomeEmployee = 'أهلاً بك';
+  static const loginSubtitle = 'أدخل رقم الموظف وكلمة المرور للمتابعة';
   static const username = 'اسم المستخدم';
   static const usernameHint = 'رقم الموظف';
   static const password = 'كلمة المرور';
