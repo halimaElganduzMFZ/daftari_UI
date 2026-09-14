@@ -7,8 +7,7 @@ import '../../data/models/employee.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_manager_attendance.dart';
 
-/// عرض بصمات الموظفين — مقابل time_sheet_show.php
-/// فلتر: موظف + من تاريخ + إلى تاريخ ← ثم جلب السجل.
+/// عرض بصمات الموظفين — بحث بالاسم أو الرقم الوظيفي + فترة زمنية.
 class ManagerAttendanceScreen extends StatefulWidget {
   const ManagerAttendanceScreen({super.key});
 
@@ -18,7 +17,7 @@ class ManagerAttendanceScreen extends StatefulWidget {
 }
 
 class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
-  final _employees = StaticManagerAttendance.structureEmployees;
+  final _searchController = TextEditingController();
   final _dateFormat = DateFormat('yyyy/MM/dd', 'ar');
 
   Employee? _selectedEmployee;
@@ -27,6 +26,10 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
   List<EmployeeDayAttendance>? _results;
   bool _loading = false;
   String? _error;
+  String _query = '';
+
+  List<Employee> get _matches =>
+      StaticManagerAttendance.searchEmployees(_query);
 
   @override
   void initState() {
@@ -34,9 +37,12 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
     final now = DateTime.now();
     _fromDate = DateTime(now.year, now.month, 1);
     _toDate = DateTime(now.year, now.month, now.day);
-    if (_employees.isNotEmpty) {
-      _selectedEmployee = _employees.first;
-    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _pickFrom() async {
@@ -68,9 +74,31 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
     setState(() => _toDate = picked);
   }
 
+  void _selectEmployee(Employee employee) {
+    setState(() {
+      _selectedEmployee = employee;
+      _searchController.text =
+          '${employee.fullName} · ${employee.employeeNumber}';
+      _query = employee.employeeNumber;
+      _error = null;
+      _results = null;
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  void _clearSearch() {
+    setState(() {
+      _searchController.clear();
+      _query = '';
+      _selectedEmployee = null;
+      _results = null;
+      _error = null;
+    });
+  }
+
   Future<void> _fetch() async {
     if (_selectedEmployee == null) {
-      setState(() => _error = 'اختر الموظف أولاً');
+      setState(() => _error = 'ابحث واختر الموظف أولاً');
       return;
     }
     if (_fromDate == null || _toDate == null) {
@@ -120,11 +148,15 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
   Widget build(BuildContext context) {
     final structure = AppSession.activeStructure?.name ?? 'الهيكل';
     final results = _results;
-    final present =
-        results?.where((r) => r.isPresent).length ?? 0;
-    final absent =
-        results?.where((r) => r.isAbsent).length ?? 0;
+    final present = results?.where((r) => r.isPresent).length ?? 0;
+    final absent = results?.where((r) => r.isAbsent).length ?? 0;
     final other = (results?.length ?? 0) - present - absent;
+    final matches = _matches;
+    // أظهر القائمة أثناء الكتابة، وأخفها بعد اختيار واضح.
+    final showList = _query.trim().isNotEmpty &&
+        (_selectedEmployee == null ||
+            _searchController.text !=
+                '${_selectedEmployee!.fullName} · ${_selectedEmployee!.employeeNumber}');
 
     return SafeArea(
       child: ListView(
@@ -149,7 +181,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'اختر الموظف والفترة ثم اعرض سجل الحضور والغياب.',
+            'ابحث بالاسم أو الرقم الوظيفي، ثم حدد الفترة واعرض السجل.',
             style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
           const SizedBox(height: 16),
@@ -158,39 +190,168 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  'اسم الموظف',
+                  'الموظف',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.charcoal,
                   ),
                 ),
                 const SizedBox(height: 8),
-                InputDecorator(
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.person_search_outlined),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<Employee>(
-                      value: _selectedEmployee,
-                      isExpanded: true,
-                      hint: const Text('ابحث باسم الموظف'),
-                      items: _employees
-                          .map(
-                            (e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(
-                                '${e.fullName} · ${e.employeeNumber}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedEmployee = value),
-                    ),
+                TextField(
+                  controller: _searchController,
+                  textInputAction: TextInputAction.search,
+                  onChanged: (value) {
+                    setState(() {
+                      _query = value;
+                      // إن غيّر النص بعد الاختيار، ألغِ التحديد.
+                      if (_selectedEmployee != null) {
+                        final locked =
+                            '${_selectedEmployee!.fullName} · ${_selectedEmployee!.employeeNumber}';
+                        if (value != locked) {
+                          _selectedEmployee = null;
+                          _results = null;
+                        }
+                      }
+                      _error = null;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'الاسم أو الرقم الوظيفي (مثال: أحمد أو FZ-10021)',
+                    prefixIcon: const Icon(Icons.search_rounded),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            tooltip: 'مسح',
+                            onPressed: _clearSearch,
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                    filled: true,
+                    fillColor: AppColors.background,
                   ),
                 ),
+                if (_selectedEmployee != null && !showList) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.goldSoft,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: AppColors.gold.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 16,
+                          backgroundColor:
+                              AppColors.gold.withValues(alpha: 0.22),
+                          child: Text(
+                            _selectedEmployee!.fullName.characters.first,
+                            style: const TextStyle(
+                              color: AppColors.goldDeep,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _selectedEmployee!.fullName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.charcoal,
+                                ),
+                              ),
+                              Text(
+                                '${_selectedEmployee!.employeeNumber} · ${_selectedEmployee!.department}',
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  color: AppColors.slate,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'تغيير',
+                          onPressed: _clearSearch,
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            size: 20,
+                            color: AppColors.goldDeep,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (showList) ...[
+                  const SizedBox(height: 8),
+                  if (matches.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Text(
+                        'لا يوجد موظف بهذا الاسم أو الرقم',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.slate),
+                      ),
+                    )
+                  else
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 220),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: matches.length,
+                        separatorBuilder: (_, _) =>
+                            const Divider(height: 1, color: AppColors.line),
+                        itemBuilder: (context, index) {
+                          final e = matches[index];
+                          return ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: CircleAvatar(
+                              radius: 18,
+                              backgroundColor:
+                                  AppColors.gold.withValues(alpha: 0.16),
+                              child: Text(
+                                e.fullName.characters.first,
+                                style: const TextStyle(
+                                  color: AppColors.goldDeep,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              e.fullName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.charcoal,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${e.employeeNumber} · ${e.department}',
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: AppColors.slate,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.chevron_left_rounded,
+                              color: AppColors.slate,
+                            ),
+                            onTap: () => _selectEmployee(e),
+                          );
+                        },
+                      ),
+                    ),
+                ],
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -421,9 +582,8 @@ class _DateField extends StatelessWidget {
                     child: Text(
                       value ?? 'اختر التاريخ',
                       style: TextStyle(
-                        color: value == null
-                            ? AppColors.slate
-                            : AppColors.charcoal,
+                        color:
+                            value == null ? AppColors.slate : AppColors.charcoal,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

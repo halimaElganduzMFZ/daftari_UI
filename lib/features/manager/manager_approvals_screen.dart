@@ -62,13 +62,16 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
     }
     final q = _query.trim().toLowerCase();
     if (q.isNotEmpty) {
+      final qDigits = q.replaceAll(RegExp(r'[\s\-]'), '');
       list = list
-          .where(
-            (r) =>
-                r.employeeName.toLowerCase().contains(q) ||
-                r.employeeNumber.toLowerCase().contains(q) ||
-                r.typeLabel.toLowerCase().contains(q),
-          )
+          .where((r) {
+            final name = r.employeeName.toLowerCase();
+            final number = r.employeeNumber.toLowerCase();
+            final numberDigits = number.replaceAll(RegExp(r'[\s\-]'), '');
+            return name.contains(q) ||
+                number.contains(q) ||
+                numberDigits.contains(qDigits);
+          })
           .toList();
     }
     return list;
@@ -255,11 +258,14 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                 _focusIndex = 0;
               }),
               decoration: InputDecoration(
-                hintText: 'بحث بالاسم أو الرقم أو نوع الطلب',
-                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: 'بحث بالاسم أو الرقم الوظيفي',
+                prefixIcon: const Icon(Icons.badge_outlined),
+                filled: true,
+                fillColor: AppColors.background,
                 suffixIcon: _query.isEmpty
                     ? null
                     : IconButton(
+                        tooltip: 'مسح',
                         onPressed: () {
                           _searchController.clear();
                           setState(() {

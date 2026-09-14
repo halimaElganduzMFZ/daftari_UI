@@ -56,6 +56,24 @@ abstract final class StaticManagerAttendance {
     return days;
   }
 
+  /// بحث بالاسم أو رقم الموظف.
+  static List<Employee> searchEmployees(String query) {
+    final q = query.trim().toLowerCase();
+    final all = structureEmployees;
+    if (q.isEmpty) return all;
+    final qDigits = q.replaceAll(RegExp(r'[\s\-]'), '');
+    return all
+        .where((e) {
+          final name = e.fullName.toLowerCase();
+          final number = e.employeeNumber.toLowerCase();
+          final numberDigits = number.replaceAll(RegExp(r'[\s\-]'), '');
+          return name.contains(q) ||
+              number.contains(q) ||
+              numberDigits.contains(qDigits);
+        })
+        .toList(growable: false);
+  }
+
   static EmployeeDayAttendance _dayFor(
     String employeeNumber,
     DateTime date,
