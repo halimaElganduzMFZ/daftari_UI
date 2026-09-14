@@ -59,38 +59,10 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
   }
 
   Future<void> _reject(PendingManagerRequest request) async {
-    final controller = TextEditingController();
     final reason = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppStrings.rejectReasonTitle),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: AppStrings.rejectReasonHint,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.danger,
-            ),
-            onPressed: () {
-              final text = controller.text.trim();
-              if (text.isEmpty) return;
-              Navigator.pop(context, text);
-            },
-            child: const Text(AppStrings.reject),
-          ),
-        ],
-      ),
+      builder: (context) => const _RejectReasonDialog(),
     );
-    controller.dispose();
     if (reason == null || !mounted) return;
     setState(() {
       request.decision = ManagerDecision.rejected;
@@ -316,6 +288,53 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RejectReasonDialog extends StatefulWidget {
+  const _RejectReasonDialog();
+
+  @override
+  State<_RejectReasonDialog> createState() => _RejectReasonDialogState();
+}
+
+class _RejectReasonDialogState extends State<_RejectReasonDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text(AppStrings.rejectReasonTitle),
+      content: TextField(
+        controller: _controller,
+        maxLines: 4,
+        autofocus: true,
+        decoration: const InputDecoration(
+          hintText: AppStrings.rejectReasonHint,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('إلغاء'),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+          onPressed: () {
+            final text = _controller.text.trim();
+            if (text.isEmpty) return;
+            Navigator.pop(context, text);
+          },
+          child: const Text(AppStrings.reject),
+        ),
+      ],
     );
   }
 }
