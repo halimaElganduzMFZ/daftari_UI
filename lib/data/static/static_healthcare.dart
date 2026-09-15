@@ -11,7 +11,7 @@ abstract final class StaticHealthcare {
       id: '1',
       title: 'مستشفى متكامل',
       subtitle: 'متعدد التخصصات',
-      icon: FontAwesomeIcons.hospital,
+      icon: FontAwesomeIcons.building,
       accent: AppColors.goldDeep,
     ),
     HealthcareSpecialty(

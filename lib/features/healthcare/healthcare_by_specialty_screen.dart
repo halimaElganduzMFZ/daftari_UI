@@ -133,7 +133,7 @@ class _HealthcareBySpecialtyScreenState
               _ProviderCard(
                 provider: p,
                 accent: specialty?.accent ?? AppColors.goldDeep,
-                icon: specialty?.icon ?? FontAwesomeIcons.hospital,
+                icon: specialty?.icon ?? FontAwesomeIcons.building,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(

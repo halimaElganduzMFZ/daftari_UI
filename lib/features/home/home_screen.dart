@@ -11,6 +11,7 @@ import '../../data/session/app_session.dart';
 import '../../data/static/static_employee_dashboard.dart';
 import '../assets/employee_assets_screen.dart';
 import '../clips/employee_clips_screen.dart';
+import '../feedback/employee_feedback_screen.dart';
 import '../healthcare/healthcare_specialties_screen.dart';
 import '../timesheet/timesheet_hub_screen.dart';
 
@@ -158,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       _ServiceTile(
                         title: 'المستشفيات',
-                        icon: FontAwesomeIcons.hospital,
+                        icon: FontAwesomeIcons.starAndCrescent,
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
@@ -170,6 +171,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 14),
+                  const _FeedbackInviteCard(),
                 ],
               ),
             ),
@@ -496,6 +499,92 @@ class _PermissionBalanceBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// دعوة هادئة لإرسال شكوى/مقترح — ظاهرة دون إفساد إيقاع الرئيسية.
+class _FeedbackInviteCard extends StatelessWidget {
+  const _FeedbackInviteCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const EmployeeFeedbackScreen(),
+            ),
+          );
+        },
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
+            gradient: LinearGradient(
+              begin: Alignment.centerRight,
+              end: Alignment.centerLeft,
+              colors: [
+                AppColors.goldSoft.withValues(alpha: 0.55),
+                AppColors.surface,
+              ],
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.goldSoft,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: const FaIcon(
+                    FontAwesomeIcons.envelopeOpenText,
+                    size: 16,
+                    color: AppColors.goldDeep,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'شكوى أو مقترح',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.charcoal,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'مساحة هادئة لملاحظاتك — اختيارية وغير ملحّة',
+                        style: TextStyle(
+                          color: AppColors.slate,
+                          fontSize: 12.5,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const FaIcon(
+                  FontAwesomeIcons.chevronLeft,
+                  size: 12,
+                  color: AppColors.goldDeep,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

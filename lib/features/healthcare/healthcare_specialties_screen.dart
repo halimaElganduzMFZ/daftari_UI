@@ -40,7 +40,7 @@ class HealthcareSpecialtiesScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         FaIcon(
-                          FontAwesomeIcons.hospital,
+                          FontAwesomeIcons.starAndCrescent,
                           color: Color(0xFFE2C79A),
                           size: 22,
                         ),

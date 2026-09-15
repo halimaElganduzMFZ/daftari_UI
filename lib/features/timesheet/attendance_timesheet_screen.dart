@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/date_range_filter_bar.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../data/models/employee_timesheet_day.dart';
 import '../../data/static/static_employee_timesheet.dart';
@@ -20,10 +21,29 @@ class AttendanceTimesheetScreen extends StatefulWidget {
 class _AttendanceTimesheetScreenState extends State<AttendanceTimesheetScreen> {
   static const _pageSize = 8;
   int _visible = _pageSize;
+  DateTime? _from;
+  DateTime? _to;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _to = DateTime(now.year, now.month, now.day);
+    _from = _to!.subtract(const Duration(days: 30));
+  }
+
+  List<EmployeeTimesheetDay> get _filtered {
+    return [
+      for (final d in StaticEmployeeTimesheet.days)
+        if (DateRangeFilterBar.inRange(d.date, _from, _to)) d,
+    ];
+  }
+
+  void _resetPaging() => _visible = _pageSize;
 
   @override
   Widget build(BuildContext context) {
-    final days = StaticEmployeeTimesheet.days;
+    final days = _filtered;
     final visible = days.take(_visible).toList();
     final hasMore = _visible < days.length;
     final workDays = days.where((d) => d.isWorkDay).length;
@@ -87,29 +107,65 @@ class _AttendanceTimesheetScreenState extends State<AttendanceTimesheetScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
+          DateRangeFilterBar(
+            from: _from,
+            to: _to,
+            hint: 'تصفية سجل الحضور حسب الفترة',
+            onFromChanged: (d) => setState(() {
+              _from = d;
+              if (_to != null && _to!.isBefore(d)) _to = d;
+              _resetPaging();
+            }),
+            onToChanged: (d) => setState(() {
+              _to = d;
+              if (_from != null && _from!.isAfter(d)) _from = d;
+              _resetPaging();
+            }),
+            onCleared: () => setState(() {
+              _from = null;
+              _to = null;
+              _resetPaging();
+            }),
+          ),
+          const SizedBox(height: 16),
           Text(
-            'عرض ${visible.length} من ${days.length}',
+            days.isEmpty
+                ? 'لا نتائج لهذه الفترة'
+                : 'عرض ${visible.length} من ${days.length}',
             style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
           ),
           const SizedBox(height: 10),
-          for (final day in visible) ...[
-            _DayCard(day: day),
-            const SizedBox(height: 10),
-          ],
-          if (hasMore)
-            OutlinedButton.icon(
-              onPressed: () => setState(() {
-                _visible = (_visible + _pageSize).clamp(0, days.length);
-              }),
-              icon: const Icon(Icons.expand_more_rounded),
-              label: Text('عرض المزيد (${days.length - visible.length})'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-                foregroundColor: AppColors.goldDeep,
-                side: const BorderSide(color: AppColors.gold),
+          if (days.isEmpty)
+            const AppSurface(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Text(
+                  'لا توجد أيام ضمن الفترة المحددة',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.slate),
+                ),
               ),
-            ),
+            )
+          else ...[
+            for (final day in visible) ...[
+              _DayCard(day: day),
+              const SizedBox(height: 10),
+            ],
+            if (hasMore)
+              OutlinedButton.icon(
+                onPressed: () => setState(() {
+                  _visible = (_visible + _pageSize).clamp(0, days.length);
+                }),
+                icon: const Icon(Icons.expand_more_rounded),
+                label: Text('عرض المزيد (${days.length - visible.length})'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: AppColors.goldDeep,
+                  side: const BorderSide(color: AppColors.gold),
+                ),
+              ),
+          ],
         ],
       ),
     );

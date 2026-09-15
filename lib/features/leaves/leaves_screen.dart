@@ -5,11 +5,12 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
+import '../../core/widgets/date_range_filter_bar.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../data/models/employee_dashboard.dart';
 import '../../data/static/static_employee_dashboard.dart';
 
-/// تبويب «طلباتي» — فلاتر سنة/نوع/حالة + عرض المزيد.
+/// تبويب «طلباتي» — فلاتر فترة/نوع/حالة + عرض المزيد.
 class LeavesScreen extends StatefulWidget {
   const LeavesScreen({super.key});
 
@@ -26,22 +27,16 @@ class _LeavesScreenState extends State<LeavesScreen> {
 
   _TypeFilter _typeFilter = _TypeFilter.all;
   _StatusFilter _statusFilter = _StatusFilter.all;
-  late int _year;
+  DateTime? _from;
+  DateTime? _to;
   int _visibleCount = _pageSize;
 
   @override
   void initState() {
     super.initState();
-    final years = _availableYears;
-    _year = years.isEmpty ? DateTime.now().year : years.first;
-  }
-
-  List<int> get _availableYears {
-    final years = {
-      for (final r in StaticEmployeeDashboard.data.requests) r.requestedAt.year,
-    }.toList()
-      ..sort((a, b) => b.compareTo(a));
-    return years;
+    final now = DateTime.now();
+    _to = DateTime(now.year, now.month, now.day);
+    _from = DateTime(now.year - 1, now.month, now.day);
   }
 
   static bool _isLeave(RequestKind kind) => switch (kind) {
@@ -58,7 +53,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
   List<EmployeeRequest> get _filtered {
     return [
       for (final r in StaticEmployeeDashboard.data.requests)
-        if (r.requestedAt.year == _year)
+        if (DateRangeFilterBar.inRange(r.requestedAt, _from, _to))
           if (_typeFilter == _TypeFilter.all ||
               (_typeFilter == _TypeFilter.leaves && _isLeave(r.kind)) ||
               (_typeFilter == _TypeFilter.permissions && !_isLeave(r.kind)))
@@ -96,7 +91,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'تصفّح سجلك بالسنة والنوع — بدون صفحات مرقّمة',
+            'تصفّح سجلك بالفترة والنوع — بدون صفحات مرقّمة',
             style: TextStyle(color: AppColors.slate),
           ),
           const SizedBox(height: 14),
@@ -128,33 +123,35 @@ class _LeavesScreenState extends State<LeavesScreen> {
             ],
           ),
           const SizedBox(height: 14),
+          DateRangeFilterBar(
+            from: _from,
+            to: _to,
+            hint: 'عرض الطلبات ضمن فترة محددة',
+            onFromChanged: (d) => setState(() {
+              _from = d;
+              if (_to != null && _to!.isBefore(d)) _to = d;
+              _resetPaging();
+            }),
+            onToChanged: (d) => setState(() {
+              _to = d;
+              if (_from != null && _from!.isAfter(d)) _from = d;
+              _resetPaging();
+            }),
+            onCleared: () => setState(() {
+              _from = null;
+              _to = null;
+              _resetPaging();
+            }),
+          ),
+          const SizedBox(height: 14),
           const Text(
-            'السنة',
+            'نوع الطلب',
             style: TextStyle(
               fontWeight: FontWeight.w700,
               color: AppColors.charcoal,
             ),
           ),
           const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final year in _availableYears) ...[
-                  _FilterChip(
-                    label: '$year',
-                    selected: _year == year,
-                    onTap: () => setState(() {
-                      _year = year;
-                      _resetPaging();
-                    }),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -186,6 +183,14 @@ class _LeavesScreenState extends State<LeavesScreen> {
             ],
           ),
           const SizedBox(height: 10),
+          const Text(
+            'الحالة',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: AppColors.charcoal,
+            ),
+          ),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -257,7 +262,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'جرّب سنة أو تصنيفاً آخر',
+                      'جرّب فترة أو تصنيفاً آخر',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: AppColors.slate, fontSize: 13),
                     ),

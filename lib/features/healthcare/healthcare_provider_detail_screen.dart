@@ -66,7 +66,7 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
                     left: -20,
                     bottom: -30,
                     child: FaIcon(
-                      specialty?.icon ?? FontAwesomeIcons.hospital,
+                      specialty?.icon ?? FontAwesomeIcons.building,
                       size: 200,
                       color: Colors.white.withValues(alpha: 0.08),
                     ),
@@ -74,7 +74,7 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
                   Align(
                     alignment: const Alignment(0, -0.15),
                     child: FaIcon(
-                      specialty?.icon ?? FontAwesomeIcons.hospital,
+                      specialty?.icon ?? FontAwesomeIcons.building,
                       size: 56,
                       color: Colors.white.withValues(alpha: 0.95),
                     ),
