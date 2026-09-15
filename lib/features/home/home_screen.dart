@@ -188,51 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SectionHeader(
-                    title: 'ملخص طلباتك الشهري',
-                    subtitle: 'أرقام سريعة لهذا الشهر فقط',
-                  ),
-                  const SizedBox(height: 12),
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 2.2,
-                    children: [
-                      _SummaryStat(
-                        label: 'إذن تأخير',
-                        value: '${data.delayPermissionCount}',
-                        icon: FontAwesomeIcons.hourglassHalf,
-                      ),
-                      _SummaryStat(
-                        label: 'خروج مبكر',
-                        value: '${data.earlyLeaveCount}',
-                        icon: FontAwesomeIcons.doorOpen,
-                      ),
-                      _SummaryStat(
-                        label: 'طارئة معلّقة',
-                        value: '${data.pendingEmergencyCount}',
-                        icon: FontAwesomeIcons.triangleExclamation,
-                      ),
-                      _SummaryStat(
-                        label: 'سنوية معلّقة',
-                        value: '${data.pendingAnnualCount}',
-                        icon: FontAwesomeIcons.calendarCheck,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SectionHeader(
                     title: 'طلباتك',
                     subtitle: 'فلتر حسب الحالة بدل ثلاث جداول مزدحمة',
                   ),
@@ -609,50 +564,6 @@ class _ServiceTile extends StatelessWidget {
               fontSize: 13.5,
               height: 1.3,
               color: AppColors.charcoal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryStat extends StatelessWidget {
-  const _SummaryStat({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final FaIconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppSurface(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Row(
-        children: [
-          FaIcon(icon, color: AppColors.goldDeep, size: 14),
-          const SizedBox(width: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 20,
-              color: AppColors.goldDeep,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.charcoal,
-                fontWeight: FontWeight.w600,
-                fontSize: 12.5,
-              ),
             ),
           ),
         ],
