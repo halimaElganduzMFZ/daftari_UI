@@ -8,6 +8,8 @@ import '../../data/auth/auth_repository.dart';
 import '../../data/session/app_session.dart';
 import '../auth/login_screen.dart';
 import '../auth/which_app_screen.dart';
+import '../manager/manager_impersonation_screen.dart';
+import '../shell/manager_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -39,11 +41,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _switchRole() {
     if (AppSession.demoAccount?.canManageStructures != true) return;
+    if (AppSession.isImpersonating) {
+      AppSession.endImpersonation();
+    }
     AppSession.activeRole = null;
     AppSession.activeStructure = null;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const WhichAppScreen()),
       (_) => false,
+    );
+  }
+
+  void _endImpersonation() {
+    final structure = AppSession.endImpersonation();
+    if (!mounted) return;
+    if (structure != null) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const ManagerShell()),
+        (_) => false,
+      );
+    }
+  }
+
+  void _openImpersonation() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ManagerImpersonationScreen(),
+      ),
     );
   }
 
@@ -94,7 +118,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   employee?.department ?? user?.workplaceName ?? '—',
                 ),
                 Text(employee?.email ?? user?.email ?? '—'),
-                if (AppSession.isManagerMode) ...[
+                if (AppSession.isImpersonating) ...[
+                  const SizedBox(height: 10),
+                  const _FlagChip(
+                    label: 'نيابة عن موظف — أنهِ من الزر بالأسفل',
+                    color: AppColors.warning,
+                  ),
+                ] else if (AppSession.isManagerMode) ...[
                   const SizedBox(height: 10),
                   _FlagChip(
                     label:
@@ -135,7 +165,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          if (AppSession.demoAccount?.canManageStructures == true) ...[
+          if (AppSession.isImpersonating) ...[
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: _endImpersonation,
+              icon: const Icon(Icons.switch_account_rounded),
+              label: const Text('العودة كمسؤول عن الهيكل'),
+            ),
+          ],
+          if (AppSession.isManagerMode) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _openImpersonation,
+              icon: const Icon(Icons.person_search_rounded),
+              label: const Text('الدخول نيابة عن موظف'),
+            ),
+          ],
+          if (AppSession.demoAccount?.canManageStructures == true &&
+              !AppSession.isImpersonating) ...[
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: _switchRole,

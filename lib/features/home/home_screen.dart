@@ -57,6 +57,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          if (AppSession.isImpersonating)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: _ImpersonationBanner(
+                  employeeName: employee?.fullName ?? 'الموظف',
+                  managerName:
+                      AppSession.impersonatingManager?.fullName ?? 'المدير',
+                ),
+              ),
+            ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
@@ -731,4 +742,52 @@ class _RequestTile extends StatelessWidget {
         RequestStatus.approved => StatusTone.success,
         RequestStatus.rejected => StatusTone.danger,
       };
+}
+
+
+class _ImpersonationBanner extends StatelessWidget {
+  const _ImpersonationBanner({
+    required this.employeeName,
+    required this.managerName,
+  });
+
+  final String employeeName;
+  final String managerName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
+        gradient: LinearGradient(
+          begin: Alignment.centerRight,
+          end: Alignment.centerLeft,
+          colors: [
+            AppColors.goldSoft.withValues(alpha: 0.9),
+            AppColors.surface,
+          ],
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.switch_account_rounded, color: AppColors.goldDeep),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'أنت تدخل نيابة عن $employeeName — المدير: $managerName',
+              style: const TextStyle(
+                color: AppColors.charcoal,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -8,6 +8,7 @@ import '../../core/widgets/attachment_viewer.dart';
 import '../../data/static/static_awol.dart';
 import '../../data/static/static_manager_approvals.dart';
 import 'manager_absentees_screen.dart';
+import 'manager_impersonation_screen.dart';
 
 enum _InboxTab { all, permissions, leaves }
 
@@ -176,6 +177,14 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
     );
   }
 
+  void _openImpersonation() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ManagerImpersonationScreen(),
+      ),
+    );
+  }
+
   void _openAbsentees() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -221,6 +230,18 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                     ],
                   ),
                 ),
+                IconButton(
+
+                  tooltip: 'الدخول نيابة عن موظف',
+
+                  onPressed: _openImpersonation,
+
+                  icon: const Icon(Icons.switch_account_outlined),
+
+                  color: AppColors.goldDeep,
+
+                ),
+
                 _NotificationBell(
                   count: StaticAwol.notificationCount,
                   onTap: _openAbsentees,

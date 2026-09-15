@@ -19,6 +19,10 @@ abstract final class AppSession {
   /// الهيكل المختار عند الدخول كمسؤول.
   static ManagedStructure? activeStructure;
 
+  /// لقطة المدير عند الدخول نيابة عن موظف (responsible_for.php).
+  static Employee? _managerSnapshot;
+  static ManagedStructure? _structureSnapshot;
+
   static bool get isAuthenticated {
     if (demoAccount != null && currentEmployee != null) return true;
     return accessToken != null &&
@@ -29,6 +33,14 @@ abstract final class AppSession {
   static bool get isManagerMode =>
       activeRole == AppRole.structureManager && activeStructure != null;
 
+  /// المدير يعمل حالياً داخل واجهة موظف آخر.
+  static bool get isImpersonating => _managerSnapshot != null;
+
+  static Employee? get impersonatingManager => _managerSnapshot;
+
+  static ManagedStructure? get impersonationReturnStructure =>
+      _structureSnapshot;
+
   static void applyLogin(TokenPair pair) {
     accessToken = pair.accessToken;
     refreshToken = pair.refreshToken;
@@ -37,6 +49,7 @@ abstract final class AppSession {
     demoAccount = null;
     activeRole = AppRole.employee;
     activeStructure = null;
+    _clearImpersonationSnapshots();
   }
 
   static void applyDemoLogin(DemoAccount account) {
@@ -47,6 +60,7 @@ abstract final class AppSession {
     refreshToken = null;
     activeRole = null;
     activeStructure = null;
+    _clearImpersonationSnapshots();
   }
 
   static void enterAsEmployee() {
@@ -59,6 +73,43 @@ abstract final class AppSession {
     activeStructure = structure;
   }
 
+  /// دخول المدير إلى تطبيق الموظف نيابة عنه — تتبدل الصفة إلى موظف.
+  static void startImpersonation(Employee target) {
+    if (!isManagerMode && _managerSnapshot == null) {
+      // يسمح بالبدء فقط من وضع المدير.
+      if (activeStructure == null) return;
+    }
+    _managerSnapshot ??=
+        demoAccount?.employee ?? currentEmployee;
+    _structureSnapshot ??= activeStructure;
+    currentEmployee = target;
+    activeRole = AppRole.employee;
+    activeStructure = null;
+  }
+
+  /// إنهاء النيابة والعودة كمسؤول عن الهيكل السابق.
+  static ManagedStructure? endImpersonation() {
+    final structure = _structureSnapshot;
+    final manager = _managerSnapshot;
+    if (manager != null) {
+      currentEmployee = manager;
+    }
+    if (structure != null) {
+      activeRole = AppRole.structureManager;
+      activeStructure = structure;
+    } else {
+      activeRole = AppRole.employee;
+      activeStructure = null;
+    }
+    _clearImpersonationSnapshots();
+    return structure;
+  }
+
+  static void _clearImpersonationSnapshots() {
+    _managerSnapshot = null;
+    _structureSnapshot = null;
+  }
+
   static void clear() {
     currentEmployee = null;
     currentUser = null;
@@ -67,5 +118,6 @@ abstract final class AppSession {
     demoAccount = null;
     activeRole = null;
     activeStructure = null;
+    _clearImpersonationSnapshots();
   }
 }

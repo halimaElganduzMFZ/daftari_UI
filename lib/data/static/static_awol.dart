@@ -1,6 +1,6 @@
 /// موظف منقطع عن العمل (AWOL) — مقابل awol_suspension_table في PHP.
 class AwolEmployee {
-  const AwolEmployee({
+  AwolEmployee({
     required this.id,
     required this.employeeNumber,
     required this.fullName,
@@ -8,6 +8,9 @@ class AwolEmployee {
     required this.firstAbsentDate,
     required this.suspendedDays,
     this.note,
+    this.handled = false,
+    this.managerNote,
+    this.handledAt,
   });
 
   final String id;
@@ -17,6 +20,11 @@ class AwolEmployee {
   final DateTime firstAbsentDate;
   final int suspendedDays;
   final String? note;
+
+  /// بعد «اتخاذ إجراء» من المدير (updateState.php → status_mgr = 3).
+  bool handled;
+  String? managerNote;
+  DateTime? handledAt;
 }
 
 /// بيانات ثابتة لإشعارات المنقطعين عند المدير.
@@ -58,5 +66,19 @@ abstract final class StaticAwol {
     ),
   ];
 
-  static int get notificationCount => absentees.length;
+  static List<AwolEmployee> get openAbsentees =>
+      absentees.where((e) => !e.handled).toList(growable: false);
+
+  static int get notificationCount => openAbsentees.length;
+
+  static void markHandled(String id, {required String managerNote}) {
+    for (final item in absentees) {
+      if (item.id == id) {
+        item.handled = true;
+        item.managerNote = managerNote.trim().isEmpty ? null : managerNote.trim();
+        item.handledAt = DateTime.now();
+        return;
+      }
+    }
+  }
 }
