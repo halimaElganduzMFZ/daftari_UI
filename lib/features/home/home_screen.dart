@@ -10,6 +10,9 @@ import '../../data/models/employee_dashboard.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_employee_dashboard.dart';
 import '../assets/employee_assets_screen.dart';
+import '../clips/employee_clips_screen.dart';
+import '../healthcare/healthcare_specialties_screen.dart';
+import '../timesheet/timesheet_hub_screen.dart';
 
 /// الصفحة الرئيسية للموظف العادي — من index.php بتوزيع أوضح وأقل ازدحاماً.
 class HomeScreen extends StatefulWidget {
@@ -120,9 +123,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisSpacing: 10,
                     childAspectRatio: 1.35,
                     children: [
-                      const _ServiceTile(
+                      _ServiceTile(
                         title: 'عرض التايم شيت',
                         icon: FontAwesomeIcons.clock,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const TimesheetHubScreen(),
+                            ),
+                          );
+                        },
                       ),
                       _ServiceTile(
                         title: 'الأصول المسجلة',
@@ -135,13 +145,28 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
-                      const _ServiceTile(
+                      _ServiceTile(
                         title: 'عرض قصاصاتك',
                         icon: FontAwesomeIcons.fileLines,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const EmployeeClipsScreen(),
+                            ),
+                          );
+                        },
                       ),
-                      const _ServiceTile(
+                      _ServiceTile(
                         title: 'المستشفيات',
                         icon: FontAwesomeIcons.hospital,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  const HealthcareSpecialtiesScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
