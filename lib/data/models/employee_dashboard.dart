@@ -37,6 +37,7 @@ class EmployeeDashboardData {
     required this.pendingAnnualCount,
     required this.delayPermissionCount,
     required this.earlyLeaveCount,
+    required this.entryExitPermissionsTakenThisMonth,
     required this.requests,
     this.permissionBalanceRemaining,
   });
@@ -47,6 +48,9 @@ class EmployeeDashboardData {
   final int pendingAnnualCount;
   final int delayPermissionCount;
   final int earlyLeaveCount;
+
+  /// عدد أذونات الدخول والخروج المأخوذة خلال هذا الشهر.
+  final int entryExitPermissionsTakenThisMonth;
   final List<EmployeeRequest> requests;
 
   /// رصيد الأذونات المتبقي لهذا الشهر (من index.php).

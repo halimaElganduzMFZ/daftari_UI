@@ -11,6 +11,7 @@ abstract final class StaticEmployeeDashboard {
     pendingAnnualCount: 0,
     delayPermissionCount: 2,
     earlyLeaveCount: 1,
+    entryExitPermissionsTakenThisMonth: 4,
     requests: _buildHistory(),
   );
 

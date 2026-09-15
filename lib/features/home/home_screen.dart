@@ -60,38 +60,42 @@ class _HomeScreenState extends State<HomeScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-              child: Row(
+              child: GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 1.45,
                 children: [
-                  Expanded(
-                    child: _BalanceCard(
-                      title: 'رصيد السنوية',
-                      value: '${data.annualBalance}',
-                      unit: 'يوم',
-                      icon: FontAwesomeIcons.calendarDays,
-                    ),
+                  _BalanceCard(
+                    title: 'رصيد السنوية',
+                    value: '${data.annualBalance}',
+                    unit: 'يوم',
+                    icon: FontAwesomeIcons.calendarDays,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _BalanceCard(
-                      title: 'رصيد الطارئة',
-                      value: '${data.emergencyBalance}',
-                      unit: 'يوم',
-                      icon: FontAwesomeIcons.circleExclamation,
-                    ),
+                  _BalanceCard(
+                    title: 'رصيد الطارئة',
+                    value: '${data.emergencyBalance}',
+                    unit: 'يوم',
+                    icon: FontAwesomeIcons.circleExclamation,
+                  ),
+                  _BalanceCard(
+                    title: 'رصيد الأذونات المتبقي',
+                    value: '${data.permissionBalanceRemaining ?? 0}',
+                    unit: 'هذا الشهر',
+                    icon: FontAwesomeIcons.userClock,
+                  ),
+                  _BalanceCard(
+                    title: 'أذونات الدخول والخروج المأخوذة',
+                    value: '${data.entryExitPermissionsTakenThisMonth}',
+                    unit: 'هذا الشهر',
+                    icon: FontAwesomeIcons.rightLeft,
                   ),
                 ],
               ),
             ),
           ),
-          if (data.permissionBalanceRemaining != null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
-                child: _PermissionBalanceBar(
-                  remaining: data.permissionBalanceRemaining!,
-                ),
-              ),
-            ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
@@ -421,82 +425,54 @@ class _BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppSurface(
-      padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FaIcon(icon, color: AppColors.goldDeep, size: 18),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: AppColors.slate,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+          FaIcon(icon, color: AppColors.goldDeep, size: 14),
+          const SizedBox(height: 6),
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.slate,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                height: 1.25,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 value,
                 style: const TextStyle(
-                  fontSize: 28,
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: AppColors.charcoal,
+                  height: 1,
                 ),
               ),
-              const SizedBox(width: 6),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  unit,
-                  style: const TextStyle(color: AppColors.slate),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Text(
+                    unit,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.slate,
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PermissionBalanceBar extends StatelessWidget {
-  const _PermissionBalanceBar({required this.remaining});
-
-  final int remaining;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppSurface(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          const FaIcon(
-            FontAwesomeIcons.userClock,
-            color: AppColors.goldDeep,
-            size: 16,
-          ),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'رصيد الأذونات المتبقي لهذا الشهر',
-              style: TextStyle(
-                color: AppColors.slate,
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          Text(
-            '$remaining',
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
-              color: AppColors.charcoal,
-            ),
           ),
         ],
       ),
