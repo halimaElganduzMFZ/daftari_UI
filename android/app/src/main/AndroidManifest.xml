@@ -2,11 +2,14 @@
     <!-- لرفع مرفقات الإجازة من الجهاز عند التشغيل على أندرويد (file_picker يستخدم SAF) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- الاتصال بـ Nest API (مطلوب في نسخة الإصدار أيضاً، لا في debug فقط) -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="شؤون الموظفين"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:extractNativeLibs="true">
+        android:extractNativeLibs="true"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
