@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brand_mark.dart';
-import '../../data/auth/auth_repository.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_auth.dart';
 import '../shell/main_shell.dart';
 import 'which_app_screen.dart';
 
 /// مقابلة شاشة login.php — تجريبي محلي أو Nest API حسب ApiConfig.
+///
+/// عبر الـ API: `POST /auth/login` يعيد التوكنات + ملف المستخدم بأعلامه،
+/// فإن كان مسؤولاً عن هيكل تُعرض صفحة تحديد نوع الدخول (whichApp)،
+/// وإلا يدخل كموظف مباشرة.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -24,7 +28,6 @@ class _LoginScreenState extends State<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _employeeNumberController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authRepository = AuthRepository();
 
   bool _obscure = true;
   bool _submitting = false;
@@ -87,38 +90,33 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
     AppSession.applyDemoLogin(account);
-
-    if (!account.canManageStructures) {
-      AppSession.enterAsEmployee();
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const MainShell()),
-      );
-      return;
-    }
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const WhichAppScreen()),
-    );
+    _routeAfterLogin();
   }
 
   Future<void> _submitRemote() async {
     try {
-      final pair = await _authRepository.login(
+      final pair = await AppServices.auth.login(
         employeeNumber: _employeeNumberController.text,
         password: _passwordController.text,
       );
       if (!mounted) return;
       AppSession.applyLogin(pair);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const MainShell()),
-      );
+      _routeAfterLogin();
     } on ApiException catch (error) {
       if (!mounted) return;
+      // رسائل الخادم إنجليزية عامة ("Invalid credentials")؛ نعرض المقابل العربي.
+      final message = switch (error.statusCode) {
+        401 => AppStrings.loginFailedMessage,
+        403 => 'هذا الحساب غير مخوّل بتسجيل الدخول',
+        _ => error.message,
+      };
       await _showError(
         title: error.isTooManyRequests
             ? AppStrings.loginRateLimitedTitle
-            : AppStrings.loginFailedTitle,
-        message: error.message,
+            : error.isNetwork
+                ? 'لا يوجد اتصال'
+                : AppStrings.loginFailedTitle,
+        message: message,
       );
     } catch (_) {
       if (!mounted) return;
@@ -129,10 +127,26 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  /// نفس المنطق للوضعين: مسؤول هيكل → whichApp، وإلا → واجهة الموظف.
+  void _routeAfterLogin() {
+    if (!AppSession.canManageStructures) {
+      AppSession.enterAsEmployee();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      );
+      return;
+    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const WhichAppScreen()),
+    );
+  }
+
   Future<void> _showError({
     required String title,
     required String message,
   }) {
+    // أعد الزر لحالته قبل الحوار حتى لا يبقى مؤشر التحميل خلفه.
+    if (_submitting) setState(() => _submitting = false);
     return showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
@@ -151,8 +165,9 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final year = DateTime.now().year;
-    final hint =
-        ApiConfig.useRemoteApi ? AppStrings.apiLoginHint : AppStrings.demoHint;
+    final hint = ApiConfig.useRemoteApi
+        ? '${AppStrings.apiLoginHint} ${ApiConfig.displayHost}'
+        : AppStrings.demoHint;
     final size = MediaQuery.sizeOf(context);
 
     return Scaffold(

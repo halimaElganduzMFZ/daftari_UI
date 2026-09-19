@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -5,17 +6,36 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import 'api_exception.dart';
 
-/// عميل HTTP بسيط لـ Nest API مع دعم Bearer.
+/// يُستدعى عند 401 على طلب محمي؛ يعيد `true` إذا نجح تجديد التوكن
+/// وينبغي إعادة المحاولة مرة واحدة بالتوكن الجديد.
+typedef UnauthorizedHandler = Future<bool> Function();
+
+/// عميل HTTP بسيط لـ Nest API مع دعم Bearer وتجديد تلقائي للجلسة.
 class ApiClient {
-  ApiClient({http.Client? httpClient, this.getAccessToken})
-      : _http = httpClient ?? http.Client();
+  ApiClient({
+    http.Client? httpClient,
+    this.getAccessToken,
+    this.onUnauthorized,
+  }) : _http = httpClient ?? http.Client();
 
   final http.Client _http;
   final Future<String?> Function()? getAccessToken;
+  final UnauthorizedHandler? onUnauthorized;
 
-  Uri _uri(String path) {
+  static const _connectionError =
+      'تعذّر الاتصال بالخادم. تأكد أن الـ API يعمل وأن العنوان صحيح.';
+
+  Uri _uri(String path, [Map<String, String?>? query]) {
     final normalized = path.startsWith('/') ? path : '/$path';
-    return Uri.parse('${ApiConfig.baseUrl}$normalized');
+    final base = Uri.parse('${ApiConfig.baseUrl}$normalized');
+    if (query == null) return base;
+    final cleaned = <String, String>{
+      for (final entry in query.entries)
+        if (entry.value != null && entry.value!.isNotEmpty)
+          entry.key: entry.value!,
+    };
+    if (cleaned.isEmpty) return base;
+    return base.replace(queryParameters: {...base.queryParameters, ...cleaned});
   }
 
   Future<Map<String, String>> _headers({bool auth = false}) async {
@@ -32,50 +52,49 @@ class ApiClient {
     return headers;
   }
 
+  /// GET يعيد JSON كائناً (`{}`). القوائم المرقّمة تأتي داخل `{ data, meta }`.
+  Future<Map<String, dynamic>> getJson(
+    String path, {
+    Map<String, String?>? query,
+    bool auth = true,
+  }) {
+    return _send(
+      auth: auth,
+      request: (headers) => _http.get(_uri(path, query), headers: headers),
+    );
+  }
+
+  /// GET يعيد JSON قائمةً (مثل `/lookups/*`).
+  Future<List<dynamic>> getJsonList(
+    String path, {
+    Map<String, String?>? query,
+    bool auth = true,
+  }) async {
+    final response = await _sendRaw(
+      auth: auth,
+      request: (headers) => _http.get(_uri(path, query), headers: headers),
+    );
+    final decoded = _decodeBody(response);
+    if (decoded is List) return decoded;
+    if (decoded is Map<String, dynamic> && decoded['data'] is List) {
+      return decoded['data'] as List;
+    }
+    return const [];
+  }
+
   Future<Map<String, dynamic>> postJson(
     String path, {
     Map<String, dynamic>? body,
     bool auth = false,
-  }) async {
-    try {
-      final response = await _http
-          .post(
-            _uri(path),
-            headers: await _headers(auth: auth),
-            body: body == null ? null : jsonEncode(body),
-          )
-          .timeout(ApiConfig.receiveTimeout);
-      return _decode(response);
-    } on ApiException {
-      rethrow;
-    } catch (_) {
-      throw const ApiException(
-        message:
-            'تعذّر الاتصال بالخادم. تأكد أن الـ API يعمل على المنفذ 3000.',
-      );
-    }
-  }
-
-  Future<Map<String, dynamic>> getJson(
-    String path, {
-    bool auth = true,
-  }) async {
-    try {
-      final response = await _http
-          .get(
-            _uri(path),
-            headers: await _headers(auth: auth),
-          )
-          .timeout(ApiConfig.receiveTimeout);
-      return _decode(response);
-    } on ApiException {
-      rethrow;
-    } catch (_) {
-      throw const ApiException(
-        message:
-            'تعذّر الاتصال بالخادم. تأكد أن الـ API يعمل على المنفذ 3000.',
-      );
-    }
+  }) {
+    return _send(
+      auth: auth,
+      request: (headers) => _http.post(
+        _uri(path),
+        headers: headers,
+        body: body == null ? null : jsonEncode(body),
+      ),
+    );
   }
 
   Future<void> postNoContent(
@@ -83,40 +102,88 @@ class ApiClient {
     Map<String, dynamic>? body,
     bool auth = true,
   }) async {
+    final response = await _sendRaw(
+      auth: auth,
+      request: (headers) => _http.post(
+        _uri(path),
+        headers: headers,
+        body: body == null ? null : jsonEncode(body),
+      ),
+    );
+    if (response.statusCode == 204 || response.statusCode == 200) return;
+    _throwFor(response);
+  }
+
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>> _send({
+    required bool auth,
+    required Future<http.Response> Function(Map<String, String> headers)
+        request,
+  }) async {
+    final response = await _sendRaw(auth: auth, request: request);
+    final decoded = _decodeBody(response);
+    if (decoded is Map<String, dynamic>) return decoded;
+    return const {};
+  }
+
+  /// يرسل الطلب، ويعالج 401 بتجديد الجلسة مرة واحدة، ويحوّل الأخطاء إلى
+  /// [ApiException]. يعيد الاستجابة الناجحة (2xx) فقط.
+  Future<http.Response> _sendRaw({
+    required bool auth,
+    required Future<http.Response> Function(Map<String, String> headers)
+        request,
+    bool allowRefresh = true,
+  }) async {
+    http.Response response;
     try {
-      final response = await _http
-          .post(
-            _uri(path),
-            headers: await _headers(auth: auth),
-            body: body == null ? null : jsonEncode(body),
-          )
+      response = await request(await _headers(auth: auth))
           .timeout(ApiConfig.receiveTimeout);
-      if (response.statusCode == 204 || response.statusCode == 200) return;
-      _decode(response);
     } on ApiException {
       rethrow;
     } catch (_) {
-      throw const ApiException(
-        message:
-            'تعذّر الاتصال بالخادم. تأكد أن الـ API يعمل على المنفذ 3000.',
-      );
+      throw const ApiException(message: _connectionError);
     }
-  }
 
-  Map<String, dynamic> _decode(http.Response response) {
-    final status = response.statusCode;
-    Map<String, dynamic> json = {};
-    if (response.body.isNotEmpty) {
-      final decoded = jsonDecode(response.body);
-      if (decoded is Map<String, dynamic>) {
-        json = decoded;
+    if (response.statusCode == 401 &&
+        auth &&
+        allowRefresh &&
+        onUnauthorized != null) {
+      final refreshed = await onUnauthorized!();
+      if (refreshed) {
+        return _sendRaw(auth: auth, request: request, allowRefresh: false);
       }
     }
 
-    if (status >= 200 && status < 300) return json;
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response;
+    }
+    _throwFor(response);
+  }
 
-    final message = _extractMessage(json, status);
-    throw ApiException(message: message, statusCode: status);
+  dynamic _decodeBody(http.Response response) {
+    if (response.body.isEmpty) return null;
+    try {
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Never _throwFor(http.Response response) {
+    final status = response.statusCode;
+    final decoded = _decodeBody(response);
+    final json = decoded is Map<String, dynamic>
+        ? decoded
+        : const <String, dynamic>{};
+    throw ApiException(
+      message: _extractMessage(json, status),
+      statusCode: status,
+      code: json['code'] as String?,
+      details: json['details'] is Map<String, dynamic>
+          ? json['details'] as Map<String, dynamic>
+          : null,
+    );
   }
 
   String _extractMessage(Map<String, dynamic> json, int status) {

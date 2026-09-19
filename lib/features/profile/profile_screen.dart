@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
-import '../../data/auth/auth_repository.dart';
 import '../../data/session/app_session.dart';
 import '../auth/login_screen.dart';
 import '../auth/which_app_screen.dart';
@@ -26,8 +25,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_loggingOut) return;
     setState(() => _loggingOut = true);
     try {
-      if (ApiConfig.useRemoteApi) {
-        await AuthRepository().logout();
+      if (AppSession.isRemote) {
+        await AppServices.auth.logout();
       }
     } catch (_) {
       // نخرج محلياً حتى لو فشل طلب الخادم
@@ -41,7 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _switchRole() {
-    if (AppSession.demoAccount?.canManageStructures != true) return;
+    if (!AppSession.canManageStructures) return;
     if (AppSession.isImpersonating) {
       AppSession.endImpersonation();
     }
@@ -166,6 +165,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           label: 'مسؤول هيكل',
                           color: AppColors.slate,
                         ),
+                      if (user.canActOnBehalf)
+                        const _FlagChip(
+                          label: 'دخول نيابة عن',
+                          color: AppColors.info,
+                        ),
+                      if (user.isRequestReviewer)
+                        const _FlagChip(
+                          label: 'مراجعة طلبات الموظفين',
+                          color: AppColors.warning,
+                        ),
                       if (user.canChangePassword)
                         const _FlagChip(
                           label: 'يمكن تغيير كلمة المرور',
@@ -199,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               label: const Text('الدخول نيابة عن موظف'),
             ),
           ],
-          if (AppSession.demoAccount?.canManageStructures == true &&
+          if (AppSession.canManageStructures &&
               !AppSession.isImpersonating) ...[
             const SizedBox(height: 12),
             OutlinedButton(

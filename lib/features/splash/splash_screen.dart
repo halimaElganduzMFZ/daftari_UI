@@ -4,12 +4,20 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brand_mark.dart';
+import '../../data/session/app_session.dart';
 import '../auth/login_screen.dart';
+import '../auth/which_app_screen.dart';
+import '../shell/main_shell.dart';
 
-/// شاشة افتتاح خفيفة: شعار يتنفس، نص يظهر بهدوء، ثم انتقال ناعم لتسجيل الدخول.
+/// شاشة افتتاح خفيفة: شعار يتنفس، نص يظهر بهدوء، ثم انتقال ناعم.
+///
+/// أثناء الحركة تُستعاد الجلسة المحفوظة (`/auth/me`)؛ فإن صلحت ندخل مباشرة
+/// (موظف أو صفحة تحديد نوع الدخول)، وإلا نذهب لتسجيل الدخول.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -31,7 +39,19 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _subFade;
   late final Animation<double> _bar;
 
-  Timer? _navTimer;
+  /// أقل مدة تبقى فيها الشاشة حتى لا تقفز الحركة.
+  static const _minimumDisplay = Duration(milliseconds: 2800);
+
+  /// حد قراءة التخزين المحلي (فوري على الأجهزة؛ يحمي من تعليق المنصة).
+  static const _storageTimeout = Duration(milliseconds: 500);
+
+  /// حد أعلى لانتظار الخادم قبل الاكتفاء بشاشة الدخول.
+  static const _restoreTimeout = Duration(seconds: 6);
+
+  Timer? _dwellTimer;
+  bool _dwellDone = false;
+  bool _restoreDone = false;
+  bool _restored = false;
 
   @override
   void initState() {
@@ -99,17 +119,63 @@ class _SplashScreenState extends State<SplashScreen>
     // bootstrap cannot skip past the splash before it is visible.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _navTimer = Timer(const Duration(milliseconds: 2800), _goLogin);
+      _bootstrap();
     });
   }
 
-  Future<void> _goLogin() async {
+  /// يشغّل استعادة الجلسة والحد الأدنى للعرض معاً، ثم يوجّه حسب النتيجة.
+  /// المؤقّت قابل للإلغاء في [dispose] حتى لا يبقى معلّقاً بعد إزالة الشاشة.
+  void _bootstrap() {
+    _dwellTimer = Timer(_minimumDisplay, () {
+      _dwellDone = true;
+      _maybeNavigate();
+    });
+    _restoreSession().then((restored) {
+      if (!mounted) return;
+      _restoreDone = true;
+      _restored = restored;
+      _maybeNavigate();
+    });
+  }
+
+  void _maybeNavigate() {
+    if (!mounted || !_dwellDone || !_restoreDone) return;
+    if (!_restored) {
+      _goTo(const LoginScreen());
+      return;
+    }
+    if (AppSession.canManageStructures) {
+      _goTo(const WhichAppScreen());
+    } else {
+      AppSession.enterAsEmployee();
+      _goTo(const MainShell());
+    }
+  }
+
+  /// لا نتصل بالخادم إلا إذا وُجد توكن محفوظ فعلاً.
+  Future<bool> _restoreSession() async {
+    if (!ApiConfig.useRemoteApi) return false;
+    try {
+      final hasToken = await AppServices.auth
+          .hasStoredSession()
+          .timeout(_storageTimeout, onTimeout: () => false);
+      if (!hasToken) return false;
+      final user = await AppServices.auth
+          .restoreSession()
+          .timeout(_restoreTimeout, onTimeout: () => null);
+      return user != null;
+    } catch (_) {
+      // خادم غير متاح / توكن غير صالح: نعرض شاشة الدخول العادية.
+      return false;
+    }
+  }
+
+  Future<void> _goTo(Widget page) async {
     if (!mounted) return;
     await Navigator.of(context).pushReplacement(
       PageRouteBuilder<void>(
         transitionDuration: const Duration(milliseconds: 520),
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const LoginScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => page,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           final curved = CurvedAnimation(
             parent: animation,
@@ -132,7 +198,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _navTimer?.cancel();
+    _dwellTimer?.cancel();
     _enter.dispose();
     _breathe.dispose();
     _progress.dispose();
