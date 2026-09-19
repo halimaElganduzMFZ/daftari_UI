@@ -13,8 +13,8 @@ abstract final class AppStrings {
   static const loginFailedMessage = 'رقم الموظف أو كلمة المرور غير صحيحة';
   static const loginRateLimitedTitle = 'تنبيه';
   static const loginConnectionError =
-      'تعذّر الاتصال بالخادم. تأكد أن الـ API يعمل على المنفذ 3000.';
-  static const apiLoginHint = 'الدخول عبر الخادم المحلي: 127.0.0.1:3000';
+      'تعذّر الاتصال بالخادم. تأكد أن الـ API يعمل وأن العنوان صحيح.';
+  static const apiLoginHint = 'الدخول برقم الموظف وكلمة مرور النظام · الخادم:';
   static const footerRights = 'جميع الحقوق محفوظة';
   static const footerOrg = 'إدارة تقنية المعلومات - المنطقة الحرة بمصراتة';
   static const demoHint =

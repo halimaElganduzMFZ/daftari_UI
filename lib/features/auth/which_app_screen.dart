@@ -29,8 +29,10 @@ class WhichAppScreen extends StatelessWidget {
   IconData _iconForType(String typeLabel) {
     switch (typeLabel) {
       case 'إدارة':
+      case 'إدارة عامة':
         return Icons.apartment_rounded;
       case 'قسم':
+      case 'وحدة':
         return Icons.account_tree_outlined;
       default:
         return Icons.business_outlined;
@@ -39,10 +41,10 @@ class WhichAppScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final account = AppSession.demoAccount;
     final employee = AppSession.currentEmployee;
     final name = employee?.fullName ?? 'موظف';
-    final structures = account?.managedStructures ?? const <ManagedStructure>[];
+    // من الحساب التجريبي أو من `structures[]` في `/auth/me`.
+    final structures = AppSession.managedStructures;
 
     // لو فُتحت الشاشة بدون هياكل — ادخل كموظف مباشرة.
     if (structures.isEmpty) {
