@@ -72,6 +72,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _enterAsEmployeeSelf() {
+    if (AppSession.isImpersonating) {
+      AppSession.endImpersonation();
+    }
+    AppSession.enterAsEmployee();
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const MainShell()),
+      (_) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final employee = AppSession.currentEmployee;
@@ -177,6 +188,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (AppSession.isManagerMode) ...[
             const SizedBox(height: 12),
             OutlinedButton.icon(
+              onPressed: _enterAsEmployeeSelf,
+              icon: const Icon(Icons.badge_outlined),
+              label: const Text('الدخول كموظف'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
               onPressed: _openImpersonation,
               icon: const Icon(Icons.person_search_rounded),
               label: const Text('الدخول نيابة عن موظف'),
@@ -187,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: _switchRole,
-              child: const Text('تغيير الوحدة / الإدارة'),
+              child: const Text('تغيير نوع الدخول / الهيكل'),
             ),
           ],
           const SizedBox(height: 12),
