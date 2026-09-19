@@ -4,6 +4,7 @@ import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/brand_mark.dart';
 import '../../data/auth/auth_repository.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_auth.dart';
@@ -221,40 +222,7 @@ class _LoginScreenState extends State<LoginScreen>
                       child: Column(
                         children: [
                           const SizedBox(height: 8),
-                          Container(
-                            width: 78,
-                            height: 78,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFFC9A66B),
-                                  AppColors.goldDeep,
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.gold.withValues(alpha: 0.28),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'MFZ',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ),
-                          ),
+                          const BrandMark(size: 78),
                           const SizedBox(height: 18),
                           const Text(
                             AppStrings.orgName,
