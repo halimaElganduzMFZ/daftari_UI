@@ -4,7 +4,7 @@
 /// ```
 /// flutter run -d chrome --web-port=43123 \
 ///   --dart-define=USE_REMOTE_API=false          # وضع التصميم (بيانات ثابتة)
-///   --dart-define=API_BASE_URL=http://10.10.8.3:3000/api/v1
+///   --dart-define=API_BASE_URL=http://127.0.0.1:3000/api/v1   # API على جهازك
 /// ```
 abstract final class ApiConfig {
   /// عند `false`: الدخول التجريبي المحلي بدون API (للتصميم من المنزل).
@@ -15,12 +15,13 @@ abstract final class ApiConfig {
   );
 
   /// عنوان الـ API الأساسي.
-  /// محلياً: http://127.0.0.1:3000/api/v1
+  /// حالياً: جهاز المبرمج على شبكة المكتب http://10.10.17.70:3000/api/v1
+  /// (لا تستخدم 127.0.0.1 على الجوال — يشير إلى الهاتف نفسه لا إلى الحاسوب).
   /// على السيرفر لاحقاً: مثلاً https://api.example.com/api/v1
   /// غيّر هذا المتغير فقط — لا تبحث في الشاشات.
   static const baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:3000/api/v1',
+    defaultValue: 'http://10.10.17.70:3000/api/v1',
   );
 
   static const connectTimeout = Duration(seconds: 15);
