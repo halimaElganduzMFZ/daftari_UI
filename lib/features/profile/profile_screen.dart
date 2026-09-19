@@ -9,6 +9,7 @@ import '../../data/session/app_session.dart';
 import '../auth/login_screen.dart';
 import '../auth/which_app_screen.dart';
 import '../manager/manager_impersonation_screen.dart';
+import '../shell/main_shell.dart';
 import '../shell/manager_shell.dart';
 
 class ProfileScreen extends StatefulWidget {

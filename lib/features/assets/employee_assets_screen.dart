@@ -10,8 +10,35 @@ import '../../data/session/app_session.dart';
 import '../../data/static/static_employee_assets.dart';
 
 /// قائمة أصول الموظف + معاينة طباعة (بديل Employee_Assets.php).
-class EmployeeAssetsScreen extends StatelessWidget {
+class EmployeeAssetsScreen extends StatefulWidget {
   const EmployeeAssetsScreen({super.key});
+
+  @override
+  State<EmployeeAssetsScreen> createState() => _EmployeeAssetsScreenState();
+}
+
+class _EmployeeAssetsScreenState extends State<EmployeeAssetsScreen> {
+  static const _pageSize = 10;
+
+  int _visibleCount = _pageSize;
+
+  Future<void> _openPrintPreview({
+    required List<EmployeeAsset> assets,
+    required String name,
+    required String employeeNumber,
+    required String department,
+  }) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => _AssetsPrintPreviewPage(
+          employeeName: name,
+          employeeNumber: employeeNumber,
+          department: department,
+          assets: assets,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +49,8 @@ class EmployeeAssetsScreen extends StatelessWidget {
     final name = employee?.fullName ?? 'موظف';
     final employeeNumber = employee?.employeeNumber ?? '—';
     final department = employee?.department ?? '—';
+    final visible = assets.take(_visibleCount).toList();
+    final hasMore = _visibleCount < assets.length;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -33,7 +62,6 @@ class EmployeeAssetsScreen extends StatelessWidget {
               padding: const EdgeInsetsDirectional.only(end: 8),
               child: FilledButton.icon(
                 onPressed: () => _openPrintPreview(
-                  context,
                   assets: assets,
                   name: name,
                   employeeNumber: employeeNumber,
@@ -80,7 +108,9 @@ class EmployeeAssetsScreen extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  '${assets.length} عنصر',
+                  assets.length > _pageSize
+                      ? 'عرض ${visible.length} من ${assets.length}'
+                      : '${assets.length} عنصر',
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: AppColors.slate,
                   ),
@@ -90,15 +120,32 @@ class EmployeeAssetsScreen extends StatelessWidget {
             const SizedBox(height: 12),
             const _TableHeader(),
             const SizedBox(height: 4),
-            for (var i = 0; i < assets.length; i++) ...[
-              _AssetRow(asset: assets[i]),
-              if (i != assets.length - 1)
+            for (var i = 0; i < visible.length; i++) ...[
+              _AssetRow(asset: visible[i]),
+              if (i != visible.length - 1)
                 const Divider(height: 1, color: AppColors.line),
+            ],
+            if (hasMore) ...[
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () => setState(() {
+                  _visibleCount =
+                      (_visibleCount + _pageSize).clamp(0, assets.length);
+                }),
+                icon: const Icon(Icons.expand_more_rounded),
+                label: Text(
+                  'عرض المزيد (${assets.length - visible.length})',
+                ),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  foregroundColor: AppColors.goldDeep,
+                  side: const BorderSide(color: AppColors.gold),
+                ),
+              ),
             ],
             const SizedBox(height: 28),
             OutlinedButton.icon(
               onPressed: () => _openPrintPreview(
-                context,
                 assets: assets,
                 name: name,
                 employeeNumber: employeeNumber,
@@ -121,25 +168,6 @@ class EmployeeAssetsScreen extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-
-  Future<void> _openPrintPreview(
-    BuildContext context, {
-    required List<EmployeeAsset> assets,
-    required String name,
-    required String employeeNumber,
-    required String department,
-  }) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _AssetsPrintPreviewPage(
-          employeeName: name,
-          employeeNumber: employeeNumber,
-          department: department,
-          assets: assets,
-        ),
       ),
     );
   }

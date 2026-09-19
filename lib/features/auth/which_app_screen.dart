@@ -101,7 +101,7 @@ class WhichAppScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     const Text(
-                      'اختر الوحدة أو الإدارة',
+                      'تحديد نوع الدخول',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 24,
@@ -112,7 +112,7 @@ class WhichAppScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'مرحباً $name — حدّد الهيكل الذي تديره للمتابعة',
+                      'مرحباً $name — ادخل كموظف أو اختر الهيكل الذي تديره',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 14,
@@ -121,6 +121,28 @@ class WhichAppScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 28),
+                    _StructureCard(
+                      name: 'الدخول كموظف',
+                      typeLabel: 'موظف',
+                      icon: Icons.badge_outlined,
+                      subtitle: 'واجهة الموظف العادية لتقديم الطلبات ومتابعتها',
+                      onTap: () => _enterEmployee(context),
+                    ),
+                    const SizedBox(height: 12),
+                    if (structures.isNotEmpty) ...[
+                      const Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          'أو ادخل مسؤولاً عن',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.charcoal,
+                            fontSize: 13.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                     ...structures.map(
                       (structure) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -130,15 +152,6 @@ class WhichAppScreen extends StatelessWidget {
                           icon: _iconForType(structure.typeLabel),
                           onTap: () => _enterManager(context, structure),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton.icon(
-                      onPressed: () => _enterEmployee(context),
-                      icon: const Icon(Icons.badge_outlined, size: 18),
-                      label: const Text('المتابعة كموظف'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.slate,
                       ),
                     ),
                   ],
@@ -158,12 +171,14 @@ class _StructureCard extends StatefulWidget {
     required this.typeLabel,
     required this.icon,
     required this.onTap,
+    this.subtitle,
   });
 
   final String name;
   final String typeLabel;
   final IconData icon;
   final VoidCallback onTap;
+  final String? subtitle;
 
   @override
   State<_StructureCard> createState() => _StructureCardState();
@@ -242,6 +257,17 @@ class _StructureCardState extends State<_StructureCard> {
                             color: AppColors.charcoal,
                           ),
                         ),
+                        if (widget.subtitle != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.subtitle!,
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              height: 1.35,
+                              color: AppColors.slate,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
