@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _progress = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2100),
+      duration: const Duration(milliseconds: 2800),
     );
     _orb = AnimationController(
       vsync: this,
@@ -95,7 +95,12 @@ class _SplashScreenState extends State<SplashScreen>
     _progress.forward();
     _orb.repeat();
 
-    _navTimer = Timer(const Duration(milliseconds: 2450), _goLogin);
+    // Start the dwell clock only after the first frame so slow web/native
+    // bootstrap cannot skip past the splash before it is visible.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _navTimer = Timer(const Duration(milliseconds: 2800), _goLogin);
+    });
   }
 
   Future<void> _goLogin() async {
