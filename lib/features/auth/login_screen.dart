@@ -117,6 +117,8 @@ class _LoginScreenState extends State<LoginScreen>
                 ? 'لا يوجد اتصال'
                 : AppStrings.loginFailedTitle,
         message: message,
+        // السبب التقني يظهر بخط صغير لتشخيص مشاكل الشبكة من لقطة الشاشة.
+        detail: error.isNetwork ? error.cause : null,
       );
     } catch (_) {
       if (!mounted) return;
@@ -144,6 +146,7 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _showError({
     required String title,
     required String message,
+    String? detail,
   }) {
     // أعد الزر لحالته قبل الحوار حتى لا يبقى مؤشر التحميل خلفه.
     if (_submitting) setState(() => _submitting = false);
@@ -151,7 +154,25 @@ class _LoginScreenState extends State<LoginScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
-        content: Text(message),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(message),
+            if (detail != null && detail.trim().isNotEmpty) ...[
+              const SizedBox(height: 12),
+              SelectableText(
+                detail,
+                textDirection: TextDirection.ltr,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  color: AppColors.slate,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
