@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -95,6 +96,48 @@ class ApiClient {
         body: body == null ? null : jsonEncode(body),
       ),
     );
+  }
+
+  /// GET يعيد ملفاً خاماً (PDF/صورة) مع نوعه واسمه من ترويسات الاستجابة.
+  Future<ApiBinary> getBytes(
+    String path, {
+    Map<String, String?>? query,
+    bool auth = true,
+  }) async {
+    final response = await _sendRaw(
+      auth: auth,
+      request: (headers) => _http.get(
+        _uri(path, query),
+        headers: {...headers, 'Accept': '*/*'}..remove('Content-Type'),
+      ),
+    );
+    return ApiBinary(
+      bytes: response.bodyBytes,
+      contentType: _mediaType(response.headers['content-type']),
+      fileName: _dispositionFileName(response.headers['content-disposition']),
+    );
+  }
+
+  static String? _mediaType(String? header) {
+    if (header == null) return null;
+    final semi = header.indexOf(';');
+    final type = (semi < 0 ? header : header.substring(0, semi)).trim();
+    return type.isEmpty ? null : type.toLowerCase();
+  }
+
+  /// `filename*=UTF-8''...` أولاً (يدعم العربية) ثم `filename="..."`.
+  static String? _dispositionFileName(String? header) {
+    if (header == null) return null;
+    final star = RegExp(r"filename\*=UTF-8''([^;]+)", caseSensitive: false)
+        .firstMatch(header);
+    if (star != null) {
+      try {
+        return Uri.decodeComponent(star.group(1)!.trim());
+      } catch (_) {/* fall through */}
+    }
+    final plain = RegExp(r'filename="?([^";]+)"?', caseSensitive: false)
+        .firstMatch(header);
+    return plain?.group(1)?.trim();
   }
 
   Future<void> postNoContent(
@@ -217,4 +260,13 @@ class ApiClient {
   }
 
   void close() => _http.close();
+}
+
+/// استجابة ثنائية (ملف) من الـ API.
+class ApiBinary {
+  const ApiBinary({required this.bytes, this.contentType, this.fileName});
+
+  final Uint8List bytes;
+  final String? contentType;
+  final String? fileName;
 }

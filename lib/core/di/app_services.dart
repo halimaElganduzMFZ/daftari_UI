@@ -2,7 +2,10 @@ import 'package:flutter/foundation.dart';
 
 import '../../data/auth/auth_repository.dart';
 import '../../data/auth/token_storage.dart';
+import '../../data/repositories/assets_repository.dart';
 import '../../data/repositories/dashboard_repository.dart';
+import '../../data/repositories/documents_repository.dart';
+import '../../data/repositories/messages_repository.dart';
 import '../../data/session/app_session.dart';
 import '../config/api_config.dart';
 import '../network/api_client.dart';
@@ -25,6 +28,21 @@ abstract final class AppServices {
   static final DashboardRepository dashboard = ApiConfig.useRemoteApi
       ? ApiDashboardRepository(apiClient)
       : const StaticDashboardRepository();
+
+  /// الشكاوى والمقترحات (`/me/messages`).
+  static final MessagesRepository messages = ApiConfig.useRemoteApi
+      ? ApiMessagesRepository(apiClient)
+      : StaticMessagesRepository();
+
+  /// الأصول المسجّلة على الموظف (`/me/assets`).
+  static final AssetsRepository assets = ApiConfig.useRemoteApi
+      ? ApiAssetsRepository(apiClient)
+      : const StaticAssetsRepository();
+
+  /// القصاصات والمستندات (`/me/documents`).
+  static final DocumentsRepository documents = ApiConfig.useRemoteApi
+      ? ApiDocumentsRepository(apiClient)
+      : const StaticDocumentsRepository();
 
   /// يُستدعى عندما تنتهي الجلسة نهائياً (فشل تجديد التوكن بغير خطأ شبكة).
   /// يضبطه `main.dart` للعودة إلى شاشة الدخول من أي مكان.
