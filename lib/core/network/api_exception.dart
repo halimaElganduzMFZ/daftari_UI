@@ -26,6 +26,9 @@ class ApiException implements Exception {
   bool get isServerError => statusCode != null && statusCode! >= 500;
   bool get isNetwork => statusCode == null;
 
+  /// السبب التقني الأصلي لخطأ الشبكة (إن وُجد) — للتشخيص لا للمستخدم النهائي.
+  String? get cause => details?['cause'] as String?;
+
   @override
   String toString() =>
       'ApiException($statusCode${code == null ? '' : ' $code'}): $message';

@@ -141,8 +141,21 @@ class ApiClient {
           .timeout(ApiConfig.receiveTimeout);
     } on ApiException {
       rethrow;
-    } catch (_) {
-      throw const ApiException(message: _connectionError);
+    } on TimeoutException {
+      throw ApiException(
+        message: _connectionError,
+        details: {
+          'cause':
+              'انتهت المهلة (${ApiConfig.receiveTimeout.inSeconds}s) دون رد من ${ApiConfig.baseUrl}',
+        },
+      );
+    } catch (error) {
+      // نحتفظ بالسبب الأصلي (Connection refused / cleartext / unreachable…)
+      // ليظهر في شاشة الدخول ويسهّل تشخيص مشاكل الشبكة.
+      throw ApiException(
+        message: _connectionError,
+        details: {'cause': error.toString(), 'url': ApiConfig.baseUrl},
+      );
     }
 
     if (response.statusCode == 401 &&
