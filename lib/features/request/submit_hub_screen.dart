@@ -16,9 +16,7 @@ class SubmitHubScreen extends StatelessWidget {
     if (kind == RequestKind.permission) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => const Scaffold(
-            body: MakeRequestScreen(),
-          ),
+          builder: (_) => const MakeRequestScreen(),
         ),
       );
       return;

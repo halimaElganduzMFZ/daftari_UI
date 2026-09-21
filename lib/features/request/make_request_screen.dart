@@ -278,20 +278,29 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
     final canSubmit =
         !_submitting && !_loading && options != null && options.canSubmit;
 
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-        physics: const BouncingScrollPhysics(),
-        children: [
-          const Text(
-            'تقديم طلب إذن',
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w800,
-              color: AppColors.charcoal,
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('تقديم طلب إذن'),
+        actions: [
+          IconButton(
+            tooltip: 'اللوائح والمخالفات',
+            onPressed: () => showAllRegulationsSheet(
+              context,
+              initialTabId: 'permissions',
+            ),
+            icon: const FaIcon(
+              FontAwesomeIcons.bookOpen,
+              size: 18,
+              color: AppColors.goldDeep,
             ),
           ),
-          const SizedBox(height: 6),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        physics: const BouncingScrollPhysics(),
+        children: [
           const Text(
             'حدّد التاريخ أولاً، فالأنواع المتاحة تعتمد على دوامك في ذلك اليوم.',
             style: TextStyle(

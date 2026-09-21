@@ -587,10 +587,6 @@ class _MessageCard extends StatelessWidget {
 
   final EmployeeMessage message;
 
-  static String _date(DateTime? d) => d == null
-      ? '—'
-      : '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
   StatusTone get _tone => switch (message.status) {
         MessageStatus.replied => StatusTone.success,
         MessageStatus.read => StatusTone.info,
@@ -605,22 +601,19 @@ class _MessageCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const FaIcon(
-                FontAwesomeIcons.calendarDay,
-                size: 12,
-                color: AppColors.slate,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                _date(message.sentAt),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.slate,
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  message.body,
+                  style: const TextStyle(
+                    color: AppColors.charcoal,
+                    height: 1.5,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 10),
               Tooltip(
                 message: message.statusLabel,
                 child: StatusPill(
@@ -629,15 +622,6 @@ class _MessageCard extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            message.body,
-            style: const TextStyle(
-              color: AppColors.charcoal,
-              height: 1.5,
-              fontWeight: FontWeight.w600,
-            ),
           ),
           if (message.hasReply) ...[
             const SizedBox(height: 12),

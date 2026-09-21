@@ -120,7 +120,7 @@ class _HealthcareBySpecialtyScreenState
         ? null
         : StaticHealthcare.specialtyById(widget.category!);
     final accent = look?.accent ?? AppColors.goldDeep;
-    final icon = look?.icon ?? FontAwesomeIcons.hospital;
+    final icon = look?.icon ?? FontAwesomeIcons.building;
     final q = _query.text.trim();
 
     return Scaffold(
@@ -221,7 +221,7 @@ class _HealthcareBySpecialtyScreenState
                 child: Column(
                   children: [
                     const FaIcon(
-                      FontAwesomeIcons.hospitalUser,
+                      FontAwesomeIcons.magnifyingGlass,
                       size: 30,
                       color: AppColors.slate,
                     ),
@@ -484,7 +484,7 @@ class ProviderLogo extends StatelessWidget {
         url,
         fit: BoxFit.contain,
         errorBuilder: (_, _, _) => const FaIcon(
-          FontAwesomeIcons.hospital,
+          FontAwesomeIcons.building,
           size: 18,
           color: AppColors.slate,
         ),
