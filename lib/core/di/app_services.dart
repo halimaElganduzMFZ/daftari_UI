@@ -5,6 +5,7 @@ import '../../data/auth/token_storage.dart';
 import '../../data/repositories/assets_repository.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/repositories/documents_repository.dart';
+import '../../data/repositories/healthcare_repository.dart';
 import '../../data/repositories/leave_requests_repository.dart';
 import '../../data/repositories/messages_repository.dart';
 import '../../data/repositories/permission_requests_repository.dart';
@@ -45,6 +46,11 @@ abstract final class AppServices {
   static final DocumentsRepository documents = ApiConfig.useRemoteApi
       ? ApiDocumentsRepository(apiClient)
       : const StaticDocumentsRepository();
+
+  /// المؤسسات الطبية المتعاقد معها (`/lookups/healthcare-providers`).
+  static final HealthcareRepository healthcare = ApiConfig.useRemoteApi
+      ? ApiHealthcareRepository(apiClient)
+      : const StaticHealthcareRepository();
 
   /// تقديم طلب إذن (`/me/requests/options` + `POST /me/requests`).
   static final PermissionRequestsRepository permissionRequests =

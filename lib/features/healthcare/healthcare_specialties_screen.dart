@@ -1,119 +1,371 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../core/di/app_services.dart';
+import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../data/models/healthcare_provider.dart';
+import '../../data/repositories/healthcare_repository.dart';
 import '../../data/static/static_healthcare.dart';
 import 'healthcare_by_specialty_screen.dart';
 
-/// المؤسسات الطبية المتعاقدة — تقسيم حسب التخصص (Contracted_Healthcare_Providers).
-class HealthcareSpecialtiesScreen extends StatelessWidget {
-  const HealthcareSpecialtiesScreen({super.key});
+/// المؤسسات الطبية المتعاقدة — التصنيفات مع عدد المؤسسات
+/// (بديل `Contracted_Healthcare_Providers.php`).
+class HealthcareSpecialtiesScreen extends StatefulWidget {
+  const HealthcareSpecialtiesScreen({super.key, this.repository});
+
+  final HealthcareRepository? repository;
+
+  @override
+  State<HealthcareSpecialtiesScreen> createState() =>
+      _HealthcareSpecialtiesScreenState();
+}
+
+class _HealthcareSpecialtiesScreenState
+    extends State<HealthcareSpecialtiesScreen> {
+  HealthcareRepository get _repo => widget.repository ?? AppServices.healthcare;
+
+  List<HealthcareCategory>? _categories;
+  Object? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final list = await _repo.categories();
+      if (!mounted) return;
+      setState(() {
+        _categories = list;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+        _loading = false;
+      });
+    }
+  }
+
+  void _open(int? category, String title, {String? initialQuery}) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => HealthcareBySpecialtyScreen(
+          category: category,
+          title: title,
+          initialQuery: initialQuery,
+          repository: widget.repository,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final specialties = StaticHealthcare.specialties;
+    final categories = _categories;
+    final total = categories?.fold<int>(0, (sum, c) => sum + c.count);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('المؤسسات الطبية')),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
+      body: RefreshIndicator(
+        color: AppColors.goldDeep,
+        onRefresh: _load,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(22),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topRight,
+                          end: Alignment.bottomLeft,
+                          colors: [Color(0xFF3D4A3F), Color(0xFF2A3030)],
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const FaIcon(
+                            FontAwesomeIcons.starAndCrescent,
+                            color: Color(0xFFE2C79A),
+                            size: 22,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'شركاء الصحة',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            total == null
+                                ? 'مؤسسات متعاقدة مع المنطقة الحرة بمصراتة — اختر التخصص ثم تصفّح التفاصيل.'
+                                : '$total مؤسسة متعاقدة مع المنطقة الحرة بمصراتة — اختر التخصص ثم تصفّح التفاصيل.',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              height: 1.45,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _SearchAllTile(
+                      onSubmitted: (q) => _open(
+                        null,
+                        'كل المؤسسات',
+                        initialQuery: q,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'حسب التخصص',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.charcoal,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'كل تخصص يفتح قائمة المؤسسات المرتبطة به',
+                      style: TextStyle(color: AppColors.slate, fontSize: 13),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                ),
+              ),
+            ),
+            if (_error != null && categories == null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _ErrorCard(error: _error!, onRetry: _load),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.92,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      if (_loading && categories == null) {
+                        return const _CategorySkeleton();
+                      }
+                      final c = categories![index];
+                      final look = StaticHealthcare.specialtyById(c.id);
+                      final known = look.id == c.id;
+                      final title = known
+                          ? look.title
+                          : (c.name ?? 'تصنيف رقم ${c.id}');
+                      final subtitle = known
+                          ? (c.name ?? look.subtitle)
+                          : look.subtitle;
+                      return _SpecialtyCard(
+                        title: title,
+                        subtitle: subtitle,
+                        icon: look.icon,
+                        accent: look.accent,
+                        count: c.count,
+                        onTap: () => _open(c.id, c.name ?? title),
+                      );
+                    },
+                    childCount: _loading && categories == null
+                        ? 6
+                        : categories!.length,
+                  ),
+                ),
+              ),
+            if (!_loading && categories != null && categories.isEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(30),
+                  child: Text(
+                    'لا توجد تصنيفات مسجّلة حالياً',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppColors.slate),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchAllTile extends StatefulWidget {
+  const _SearchAllTile({required this.onSubmitted});
+
+  final ValueChanged<String> onSubmitted;
+
+  @override
+  State<_SearchAllTile> createState() => _SearchAllTileState();
+}
+
+class _SearchAllTileState extends State<_SearchAllTile> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _go() {
+    final q = _controller.text.trim();
+    widget.onSubmitted(q);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      textInputAction: TextInputAction.search,
+      onSubmitted: (_) => _go(),
+      maxLength: HealthcareRepository.searchMaxLength,
+      decoration: InputDecoration(
+        counterText: '',
+        hintText: 'ابحث في كل المؤسسات بالاسم أو العنوان',
+        prefixIcon: const Icon(Icons.search_rounded),
+        suffixIcon: IconButton(
+          tooltip: 'بحث',
+          onPressed: _go,
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft, size: 15),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorCard extends StatelessWidget {
+  const _ErrorCard({required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final e = error;
+    final message = e is ApiException
+        ? (e.isNetwork
+            ? 'تعذر الوصول إلى الخادم. تأكد من الشبكة ثم أعد المحاولة.'
+            : e.message)
+        : 'حدث خطأ غير متوقع.';
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
+      decoration: BoxDecoration(
+        color: AppColors.danger.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const FaIcon(
+                FontAwesomeIcons.triangleExclamation,
+                size: 15,
+                color: AppColors.danger,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(fontSize: 13, height: 1.45),
+                ),
+              ),
+            ],
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton(onPressed: onRetry, child: const Text('إعادة المحاولة')),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategorySkeleton extends StatelessWidget {
+  const _CategorySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: 5,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppColors.line,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(19)),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 4,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
+                    width: 100,
+                    height: 12,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: [Color(0xFF3D4A3F), Color(0xFF2A3030)],
-                      ),
-                    ),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FaIcon(
-                          FontAwesomeIcons.starAndCrescent,
-                          color: Color(0xFFE2C79A),
-                          size: 22,
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          'شركاء الصحة',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          'مؤسسات متعاقدة مع المنطقة الحرة بمصراتة — اختر التخصص ثم تصفّح التفاصيل.',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            height: 1.45,
-                            fontSize: 13.5,
-                          ),
-                        ),
-                      ],
+                      color: AppColors.line,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'حسب التخصص',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.charcoal,
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 70,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: AppColors.line,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'كل تخصص يفتح قائمة المؤسسات المرتبطة به',
-                    style: TextStyle(color: AppColors.slate, fontSize: 13),
-                  ),
-                  const SizedBox(height: 14),
                 ],
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.92,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final s = specialties[index];
-                  final count = StaticHealthcare.countFor(s.id);
-                  return _SpecialtyCard(
-                    title: s.title,
-                    subtitle: s.subtitle,
-                    icon: s.icon,
-                    accent: s.accent,
-                    count: count,
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) =>
-                              HealthcareBySpecialtyScreen(specialtyId: s.id),
-                        ),
-                      );
-                    },
-                  );
-                },
-                childCount: specialties.length,
               ),
             ),
           ),
