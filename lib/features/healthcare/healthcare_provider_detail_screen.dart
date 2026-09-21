@@ -1,33 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../data/models/healthcare_provider.dart';
 import '../../data/static/static_healthcare.dart';
+import 'healthcare_by_specialty_screen.dart' show ProviderLogo;
 
-/// تفاصيل مؤسسة طبية — عرض غامر مع خدمات وخريطة.
+/// تفاصيل مؤسسة طبية — ما يوفره `hospitals`: التفاصيل (اسم وعنوان)،
+/// التصنيف، الشعار، ورابط الخريطة.
 class HealthcareProviderDetailScreen extends StatelessWidget {
-  const HealthcareProviderDetailScreen({super.key, required this.providerId});
+  const HealthcareProviderDetailScreen({super.key, required this.provider});
 
-  final String providerId;
+  final HealthcareProvider provider;
 
-  Future<void> _openMap(String url) async {
-    final uri = Uri.tryParse(url);
+  Future<void> _openMap(BuildContext context) async {
+    final uri = Uri.tryParse(provider.mapUrl ?? '');
     if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر فتح رابط الخريطة')),
+      );
+    }
+  }
+
+  Future<void> _copy(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: provider.details));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم نسخ التفاصيل')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = StaticHealthcare.providerById(providerId);
-    if (provider == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('التفاصيل')),
-        body: const Center(child: Text('المؤسسة غير موجودة')),
-      );
-    }
-    final specialty = StaticHealthcare.specialtyById(provider.specialtyId);
-    final accent = specialty?.accent ?? AppColors.goldDeep;
+    final look = StaticHealthcare.specialtyById(provider.category);
+    final accent = look.accent;
+    final categoryLabel = provider.categoryName ?? look.title;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -40,7 +52,9 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
             backgroundColor: accent,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                provider.name,
+                provider.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 16,
@@ -66,18 +80,20 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
                     left: -20,
                     bottom: -30,
                     child: FaIcon(
-                      specialty?.icon ?? FontAwesomeIcons.building,
+                      look.icon,
                       size: 200,
                       color: Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
                   Align(
                     alignment: const Alignment(0, -0.15),
-                    child: FaIcon(
-                      specialty?.icon ?? FontAwesomeIcons.building,
-                      size: 56,
-                      color: Colors.white.withValues(alpha: 0.95),
-                    ),
+                    child: provider.imageUrl != null
+                        ? ProviderLogo(url: provider.imageUrl!, size: 84)
+                        : FaIcon(
+                            look.icon,
+                            size: 56,
+                            color: Colors.white.withValues(alpha: 0.95),
+                          ),
                   ),
                 ],
               ),
@@ -89,37 +105,27 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (specialty != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        specialty.title,
-                        style: TextStyle(
-                          color: accent,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12.5,
-                        ),
-                      ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                  const SizedBox(height: 14),
-                  Text(
-                    provider.summary,
-                    style: const TextStyle(
-                      color: AppColors.charcoal,
-                      height: 1.55,
-                      fontSize: 15,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      categoryLabel,
+                      style: TextStyle(
+                        color: accent,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 22),
                   const Text(
-                    'معلومات التواصل',
+                    'التفاصيل والعنوان',
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 17,
@@ -128,67 +134,25 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _InfoTile(
-                    icon: FontAwesomeIcons.locationDot,
-                    label: 'العنوان',
-                    value: provider.address,
+                    icon: FontAwesomeIcons.hospital,
+                    label: 'كما هو مسجّل في التعاقد',
+                    value: provider.details,
                     accent: accent,
+                    onCopy: () => _copy(context),
                   ),
                   const SizedBox(height: 10),
                   _InfoTile(
-                    icon: FontAwesomeIcons.phone,
-                    label: 'الهاتف',
-                    value: provider.phone,
+                    icon: FontAwesomeIcons.mapLocationDot,
+                    label: 'الخريطة',
+                    value: provider.hasMap
+                        ? 'رابط موقع متاح — اضغط الزر أدناه لفتحه'
+                        : 'لم يُسجَّل رابط خريطة لهذه المؤسسة',
                     accent: accent,
                   ),
-                  const SizedBox(height: 10),
-                  _InfoTile(
-                    icon: FontAwesomeIcons.clock,
-                    label: 'ساعات العمل',
-                    value: provider.hours,
-                    accent: accent,
-                  ),
-                  if (provider.services.isNotEmpty) ...[
-                    const SizedBox(height: 22),
-                    const Text(
-                      'الخدمات',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 17,
-                        color: AppColors.charcoal,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        for (final s in provider.services)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.line),
-                            ),
-                            child: Text(
-                              s,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.charcoal,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                  if (provider.mapUrl != null) ...[
+                  if (provider.hasMap) ...[
                     const SizedBox(height: 28),
                     FilledButton.icon(
-                      onPressed: () => _openMap(provider.mapUrl!),
+                      onPressed: () => _openMap(context),
                       icon: const FaIcon(FontAwesomeIcons.mapLocationDot, size: 16),
                       label: const Text('عرض على الخريطة'),
                       style: FilledButton.styleFrom(
@@ -213,12 +177,14 @@ class _InfoTile extends StatelessWidget {
     required this.label,
     required this.value,
     required this.accent,
+    this.onCopy,
   });
 
   final FaIconData icon;
   final String label;
   final String value;
   final Color accent;
+  final VoidCallback? onCopy;
 
   @override
   Widget build(BuildContext context) {
@@ -255,17 +221,23 @@ class _InfoTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
+                SelectableText(
                   value,
                   style: const TextStyle(
                     color: AppColors.charcoal,
                     fontWeight: FontWeight.w700,
-                    height: 1.35,
+                    height: 1.45,
                   ),
                 ),
               ],
             ),
           ),
+          if (onCopy != null)
+            IconButton(
+              tooltip: 'نسخ',
+              onPressed: onCopy,
+              icon: const FaIcon(FontAwesomeIcons.copy, size: 15, color: AppColors.slate),
+            ),
         ],
       ),
     );

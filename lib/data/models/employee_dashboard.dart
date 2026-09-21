@@ -324,6 +324,39 @@ class EmployeeDashboardData {
       value is Map<String, dynamic> ? value : null;
 }
 
+/// نوع مخزّن في `employee_app_request_panel.permission_type`
+/// (`RequestPanelTypeDto` من `GET /lookups/request-types`) — قائمة «بحث حسب النوع».
+class RequestPanelType {
+  const RequestPanelType({
+    required this.label,
+    required this.code,
+    required this.group,
+    required this.isLeave,
+    this.type,
+  });
+
+  factory RequestPanelType.fromApi(Map<String, dynamic> json) => RequestPanelType(
+        label: (json['label'] as String? ?? '').trim(),
+        code: json['code'] as String? ?? '',
+        group: json['group'] as String? ?? '',
+        isLeave: json['category'] == 'leave',
+        type: (json['type'] as num?)?.toInt(),
+      );
+
+  /// التسمية كما تُخزَّن حرفياً (مثل «إجازة سنوية»).
+  final String label;
+
+  /// رمز الكتالوج الثابت (مثل `ANNUAL_LEAVE`) — يُرسل كـ `type=` للفلترة.
+  final String code;
+
+  /// عنوان المجموعة القديم («أنواع الأذونات» / «أنواع الإجازات»).
+  final String group;
+  final bool isLeave;
+
+  /// الرقم (`permissions.TypeH`) للأذونات؛ null للإجازات.
+  final int? type;
+}
+
 /// صفحة من قائمة الطلبات (`{ data, meta }` من `GET /me/requests`).
 class RequestsPage {
   const RequestsPage({
