@@ -134,7 +134,7 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _InfoTile(
-                    icon: FontAwesomeIcons.hospital,
+                    icon: FontAwesomeIcons.building,
                     label: 'كما هو مسجّل في التعاقد',
                     value: provider.details,
                     accent: accent,

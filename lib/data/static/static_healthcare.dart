@@ -13,14 +13,14 @@ abstract final class StaticHealthcare {
       id: 1,
       title: 'مستشفى متكامل',
       subtitle: 'متعدد التخصصات',
-      icon: FontAwesomeIcons.hospital,
+      icon: FontAwesomeIcons.building,
       accent: AppColors.goldDeep,
     ),
     HealthcareSpecialty(
       id: 3,
       title: 'تأهيل وعلاج طبيعي',
       subtitle: 'مراكز إعادة تأهيل',
-      icon: FontAwesomeIcons.handHoldingMedical,
+      icon: FontAwesomeIcons.personWalking,
       accent: Color(0xFF5C738A),
     ),
     HealthcareSpecialty(
