@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' show MediaType;
 
 import '../config/api_config.dart';
 import 'api_exception.dart';
@@ -140,6 +141,37 @@ class ApiClient {
     return plain?.group(1)?.trim();
   }
 
+  /// POST `multipart/form-data` (حقول نصية + ملف واحد اختياري) ويعيد JSON.
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required Map<String, String> fields,
+    MultipartFile? file,
+    bool auth = true,
+  }) {
+    return _send(
+      auth: auth,
+      request: (headers) async {
+        final request = http.MultipartRequest('POST', _uri(path))
+          ..headers.addAll({...headers}..remove('Content-Type'))
+          ..fields.addAll(fields);
+        if (file != null) {
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              file.field,
+              file.bytes,
+              filename: file.fileName,
+              contentType: file.contentType == null
+                  ? null
+                  : MediaType.parse(file.contentType!),
+            ),
+          );
+        }
+        final streamed = await _http.send(request);
+        return http.Response.fromStream(streamed);
+      },
+    );
+  }
+
   Future<void> postNoContent(
     String path, {
     Map<String, dynamic>? body,
@@ -260,6 +292,21 @@ class ApiClient {
   }
 
   void close() => _http.close();
+}
+
+/// ملف يُرفع ضمن طلب multipart.
+class MultipartFile {
+  const MultipartFile({
+    required this.field,
+    required this.fileName,
+    required this.bytes,
+    this.contentType,
+  });
+
+  final String field;
+  final String fileName;
+  final Uint8List bytes;
+  final String? contentType;
 }
 
 /// استجابة ثنائية (ملف) من الـ API.

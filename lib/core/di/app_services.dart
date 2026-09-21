@@ -5,7 +5,9 @@ import '../../data/auth/token_storage.dart';
 import '../../data/repositories/assets_repository.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/repositories/documents_repository.dart';
+import '../../data/repositories/leave_requests_repository.dart';
 import '../../data/repositories/messages_repository.dart';
+import '../../data/repositories/permission_requests_repository.dart';
 import '../../data/session/app_session.dart';
 import '../config/api_config.dart';
 import '../network/api_client.dart';
@@ -43,6 +45,17 @@ abstract final class AppServices {
   static final DocumentsRepository documents = ApiConfig.useRemoteApi
       ? ApiDocumentsRepository(apiClient)
       : const StaticDocumentsRepository();
+
+  /// تقديم طلب إذن (`/me/requests/options` + `POST /me/requests`).
+  static final PermissionRequestsRepository permissionRequests =
+      ApiConfig.useRemoteApi
+          ? ApiPermissionRequestsRepository(apiClient)
+          : StaticPermissionRequestsRepository();
+
+  /// تقديم طلب إجازة (`/me/leave/requests/*`).
+  static final LeaveRequestsRepository leaveRequests = ApiConfig.useRemoteApi
+      ? ApiLeaveRequestsRepository(apiClient)
+      : StaticLeaveRequestsRepository();
 
   /// يُستدعى عندما تنتهي الجلسة نهائياً (فشل تجديد التوكن بغير خطأ شبكة).
   /// يضبطه `main.dart` للعودة إلى شاشة الدخول من أي مكان.
