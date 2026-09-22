@@ -15,7 +15,7 @@ import '../assets/employee_assets_screen.dart';
 import '../clips/employee_clips_screen.dart';
 import '../feedback/employee_feedback_screen.dart';
 import '../healthcare/healthcare_specialties_screen.dart';
-import '../timesheet/timesheet_hub_screen.dart';
+import '../timesheet/timesheet_screen.dart';
 
 /// الصفحة الرئيسية للموظف العادي — من index.php بتوزيع أوضح وأقل ازدحاماً.
 ///
@@ -360,7 +360,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute<void>(
-                                builder: (_) => const TimesheetHubScreen(),
+                                builder: (_) => const TimesheetScreen(),
                               ),
                             );
                           },
