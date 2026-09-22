@@ -13,8 +13,8 @@ Map<String, dynamic>? _map(Object? v) =>
 
 /// مكان قضاء الإجازة (`place_for_off`).
 enum LeaveLocation {
-  inside('INSIDE', 'داخل ليبيا'),
-  outside('OUTSIDE', 'خارج ليبيا');
+  inside('INSIDE', 'داخلي'),
+  outside('OUTSIDE', 'خارجي');
 
   const LeaveLocation(this.code, this.label);
   final String code;

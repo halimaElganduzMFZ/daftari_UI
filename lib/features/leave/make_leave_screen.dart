@@ -1365,7 +1365,7 @@ class _LocationPicker extends StatelessWidget {
           const SizedBox(width: 10),
           const Expanded(
             child: Text(
-              'مكان قضاء الإجازة',
+              'مكان الإجازة',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
