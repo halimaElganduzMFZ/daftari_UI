@@ -57,6 +57,10 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
   final _reasonController = TextEditingController();
   RequestAttachment? _attachment;
 
+  /// زر «طلب إجازة استثناء»: يوماً بيوم بدل دورات الأربعة أيام.
+  /// يُعرض فقط عندما يقول الخادم `exceptionAvailable == true`.
+  bool _exception = false;
+
   LeavePlan? _plan;
   Object? _planError;
   bool _previewing = false;
@@ -93,6 +97,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
     try {
       final options = await _repo.options(date: _startDate);
       if (!mounted || seq != _loadSeq) return;
+      var exceptionDropped = false;
       setState(() {
         _options = options;
         _loading = false;
@@ -100,7 +105,13 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
         if (_selected != null) {
           _selected = options.kindByCode(_selected!.code);
         }
+        // الاستثناء يتبع وردية تاريخ البداية؛ إن لم يعد متاحاً نلغيه.
+        if (_exception && !options.exceptionAvailable) {
+          _exception = false;
+          exceptionDropped = true;
+        }
       });
+      if (exceptionDropped) _schedulePreview();
     } catch (e) {
       if (!mounted || seq != _loadSeq) return;
       setState(() {
@@ -146,6 +157,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
         kind: kind.code,
         from: from,
         to: kind.fields.endDateFixed ? null : _endDate,
+        exception: _exceptionApplies,
       );
       if (!mounted || seq != _previewSeq) return;
       setState(() {
@@ -161,6 +173,23 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
         _previewing = false;
       });
     }
+  }
+
+  // ─── الاستثناء ──────────────────────────────────────────────────────────
+
+  /// الزر يظهر عندما يسمح الخادم به ويكون النوع من أنواع الرصيد
+  /// (السنوية/الطارئة) — على الأنواع الأخرى لا أثر له بحسب الـ API.
+  bool get _exceptionOffered =>
+      (_options?.exceptionAvailable ?? false) &&
+      _selected != null &&
+      (_selected!.isAnnual || _selected!.isEmergency);
+
+  bool get _exceptionApplies => _exception && _exceptionOffered;
+
+  void _toggleException(bool value) {
+    if (_exception == value) return;
+    setState(() => _exception = value);
+    _schedulePreview();
   }
 
   // ─── الإدخال ────────────────────────────────────────────────────────────
@@ -397,6 +426,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
         to: kind.fields.endDateFixed ? null : _endDate,
         reason: reason.isEmpty ? null : reason,
         location: kind.fields.locationEnabled ? _location : null,
+        exception: _exceptionApplies,
         attachment: attachment == null || attachment.bytes == null
             ? null
             : LeaveAttachmentUpload(
@@ -418,6 +448,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
           _startDate = null;
           _endDate = null;
           _location = null;
+          _exception = false;
           _reasonController.clear();
           _attachment = null;
           _plan = null;
@@ -471,6 +502,8 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
             Text(
               [
                 if (plan.days > 0) 'الأيام المحسوبة: ${_fmtDays(plan.days)}',
+                if (plan.isPartial)
+                  'غطّى الرصيد ${_fmtDays(plan.covered)} من ${_fmtDays(plan.required)} — أُرسل الجزء المغطّى فقط.',
                 if (result.requests.length > 1)
                   'عدد السجلات: ${result.requests.length}',
                 if (result.attachment != null)
@@ -700,12 +733,21 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
           const SizedBox(height: 8),
           if (options != null && _startDate != null)
             _ShiftHint(shift: options.shift, loading: _loading),
+          if (_exceptionOffered) ...[
+            const SizedBox(height: 10),
+            _ExceptionCard(
+              value: _exception,
+              enabled: !_submitting,
+              onChanged: _toggleException,
+            ),
+          ],
           const SizedBox(height: 8),
           _PlanCard(
             plan: _plan,
             error: _planError,
             loading: _previewing,
             fixedDays: kind?.fixedDays,
+            exception: _exceptionApplies,
             onRetry: _schedulePreview,
           ),
           if (kind?.fields.locationEnabled == true) ...[
@@ -780,12 +822,16 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                       color: Colors.white,
                     ),
                   )
-                : const Row(
+                : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      FaIcon(FontAwesomeIcons.paperPlane, size: 16),
-                      SizedBox(width: 10),
-                      Text('تأكيد وإرسال الطلب'),
+                      const FaIcon(FontAwesomeIcons.paperPlane, size: 16),
+                      const SizedBox(width: 10),
+                      Text(
+                        _exceptionApplies
+                            ? 'تأكيد وإرسال طلب إجازة استثناء'
+                            : 'تأكيد وإرسال الطلب',
+                      ),
                     ],
                   ),
           ),
@@ -1183,6 +1229,70 @@ class _ShiftHint extends StatelessWidget {
   }
 }
 
+/// زر «طلب إجازة استثناء» القديم (`saveee`) — يظهر فقط عندما يعيد الخادم
+/// `exceptionAvailable == true`: مكلّف على الوردية المفتوحة (24 ساعة).
+class _ExceptionCard extends StatelessWidget {
+  const _ExceptionCard({
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final bool value;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: value ? AppColors.goldSoft.withValues(alpha: 0.6) : AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: value ? AppColors.gold : AppColors.line,
+        ),
+      ),
+      child: SwitchListTile.adaptive(
+        value: value,
+        onChanged: enabled ? onChanged : null,
+        activeThumbColor: AppColors.goldDeep,
+        contentPadding: const EdgeInsets.fromLTRB(14, 4, 8, 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        secondary: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.goldSoft,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          alignment: Alignment.center,
+          child: const FaIcon(
+            FontAwesomeIcons.calendarDay,
+            size: 15,
+            color: AppColors.goldDeep,
+          ),
+        ),
+        title: const Text(
+          'طلب إجازة استثناء',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 14,
+            color: AppColors.charcoal,
+          ),
+        ),
+        subtitle: const Padding(
+          padding: EdgeInsets.only(top: 3),
+          child: Text(
+            'للوردية المفتوحة (24 ساعة): تُخصم الأيام يوماً بيوم شاملةً الجمعة، '
+            'بدلاً من تقريبها إلى دورات من 4 أيام.',
+            style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.slate),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// نتيجة المعاينة: الأيام المحسوبة، طريقة العدّ، تاريخ النهاية الفعلي، والرصيد.
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
@@ -1191,12 +1301,14 @@ class _PlanCard extends StatelessWidget {
     required this.loading,
     required this.fixedDays,
     required this.onRetry,
+    this.exception = false,
   });
 
   final LeavePlan? plan;
   final Object? error;
   final bool loading;
   final int? fixedDays;
+  final bool exception;
   final VoidCallback onRetry;
 
   static String _n(double v) =>
@@ -1276,8 +1388,11 @@ class _PlanCard extends StatelessWidget {
             child: Text(
               [
                 'من ${d(p.from)} إلى ${d(p.to)} · ${p.methodLabel}'
+                    '${exception && p.method == 'CALENDAR' ? ' (استثناء: يوماً بيوم)' : ''}'
                     '${fixedDays != null ? ' ($fixedDays يوماً)' : ''}',
                 if (p.workShifts != null) 'ورديات عمل ضمن الفترة: ${p.workShifts}',
+                if (p.method == 'CAMERA_SHIFTS' && p.required > 0)
+                  'المطلوب ${_n(p.required)} يوم (يومان لكل وردية)',
                 if (p.blocks.length > 1) 'سيُسجّل الطلب في ${p.blocks.length} سجلات',
               ].join('\n'),
               style: const TextStyle(
@@ -1312,6 +1427,35 @@ class _PlanCard extends StatelessWidget {
               ],
             ),
           ],
+          if (p.isPartial) ...[
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: FaIcon(
+                    FontAwesomeIcons.triangleExclamation,
+                    size: 12,
+                    color: AppColors.danger,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'الرصيد يغطّي ${_n(p.covered)} من ${_n(p.required)} يوم فقط — '
+                    'سيُرسل الجزء المغطّى (حتى ${d(p.to)}) ويُعتذر عن البقية.',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.4,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.danger,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (balance != null) ...[
             const SizedBox(height: 10),
             Row(
@@ -1327,7 +1471,7 @@ class _PlanCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'الرصيد ${balance.kind == 'annual' ? 'السنوي' : 'الطارئ'} '
-                    'بتاريخ البداية ${_n(balance.available)} − ${_n(balance.required)} '
+                    'بتاريخ البداية ${_n(balance.available)} − ${_n(balance.charged)} '
                     '= ${_n(balance.remaining)} يوم',
                     style: TextStyle(
                       fontSize: 12.5,
@@ -1365,7 +1509,7 @@ class _LocationPicker extends StatelessWidget {
           const SizedBox(width: 10),
           const Expanded(
             child: Text(
-              'مكان قضاء الإجازة',
+              'مكان الإجازة',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,

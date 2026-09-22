@@ -13,8 +13,8 @@ Map<String, dynamic>? _map(Object? v) =>
 
 /// مكان قضاء الإجازة (`place_for_off`).
 enum LeaveLocation {
-  inside('INSIDE', 'داخل ليبيا'),
-  outside('OUTSIDE', 'خارج ليبيا');
+  inside('INSIDE', 'داخلي'),
+  outside('OUTSIDE', 'خارجي');
 
   const LeaveLocation(this.code, this.label);
   final String code;
@@ -224,21 +224,27 @@ class LeaveShiftInfo {
   bool get isOk => status == 'ok';
   bool get isUnavailable => status == 'unavailable';
 
+  /// الوردية المفتوحة (بدون أوقات ثابتة — 24 ساعة) هي التي يخصّها زر «استثناء».
+  bool get isOpen => shift == 'OPEN';
+
+  /// تسميات `$typeOfShift` القديمة: 1 إداري · 2 كاميرات · 3 مفتوح · 6 مناوبين 17 · 7 مناوبين 24.
   String get shiftLabel => switch (shift) {
         'REGULAR' => 'دوام إداري',
         'CAMERAS' => 'ورديات كاميرات',
-        'OPEN' => 'دوام مفتوح',
-        'SHIFT_17' => 'وردية 17 ساعة',
-        'SHIFT_24' => 'وردية 24 ساعة',
+        'OPEN' => 'وردية مفتوحة (24 ساعة)',
+        'SHIFT_17' => 'مناوبين 17',
+        'SHIFT_24' => 'مناوبين 24',
         _ => 'غير محدد',
       };
 
+  /// طريقة عدّ أيام السنوية/الطارئة كما ينفّذها الـ API (`planLeave`).
   String get countingHint => switch (shift) {
-        'REGULAR' => 'تُحسب الأيام بالتقويم (أيام الجمعة لا تُخصم في الدوام الإداري)',
-        'CAMERAS' => 'تُحسب أيام العمل الفعلية فقط ضمن الفترة',
-        'SHIFT_17' => 'تُقرّب المدة إلى دورات من 3 أيام',
-        'SHIFT_24' => 'تُقرّب المدة إلى دورات من 4 أيام',
-        'OPEN' => 'تُحسب الأيام بالتقويم',
+        'REGULAR' =>
+          'أيام تقويمية؛ الجمعة لا تُخصم من السنوية لذوي الأسبوع الإداري',
+        'CAMERAS' => 'يومان لكل وردية عمل فعلية ضمن الفترة، وقد يُغطّى الرصيد جزءاً منها',
+        'SHIFT_17' || 'SHIFT_24' => 'تُقرَّب المدة لأعلى إلى دورات من 3 أيام وتُمدَّد النهاية',
+        'OPEN' =>
+          'تُقرَّب المدة لأعلى إلى دورات من 4 أيام — أو يوماً بيوم عند طلب «استثناء»',
         _ => 'لا يمكن تحديد طريقة العدّ حتى يُعرف نوع الدوام',
       };
 }
@@ -298,6 +304,7 @@ class LeaveRequestOptions {
     required this.monthLocked,
     required this.balances,
     required this.kinds,
+    this.exceptionAvailable = false,
   });
 
   factory LeaveRequestOptions.fromApi(Map<String, dynamic> json) {
@@ -315,6 +322,7 @@ class LeaveRequestOptions {
         for (final k in (json['kinds'] as List? ?? const []))
           LeaveKindOption.fromApi((k as Map).cast<String, dynamic>()),
       ],
+      exceptionAvailable: json['exceptionAvailable'] == true,
     );
   }
 
@@ -327,6 +335,12 @@ class LeaveRequestOptions {
   final bool monthLocked;
   final LeaveBalances balances;
   final List<LeaveKindOption> kinds;
+
+  /// زر «طلب إجازة استثناء» القديم (`ShowExcludeBtn == 3`): يحسبه الخادم
+  /// `(isAssigner || isAdmin) && shift == OPEN` لتاريخ البداية المختار.
+  /// عند `true` يُرسل الطلب بـ `exception: true` فتُخصم الأيام يوماً بيوم
+  /// (شاملة الجمعة) بدل دورات الأربعة أيام. لا يُحسب في الواجهة أبداً.
+  final bool exceptionAvailable;
 
   LeaveKindOption? kindByCode(String code) {
     for (final k in kinds) {
@@ -353,7 +367,8 @@ class LeaveBalanceCheck {
     required this.available,
     required this.required,
     required this.remaining,
-  });
+    double? charged,
+  }) : charged = charged ?? required;
 
   factory LeaveBalanceCheck.fromApi(Map<String, dynamic> json) {
     return LeaveBalanceCheck(
@@ -362,6 +377,7 @@ class LeaveBalanceCheck {
       available: _num(json['available']) ?? 0,
       required: _num(json['required']) ?? 0,
       remaining: _num(json['remaining']) ?? 0,
+      charged: _num(json['charged']),
     );
   }
 
@@ -369,11 +385,25 @@ class LeaveBalanceCheck {
   final String kind;
   final String asOf;
   final double available;
+
+  /// ما يطلبه الطلب كاملاً (ورديات الكاميرات: يومان لكل وردية).
   final double required;
+
+  /// ما يُخصم فعلاً — يساوي `required` إلا عند تغطية جزئية للكاميرات.
+  final double charged;
   final double remaining;
 
   bool get sufficient => remaining >= 0;
 }
+
+/// مدى تغطية الرصيد للطلب (`LeaveCoverage`).
+enum LeaveCoverage { full, partial, none }
+
+LeaveCoverage _coverage(Object? v) => switch (v) {
+      'partial' => LeaveCoverage.partial,
+      'none' => LeaveCoverage.none,
+      _ => LeaveCoverage.full,
+    };
 
 /// صف واحد سيُدرج في لوحة الطلبات (`LeaveBlockDto`).
 class LeaveBlock {
@@ -404,10 +434,14 @@ class LeavePlan {
     required this.days,
     required this.blocks,
     required this.method,
+    double? required,
+    double? covered,
+    this.coverage = LeaveCoverage.full,
     this.workShifts,
     this.shift,
     this.balance,
-  });
+  })  : required = required ?? days,
+        covered = covered ?? days;
 
   factory LeavePlan.fromApi(Map<String, dynamic> json) {
     final balance = _map(json['balance']);
@@ -418,6 +452,9 @@ class LeavePlan {
       to: _str(json['to']) ?? '',
       requestedTo: _str(json['requestedTo']) ?? '',
       days: _num(json['days']) ?? 0,
+      required: _num(json['required']),
+      covered: _num(json['covered']),
+      coverage: _coverage(json['coverage']),
       blocks: [
         for (final b in (json['blocks'] as List? ?? const []))
           LeaveBlock.fromApi((b as Map).cast<String, dynamic>()),
@@ -435,7 +472,18 @@ class LeavePlan {
   /// آخر يوم محسوب — قد يتجاوز `requestedTo` (دورات 3/4 أيام، ورديات الكاميرات).
   final String to;
   final String requestedTo;
+
+  /// ما سيُخزَّن في `DAYS1` مجموعاً على السجلات (0 للإعفاء).
   final double days;
+
+  /// ما يطلبه الطلب كاملاً؛ ورديات الكاميرات: يومان لكل وردية عمل.
+  final double required;
+
+  /// ما يدفعه الرصيد — يساوي `required` إلا عند التغطية الجزئية.
+  final double covered;
+
+  /// `partial` (كاميرات فقط): يُرسل الجزء المغطّى وتأتي رسالة اعتذار عن البقية.
+  final LeaveCoverage coverage;
   final List<LeaveBlock> blocks;
 
   /// `FIXED | CALENDAR | FRIDAYS_EXCLUDED | ROUNDED_3 | ROUNDED_4 | CAMERA_SHIFTS | NONE`.
@@ -445,6 +493,7 @@ class LeavePlan {
   final LeaveBalanceCheck? balance;
 
   bool get endExtended => to != requestedTo;
+  bool get isPartial => coverage == LeaveCoverage.partial;
 
   String get methodLabel => switch (method) {
         'FIXED' => 'مدة ثابتة حسب اللائحة',
