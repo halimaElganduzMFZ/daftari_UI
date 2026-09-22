@@ -34,10 +34,13 @@ abstract class LeaveRequestsRepository {
 
   Future<LeaveRequestOptions> options({DateTime? date});
 
+  /// `exception`: زر «طلب إجازة استثناء» — يُرسل فقط عندما تعيد
+  /// `options.exceptionAvailable == true` (مكلّف على وردية مفتوحة).
   Future<LeavePlan> preview({
     required String kind,
     required DateTime from,
     DateTime? to,
+    bool exception = false,
   });
 
   Future<LeaveRequestResult> submit({
@@ -47,6 +50,7 @@ abstract class LeaveRequestsRepository {
     String? reason,
     LeaveLocation? location,
     LeaveAttachmentUpload? attachment,
+    bool exception = false,
   });
 }
 
@@ -72,6 +76,7 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
     required String kind,
     required DateTime from,
     DateTime? to,
+    bool exception = false,
   }) async {
     final json = await _client.getJson(
       '/me/leave/requests/preview',
@@ -79,6 +84,7 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
         'kind': kind,
         'from': _iso(from),
         if (to != null) 'to': _iso(to),
+        if (exception) 'exception': 'true',
       },
     );
     return LeavePlan.fromApi(json);
@@ -92,6 +98,7 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
     String? reason,
     LeaveLocation? location,
     LeaveAttachmentUpload? attachment,
+    bool exception = false,
   }) async {
     final trimmedReason = reason?.trim();
     final fields = <String, String>{
@@ -107,7 +114,8 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
     if (attachment != null) {
       json = await _client.postMultipart(
         '/me/leave/requests',
-        fields: fields,
+        // multipart يحمل القيم نصاً؛ الـ API يحوّل 'true' إلى boolean.
+        fields: {...fields, if (exception) 'exception': 'true'},
         file: MultipartFile(
           field: 'attachment',
           fileName: attachment.fileName,
@@ -118,7 +126,7 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
     } else {
       json = await _client.postJson(
         '/me/leave/requests',
-        body: fields,
+        body: {...fields, if (exception) 'exception': true},
         auth: true,
       );
     }
@@ -209,6 +217,7 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
     required String kind,
     required DateTime from,
     DateTime? to,
+    bool exception = false,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     final def = _kinds.where((k) => k.$1 == kind);
@@ -275,6 +284,7 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
     String? reason,
     LeaveLocation? location,
     LeaveAttachmentUpload? attachment,
+    bool exception = false,
   }) async {
     final plan = await preview(kind: kind, from: from, to: to);
     if ((_pending[kind] ?? 0) > 0) {

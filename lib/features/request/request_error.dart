@@ -71,6 +71,7 @@ RequestErrorInfo describeRequestError(Object error) {
     'DUPLICATE_EXEMPTION' =>
       'تداخل مع طلب أو إجازة',
     'INSUFFICIENT_BALANCE' => 'الرصيد غير كافٍ',
+    'EXCEPTION_NOT_ALLOWED' || 'EXCEPTION_NOT_APPLICABLE' => 'إجازة الاستثناء',
     'REASON_REQUIRED' => 'السبب مطلوب',
     'ATTACHMENT_REQUIRED' ||
     'ATTACHMENT_NOT_ALLOWED' ||
