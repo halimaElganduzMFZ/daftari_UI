@@ -3,210 +3,118 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/app_surface.dart';
-import '../../core/widgets/date_range_filter_bar.dart';
 import '../../core/widgets/status_pill.dart';
-import '../../data/models/employee_timesheet_day.dart';
-import '../../data/static/static_employee_timesheet.dart';
+import '../../data/models/timesheet.dart';
+import '../../data/repositories/timesheet_repository.dart';
+import 'timesheet_log_scaffold.dart';
 
-/// تايم شيت الحضور والانصراف مع pagination.
-class AttendanceTimesheetScreen extends StatefulWidget {
-  const AttendanceTimesheetScreen({super.key});
+/// تايم شيت الحضور والانصراف (بديل `time_sheet_employee.php`) — `GET /me/timesheet`.
+///
+/// يعرض بصمات اليوم الأربع مع شارة «الحالة (الوصف)» والعدّادات المحسوبة في الخادم.
+class AttendanceTimesheetScreen extends StatelessWidget {
+  const AttendanceTimesheetScreen({super.key, this.repository});
 
-  @override
-  State<AttendanceTimesheetScreen> createState() =>
-      _AttendanceTimesheetScreenState();
-}
-
-class _AttendanceTimesheetScreenState extends State<AttendanceTimesheetScreen> {
-  static const _pageSize = 8;
-  int _visible = _pageSize;
-  DateTime? _from;
-  DateTime? _to;
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _to = DateTime(now.year, now.month, now.day);
-    _from = _to!.subtract(const Duration(days: 30));
-  }
-
-  List<EmployeeTimesheetDay> get _filtered {
-    return [
-      for (final d in StaticEmployeeTimesheet.days)
-        if (DateRangeFilterBar.inRange(d.date, _from, _to)) d,
-    ];
-  }
-
-  void _resetPaging() => _visible = _pageSize;
+  /// للاختبارات؛ الافتراضي `AppServices.timesheet`.
+  final TimesheetRepository? repository;
 
   @override
   Widget build(BuildContext context) {
-    final days = _filtered;
-    final visible = days.take(_visible).toList();
-    final hasMore = _visible < days.length;
-    final workDays = days.where((d) => d.isWorkDay).length;
-    final lateDays = days.where((d) => d.delayLabel != null).length;
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('حضور وانصراف')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [Color(0xFF2F2F2F), Color(0xFF4A4034)],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    FaIcon(
-                      FontAwesomeIcons.fingerprint,
-                      color: Colors.white70,
-                      size: 16,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'سجل البصمة',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'أيام حضورك وانصرافك',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _MiniStat(label: 'أيام دوام', value: '$workDays'),
-                    const SizedBox(width: 10),
-                    _MiniStat(label: 'تأخير', value: '$lateDays'),
-                    const SizedBox(width: 10),
-                    _MiniStat(label: 'المعروض', value: '${visible.length}'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          DateRangeFilterBar(
-            from: _from,
-            to: _to,
-            hint: 'تصفية سجل الحضور حسب الفترة',
-            onFromChanged: (d) => setState(() {
-              _from = d;
-              if (_to != null && _to!.isBefore(d)) _to = d;
-              _resetPaging();
-            }),
-            onToChanged: (d) => setState(() {
-              _to = d;
-              if (_from != null && _from!.isAfter(d)) _from = d;
-              _resetPaging();
-            }),
-            onCleared: () => setState(() {
-              _from = null;
-              _to = null;
-              _resetPaging();
-            }),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            days.isEmpty
-                ? 'لا نتائج لهذه الفترة'
-                : 'عرض ${visible.length} من ${days.length}',
-            style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
-          ),
-          const SizedBox(height: 10),
-          if (days.isEmpty)
-            const AppSurface(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Text(
-                  'لا توجد أيام ضمن الفترة المحددة',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.slate),
-                ),
-              ),
-            )
-          else ...[
-            for (final day in visible) ...[
-              _DayCard(day: day),
-              const SizedBox(height: 10),
-            ],
-            if (hasMore)
-              OutlinedButton.icon(
-                onPressed: () => setState(() {
-                  _visible = (_visible + _pageSize).clamp(0, days.length);
-                }),
-                icon: const Icon(Icons.expand_more_rounded),
-                label: Text('عرض المزيد (${days.length - visible.length})'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  foregroundColor: AppColors.goldDeep,
-                  side: const BorderSide(color: AppColors.gold),
-                ),
-              ),
-          ],
-        ],
-      ),
+    return TimesheetLogScaffold(
+      title: 'حضور وانصراف',
+      filterHint: 'تصفية سجل الحضور حسب الفترة',
+      emptyText: 'لا توجد أيام مؤرشفة ضمن الفترة المحددة',
+      unavailableText: 'سجل الحضور غير متاح',
+      repository: repository,
+      headerBuilder: (context, result, shown) =>
+          _Header(result: result, shown: shown),
+      dayBuilder: (context, day, result) => _DayCard(day: day),
     );
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({required this.label, required this.value});
+class _Header extends StatelessWidget {
+  const _Header({required this.result, required this.shown});
 
-  final String label;
-  final String value;
+  final TimesheetResult? result;
+  final int shown;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+    final s = result?.summary;
+    String n(int? v) => v == null ? '—' : '$v';
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [Color(0xFF2F2F2F), Color(0xFF4A4034)],
         ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const FaIcon(
+                FontAwesomeIcons.fingerprint,
+                color: Colors.white70,
+                size: 16,
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
-                fontSize: 11,
+              const SizedBox(width: 8),
+              const Text(
+                'سجل البصمة',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
+              const Spacer(),
+              if (result?.employee?.workplace case final wp?)
+                Text(
+                  wp,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'أيام حضورك وانصرافك',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              TimesheetMiniStat(label: 'أيام دوام', value: n(s?.workDays)),
+              const SizedBox(width: 10),
+              TimesheetMiniStat(
+                label: 'حضور كامل',
+                value: n(s?.presentFullDays),
+              ),
+              const SizedBox(width: 10),
+              TimesheetMiniStat(label: 'إجازة', value: n(s?.leaveDays)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              TimesheetMiniStat(label: 'غياب', value: n(s?.absenceDays)),
+              const SizedBox(width: 10),
+              TimesheetMiniStat(
+                label: 'مخالفات بصمة',
+                value: n(s?.timesheetViolationDays),
+              ),
+              const SizedBox(width: 10),
+              TimesheetMiniStat(label: 'المعروض', value: '$shown'),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -215,20 +123,21 @@ class _MiniStat extends StatelessWidget {
 class _DayCard extends StatelessWidget {
   const _DayCard({required this.day});
 
-  final EmployeeTimesheetDay day;
+  final TimesheetDay day;
 
   @override
   Widget build(BuildContext context) {
     final dateFmt = DateFormat('yyyy/MM/dd — EEEE', 'ar');
-    final tone = switch (day.statusLabel) {
-      'غائب' => StatusTone.danger,
-      'متأخر' => StatusTone.warning,
-      'عطلة' => StatusTone.neutral,
-      _ => StatusTone.success,
-    };
+    final att = day.attendance;
+    final subtitle = [
+      ?day.dayTypeName,
+      ?day.workType,
+      ?day.workplace,
+    ].join(' · ');
+    final showPunches = !day.isRest && (day.isWorkDay || !day.punches.isEmpty);
 
-    return AppSurface(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+    return TimesheetDayCard(
+      accent: rowAccentOf(day.tone),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -243,38 +152,65 @@ class _DayCard extends StatelessWidget {
                   ),
                 ),
               ),
-              StatusPill(label: day.statusLabel, tone: tone),
+              StatusPill(
+                label: att.badge.text,
+                tone: statusToneOf(att.badge.tone),
+              ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            day.dayTypeLabel,
-            style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
-          ),
-          if (day.isWorkDay) ...[
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
+            ),
+          ],
+          if (showPunches) ...[
             const SizedBox(height: 12),
             Row(
               children: [
-                _Stamp(label: 'حضور', value: day.checkIn ?? '—', inBound: true),
+                _Stamp(
+                  label: 'حضور',
+                  value: day.punches.checkIn ?? '—',
+                  color: AppColors.success,
+                ),
                 const SizedBox(width: 8),
-                _Stamp(label: 'استراحة', value: day.breakOut ?? '—'),
+                _Stamp(label: 'الثانية', value: day.punches.breakOut ?? '—'),
                 const SizedBox(width: 8),
-                _Stamp(label: 'عودة', value: day.breakIn ?? '—'),
+                _Stamp(label: 'الثالثة', value: day.punches.resume ?? '—'),
                 const SizedBox(width: 8),
-                _Stamp(label: 'انصراف', value: day.checkOut ?? '—', outBound: true),
+                _Stamp(
+                  label: 'انصراف',
+                  value: day.punches.checkOut ?? '—',
+                  color: AppColors.info,
+                ),
               ],
             ),
-            if (day.delayLabel != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                day.delayLabel!,
-                style: const TextStyle(
-                  color: AppColors.warning,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12.5,
-                ),
-              ),
-            ],
+          ],
+          if (att.work != null || att.undertime != null || att.overtime != null) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: [
+                if (att.work case final v?)
+                  TimesheetMeta(label: 'ساعات العمل', value: v, width: 90),
+                if (att.undertime case final v?)
+                  TimesheetMeta(
+                    label: 'نقص',
+                    value: v,
+                    width: 90,
+                    valueColor: AppColors.warning,
+                  ),
+                if (att.overtime case final v?)
+                  TimesheetMeta(
+                    label: 'إضافي',
+                    value: v,
+                    width: 90,
+                    valueColor: AppColors.success,
+                  ),
+              ],
+            ),
           ],
         ],
       ),
@@ -286,22 +222,15 @@ class _Stamp extends StatelessWidget {
   const _Stamp({
     required this.label,
     required this.value,
-    this.inBound = false,
-    this.outBound = false,
+    this.color = AppColors.slate,
   });
 
   final String label;
   final String value;
-  final bool inBound;
-  final bool outBound;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final color = inBound
-        ? AppColors.success
-        : outBound
-            ? AppColors.info
-            : AppColors.slate;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -316,7 +245,7 @@ class _Stamp extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 12.5,
                 color: AppColors.charcoal,
