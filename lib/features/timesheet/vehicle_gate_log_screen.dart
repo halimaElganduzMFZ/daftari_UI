@@ -3,207 +3,116 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/app_surface.dart';
-import '../../core/widgets/date_range_filter_bar.dart';
 import '../../core/widgets/status_pill.dart';
-import '../../data/models/vehicle_gate_day.dart';
-import '../../data/static/static_vehicle_gate.dart';
+import '../../data/models/timesheet.dart';
+import '../../data/repositories/timesheet_repository.dart';
+import 'timesheet_log_scaffold.dart';
 
-/// سجل حركة السيارة في بوابة المنطقة الحرة.
-class VehicleGateLogScreen extends StatefulWidget {
-  const VehicleGateLogScreen({super.key});
+/// سجل حركة السيارة في بوابة المنطقة (بديل `Vehicle_Employee_Log.php`) — `GET /me/timesheet`.
+///
+/// يعرض لكل يوم: مرات الدخول/الخروج، مدة البقاء، وقت الخروج بلا إذن، هامش السماحية،
+/// وشارة «الحالة» بعد تطبيق فترة السماح — كلها محسوبة في الخادم.
+class VehicleGateLogScreen extends StatelessWidget {
+  const VehicleGateLogScreen({super.key, this.repository});
 
-  @override
-  State<VehicleGateLogScreen> createState() => _VehicleGateLogScreenState();
-}
-
-class _VehicleGateLogScreenState extends State<VehicleGateLogScreen> {
-  static const _pageSize = 8;
-  int _visible = _pageSize;
-  DateTime? _from;
-  DateTime? _to;
-
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _to = DateTime(now.year, now.month, now.day);
-    _from = _to!.subtract(const Duration(days: 30));
-  }
-
-  List<VehicleGateDay> get _filtered {
-    return [
-      for (final d in StaticVehicleGateLog.days)
-        if (DateRangeFilterBar.inRange(d.date, _from, _to)) d,
-    ];
-  }
-
-  void _resetPaging() => _visible = _pageSize;
+  /// للاختبارات؛ الافتراضي `AppServices.timesheet`.
+  final TimesheetRepository? repository;
 
   @override
   Widget build(BuildContext context) {
-    final days = _filtered;
-    final visible = days.take(_visible).toList();
-    final hasMore = _visible < days.length;
-    final violations = days.where((d) => d.isViolation).length;
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('سجل البوابة')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [Color(0xFF6B5538), Color(0xFF3A3228)],
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    FaIcon(
-                      FontAwesomeIcons.carSide,
-                      color: Colors.white70,
-                      size: 16,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'بوابة المركبات',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'حركة سيارتك داخل المنطقة',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _ChipStat(label: 'أيام', value: '${days.length}'),
-                    const SizedBox(width: 10),
-                    _ChipStat(label: 'مخالفات', value: '$violations'),
-                    const SizedBox(width: 10),
-                    _ChipStat(label: 'المعروض', value: '${visible.length}'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          DateRangeFilterBar(
-            from: _from,
-            to: _to,
-            hint: 'تصفية سجل البوابة حسب الفترة',
-            onFromChanged: (d) => setState(() {
-              _from = d;
-              if (_to != null && _to!.isBefore(d)) _to = d;
-              _resetPaging();
-            }),
-            onToChanged: (d) => setState(() {
-              _to = d;
-              if (_from != null && _from!.isAfter(d)) _from = d;
-              _resetPaging();
-            }),
-            onCleared: () => setState(() {
-              _from = null;
-              _to = null;
-              _resetPaging();
-            }),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            days.isEmpty
-                ? 'لا نتائج لهذه الفترة'
-                : 'عرض ${visible.length} من ${days.length}',
-            style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
-          ),
-          const SizedBox(height: 10),
-          if (days.isEmpty)
-            const AppSurface(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Text(
-                  'لا توجد حركات ضمن الفترة المحددة',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.slate),
-                ),
-              ),
-            )
-          else ...[
-            for (final day in visible) ...[
-              _GateCard(day: day),
-              const SizedBox(height: 10),
-            ],
-            if (hasMore)
-              OutlinedButton.icon(
-                onPressed: () => setState(() {
-                  _visible = (_visible + _pageSize).clamp(0, days.length);
-                }),
-                icon: const Icon(Icons.expand_more_rounded),
-                label: Text('عرض المزيد (${days.length - visible.length})'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  foregroundColor: AppColors.goldDeep,
-                  side: const BorderSide(color: AppColors.gold),
-                ),
-              ),
-          ],
-        ],
-      ),
+    return TimesheetLogScaffold(
+      title: 'سجل البوابة',
+      filterHint: 'تصفية سجل البوابة حسب الفترة',
+      emptyText: 'لا توجد حركات مؤرشفة ضمن الفترة المحددة',
+      unavailableText: 'سجل البوابة غير متاح',
+      repository: repository,
+      headerBuilder: (context, result, shown) =>
+          _Header(result: result, shown: shown),
+      dayBuilder: (context, day, result) => _GateCard(day: day),
     );
   }
 }
 
-class _ChipStat extends StatelessWidget {
-  const _ChipStat({required this.label, required this.value});
+class _Header extends StatelessWidget {
+  const _Header({required this.result, required this.shown});
 
-  final String label;
-  final String value;
+  final TimesheetResult? result;
+  final int shown;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+    final s = result?.summary;
+    final carNumber = result?.days.reversed
+        .map((d) => d.car.number)
+        .firstWhere((n) => n != null, orElse: () => null);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [Color(0xFF6B5538), Color(0xFF3A3228)],
         ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const FaIcon(
+                FontAwesomeIcons.carSide,
+                color: Colors.white70,
+                size: 16,
               ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
-                fontSize: 11,
+              const SizedBox(width: 8),
+              const Text(
+                'بوابة المركبات',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
+              const Spacer(),
+              if (carNumber != null)
+                Text(
+                  'لوحة $carNumber',
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'حركة سيارتك داخل المنطقة',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              TimesheetMiniStat(
+                label: 'أيام',
+                value: result == null ? '—' : '${result!.days.length}',
+              ),
+              const SizedBox(width: 10),
+              TimesheetMiniStat(
+                label: 'مخالفات',
+                value: s == null ? '—' : '${s.carViolations}',
+              ),
+              const SizedBox(width: 10),
+              TimesheetMiniStat(
+                label: 'خروج بلا إذن',
+                value: s?.totalLeak ?? '—',
+              ),
+              const SizedBox(width: 10),
+              TimesheetMiniStat(label: 'المعروض', value: '$shown'),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -212,13 +121,24 @@ class _ChipStat extends StatelessWidget {
 class _GateCard extends StatelessWidget {
   const _GateCard({required this.day});
 
-  final VehicleGateDay day;
+  final TimesheetDay day;
 
   @override
   Widget build(BuildContext context) {
-    final dateFmt = DateFormat('yyyy/MM/dd', 'ar');
-    return AppSurface(
-      padding: const EdgeInsets.all(14),
+    final dateFmt = DateFormat('yyyy/MM/dd · EEEE', 'ar');
+    final car = day.car;
+    final judgment = car.judgment;
+    final violation = car.countsAsViolation ||
+        judgment.badge.tone == BadgeTone.red ||
+        judgment.badge.tone == BadgeTone.orange;
+    final iconColor = violation
+        ? AppColors.danger
+        : judgment.badge.tone == BadgeTone.green
+            ? AppColors.success
+            : AppColors.goldDeep;
+
+    return TimesheetDayCard(
+      accent: rowAccentOf(day.tone),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -228,17 +148,13 @@ class _GateCard extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: day.isViolation
+                  color: violation
                       ? AppColors.danger.withValues(alpha: 0.12)
                       : AppColors.goldSoft,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
-                child: FaIcon(
-                  FontAwesomeIcons.car,
-                  size: 16,
-                  color: day.isViolation ? AppColors.danger : AppColors.goldDeep,
-                ),
+                child: FaIcon(FontAwesomeIcons.car, size: 16, color: iconColor),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -246,7 +162,7 @@ class _GateCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${dateFmt.format(day.date)} · ${day.dayName}',
+                      dateFmt.format(day.date),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         color: AppColors.charcoal,
@@ -254,7 +170,10 @@ class _GateCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'لوحة ${day.carNumber}',
+                      [
+                        ?day.dayTypeName,
+                        if (car.number case final n?) 'لوحة $n',
+                      ].join(' · '),
                       style: const TextStyle(
                         color: AppColors.slate,
                         fontSize: 12.5,
@@ -264,65 +183,106 @@ class _GateCard extends StatelessWidget {
                 ),
               ),
               StatusPill(
-                label: day.judgmentLabel,
-                tone: day.isViolation
-                    ? StatusTone.danger
-                    : (day.exemptionLabel != null
-                        ? StatusTone.warning
-                        : StatusTone.success),
+                label: judgment.badge.text,
+                tone: statusToneOf(judgment.badge.tone),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.line),
+          if (!car.hasData)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: Text(
+                day.isRest
+                    ? 'يوم راحة — لا حركة مسجلة'
+                    : 'لا توجد حركة سيارة مسجلة لهذا اليوم',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
+              ),
+            )
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.line),
+              ),
+              child: Wrap(
+                spacing: 16,
+                runSpacing: 10,
+                children: [
+                  TimesheetMeta(
+                    label: 'دخول بوابة',
+                    value: '${car.gateInCount ?? 0}',
+                  ),
+                  TimesheetMeta(
+                    label: 'خروج بوابة',
+                    value: '${car.gateOutCount ?? 0}',
+                  ),
+                  TimesheetMeta(label: 'داخل المنطقة', value: car.insideLabel),
+                  TimesheetMeta(
+                    label: 'فترة الانقطاع',
+                    value: car.leak,
+                    valueColor:
+                        car.leakMinutes > 0 ? AppColors.danger : null,
+                  ),
+                  TimesheetMeta(
+                    label: 'حضور',
+                    value: day.punches.checkIn ?? '—',
+                  ),
+                  TimesheetMeta(
+                    label: 'انصراف',
+                    value: day.punches.checkOut ?? '—',
+                  ),
+                  TimesheetMeta(
+                    label: 'هامش / إذن السماحية',
+                    value: car.permissionMargin,
+                    width: 208,
+                    valueColor: car.exemption?.isReal == true
+                        ? AppColors.success
+                        : null,
+                  ),
+                ],
+              ),
             ),
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 10,
+          if (car.displayText case final text?) ...[
+            const SizedBox(height: 10),
+            Text(
+              text,
+              style: const TextStyle(
+                color: AppColors.charcoal,
+                fontSize: 12.5,
+                height: 1.4,
+              ),
+            ),
+          ],
+          if (car.isViolation && car.inGracePeriod) ...[
+            const SizedBox(height: 8),
+            const Row(
               children: [
-                _Meta(label: 'دخول بوابة', value: '${day.gateInCount}'),
-                _Meta(label: 'خروج بوابة', value: '${day.gateOutCount}'),
-                _Meta(label: 'داخل المنطقة', value: day.carInsideLabel),
-                _Meta(label: 'حضور', value: day.checkIn ?? '—'),
-                _Meta(label: 'انصراف', value: day.checkOut ?? '—'),
-                if (day.exemptionLabel != null)
-                  _Meta(label: 'استثناء', value: day.exemptionLabel!),
+                FaIcon(
+                  FontAwesomeIcons.circleInfo,
+                  size: 12,
+                  color: AppColors.slate,
+                ),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'هذا اليوم ضمن فترة السماح قبل بدء احتساب المخالفات، فلا يُحتسب.',
+                    style: TextStyle(color: AppColors.slate, fontSize: 12),
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Meta extends StatelessWidget {
-  const _Meta({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 96,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.slate)),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              color: AppColors.charcoal,
-            ),
-          ),
+          ],
         ],
       ),
     );

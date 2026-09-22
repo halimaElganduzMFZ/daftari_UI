@@ -9,6 +9,7 @@ import '../../data/repositories/healthcare_repository.dart';
 import '../../data/repositories/leave_requests_repository.dart';
 import '../../data/repositories/messages_repository.dart';
 import '../../data/repositories/permission_requests_repository.dart';
+import '../../data/repositories/timesheet_repository.dart';
 import '../../data/session/app_session.dart';
 import '../config/api_config.dart';
 import '../network/api_client.dart';
@@ -51,6 +52,11 @@ abstract final class AppServices {
   static final HealthcareRepository healthcare = ApiConfig.useRemoteApi
       ? ApiHealthcareRepository(apiClient)
       : const StaticHealthcareRepository();
+
+  /// سجل الحضور وحركة البوابة (`/me/timesheet`).
+  static final TimesheetRepository timesheet = ApiConfig.useRemoteApi
+      ? ApiTimesheetRepository(apiClient)
+      : const StaticTimesheetRepository();
 
   /// تقديم طلب إذن (`/me/requests/options` + `POST /me/requests`).
   static final PermissionRequestsRepository permissionRequests =
