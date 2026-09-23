@@ -230,13 +230,16 @@ class _Stats {
   /// أيام العمل الرسمية (`daytype = W`).
   final int workDays;
 
-  /// أيام عمل بحضور (حاضر أو مأذون).
+  /// أيام عمل حضر فيها الموظف (حاضر/مأذون، أو حضر مع خصم).
   final int present;
 
   /// أيام عمل في إجازة.
   final int leave;
 
-  /// أيام غياب (حالة A أياً كان وصفها).
+  /// أيام الغياب الفعلي: حالة A ووصفها «غائب» تماماً (قاعدة الصفحة القديمة).
+  ///
+  /// الأرشيف يضع الحالة A أيضاً على أيام الخصم (مثل مخالفات البوابة
+  /// «تجاوز التسرب — خصم») رغم أن الموظف حضر فيها؛ تلك تُحتسب حضوراً هنا.
   final int absence;
 
   /// مخالفات بوابة محسوبة (خارج فترة السماح).
@@ -254,6 +257,7 @@ class _Stats {
     var work = 0, present = 0, leave = 0, absence = 0, violations = 0, leak = 0, unknown = 0;
     for (final d in days) {
       final st = d.attendance.state;
+      final realAbsence = _isRealAbsence(d);
       if (d.isWorkDay) {
         work++;
         switch (st) {
@@ -262,7 +266,12 @@ class _Stats {
           case AttendanceState.leave:
             leave++;
           case AttendanceState.absent:
-            absence++;
+            // A بوصف «غائب» = غياب؛ A بوصف آخر = حضر مع خصم.
+            if (realAbsence) {
+              absence++;
+            } else {
+              present++;
+            }
           case null:
             // حضور ببصمة دون تصنيف يُعدّ حضوراً؛ بلا بصمة يبقى مجهولاً.
             if (d.punches.checkIn != null) {
@@ -271,7 +280,7 @@ class _Stats {
               unknown++;
             }
         }
-      } else if (st == AttendanceState.absent) {
+      } else if (realAbsence) {
         absence++;
       }
       if (d.car.countsAsViolation) violations++;
@@ -287,6 +296,11 @@ class _Stats {
       unknown: unknown,
     );
   }
+
+  /// غياب فعلي وفق النظام القديم: `state_Nm = 'A'` و`DELAY_Nm = 'غائب'`.
+  static bool _isRealAbsence(TimesheetDay d) =>
+      d.attendance.state == AttendanceState.absent &&
+      (d.attendance.description?.trim() == 'غائب');
 }
 
 class _Header extends StatelessWidget {
