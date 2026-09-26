@@ -58,14 +58,18 @@ final _isoDate = DateFormat('yyyy-MM-dd');
 String _iso(DateTime d) => _isoDate.format(d);
 
 class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
-  const ApiLeaveRequestsRepository(this._client);
+  const ApiLeaveRequestsRepository(
+    this._client, {
+    this.basePath = '/me/leave/requests',
+  });
 
   final ApiClient _client;
+  final String basePath;
 
   @override
   Future<LeaveRequestOptions> options({DateTime? date}) async {
     final json = await _client.getJson(
-      '/me/leave/requests/options',
+      '$basePath/options',
       query: {if (date != null) 'date': _iso(date)},
     );
     return LeaveRequestOptions.fromApi(json);
@@ -79,7 +83,7 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
     bool exception = false,
   }) async {
     final json = await _client.getJson(
-      '/me/leave/requests/preview',
+      '$basePath/preview',
       query: {
         'kind': kind,
         'from': _iso(from),
@@ -113,7 +117,7 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
     final Map<String, dynamic> json;
     if (attachment != null) {
       json = await _client.postMultipart(
-        '/me/leave/requests',
+        basePath,
         // multipart يحمل القيم نصاً؛ الـ API يحوّل 'true' إلى boolean.
         fields: {...fields, if (exception) 'exception': 'true'},
         file: MultipartFile(
@@ -125,7 +129,7 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
       );
     } else {
       json = await _client.postJson(
-        '/me/leave/requests',
+        basePath,
         body: {...fields, if (exception) 'exception': true},
         auth: true,
       );
@@ -244,8 +248,9 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
     final dash = StaticEmployeeDashboard.data;
     LeaveBalanceCheck? balance;
     if (option.isAnnual || option.isEmergency) {
-      final available = (option.isAnnual ? dash.annualBalance : dash.emergencyBalance)
-          .toDouble();
+      final available =
+          (option.isAnnual ? dash.annualBalance : dash.emergencyBalance)
+              .toDouble();
       balance = LeaveBalanceCheck(
         kind: option.isAnnual ? 'annual' : 'emergency',
         asOf: _iso(start),
@@ -268,7 +273,9 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
       to: _iso(end),
       requestedTo: _iso(end),
       days: days.toDouble(),
-      blocks: [LeaveBlock(from: _iso(start), to: _iso(end), days: days.toDouble())],
+      blocks: [
+        LeaveBlock(from: _iso(start), to: _iso(end), days: days.toDouble()),
+      ],
       method: option.fixedDays != null
           ? 'FIXED'
           : (option.isAnnual ? 'FRIDAYS_EXCLUDED' : 'CALENDAR'),
@@ -295,7 +302,8 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
             'لا يمكن تقديم طلب لمثل هذا النوع لأنه لديك طلب ${plan.kind.label} لا يزال معلقاً لم يتم اتخاذ إجراء به',
       );
     }
-    if (kind == 'EMERGENCY_LEAVE' && (reason == null || reason.trim().isEmpty)) {
+    if (kind == 'EMERGENCY_LEAVE' &&
+        (reason == null || reason.trim().isEmpty)) {
       throw const ApiException(
         statusCode: 400,
         code: 'REASON_REQUIRED',

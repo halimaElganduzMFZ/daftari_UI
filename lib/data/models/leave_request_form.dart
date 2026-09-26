@@ -4,7 +4,8 @@
 /// في وحدة `leave`.
 library;
 
-int? _int(Object? v) => v is int ? v : (v is num ? v.toInt() : int.tryParse('$v'));
+int? _int(Object? v) =>
+    v is int ? v : (v is num ? v.toInt() : int.tryParse('$v'));
 double? _num(Object? v) =>
     v is num ? v.toDouble() : (v == null ? null : double.tryParse('$v'));
 String? _str(Object? v) => v == null ? null : '$v';
@@ -37,11 +38,11 @@ enum LeaveKindCategory {
 }
 
 LeaveKindCategory _category(Object? v) => switch (v) {
-      'fixed' => LeaveKindCategory.fixed,
-      'attachment' => LeaveKindCategory.attachment,
-      'exemption' => LeaveKindCategory.exemption,
-      _ => LeaveKindCategory.balance,
-    };
+  'fixed' => LeaveKindCategory.fixed,
+  'attachment' => LeaveKindCategory.attachment,
+  'exemption' => LeaveKindCategory.exemption,
+  _ => LeaveKindCategory.balance,
+};
 
 /// الحقول التي يتطلبها نوع الإجازة (`LeaveKindFieldsDto`).
 class LeaveKindFields {
@@ -135,17 +136,17 @@ class LeaveKindOption extends LeaveKindSummary {
 
   /// شرح مختصر لسبب عدم التوفر.
   String? get unavailableLabel => switch (unavailableReason) {
-        null => null,
-        'SAME_KIND_PENDING' => 'لديك طلب من هذا النوع لا يزال معلقاً',
-        'ALREADY_GRANTED' => 'مُنحت هذه الإجازة مسبقاً (مرة واحدة في الخدمة)',
-        'FEMALE_ONLY' => 'متاحة للموظفات فقط',
-        'NOT_ELIGIBLE' => 'متاحة لمسؤولي الهياكل الرئيسية فقط',
-        'EMPLOYEE_INACTIVE' => 'الموظف خارج الخدمة حالياً',
-        'CONTRACT_NOT_ELIGIBLE' => 'عقد التعاون لا يخوّل أخذ إجازة',
-        'MISSING_START_DATE' => 'لا يوجد تاريخ بداية عمل مسجّل',
-        'MONTH_LOCKED' => 'شهر التاريخ المطلوب مقفل للمرتبات',
-        final other => 'غير متاح حالياً ($other)',
-      };
+    null => null,
+    'SAME_KIND_PENDING' => 'لديك طلب من هذا النوع لا يزال معلقاً',
+    'ALREADY_GRANTED' => 'مُنحت هذه الإجازة مسبقاً (مرة واحدة في الخدمة)',
+    'FEMALE_ONLY' => 'متاحة للموظفات فقط',
+    'NOT_ELIGIBLE' => 'متاحة لمسؤولي الهياكل الرئيسية فقط',
+    'EMPLOYEE_INACTIVE' => 'الموظف خارج الخدمة حالياً',
+    'CONTRACT_NOT_ELIGIBLE' => 'عقد التعاون لا يخوّل أخذ إجازة',
+    'MISSING_START_DATE' => 'لا يوجد تاريخ بداية عمل مسجّل',
+    'MONTH_LOCKED' => 'شهر التاريخ المطلوب مقفل للمرتبات',
+    final other => 'غير متاح حالياً ($other)',
+  };
 }
 
 /// أهلية الموظف (`LeaveEligibilityDto`).
@@ -175,12 +176,12 @@ class LeaveEligibility {
   final String? reason;
 
   String? get reasonLabel => switch (reason) {
-        null => null,
-        'EMPLOYEE_NOT_FOUND' => 'لم يتم العثور على بطاقة الموظف.',
-        'EMPLOYEE_INACTIVE' => 'هذا الموظف خارج الخدمة حالياً.',
-        'CONTRACT_NOT_ELIGIBLE' => 'هذا الموظف عقد متعاون لا يحق له أخذ الإجازة.',
-        _ => 'غير مؤهل لتقديم طلب إجازة.',
-      };
+    null => null,
+    'EMPLOYEE_NOT_FOUND' => 'لم يتم العثور على بطاقة الموظف.',
+    'EMPLOYEE_INACTIVE' => 'هذا الموظف خارج الخدمة حالياً.',
+    'CONTRACT_NOT_ELIGIBLE' => 'هذا الموظف عقد متعاون لا يحق له أخذ الإجازة.',
+    _ => 'غير مؤهل لتقديم طلب إجازة.',
+  };
 }
 
 /// دوام تاريخ البداية (`LeaveShiftDto`) — يحدد طريقة عدّ الأيام.
@@ -224,29 +225,30 @@ class LeaveShiftInfo {
   bool get isOk => status == 'ok';
   bool get isUnavailable => status == 'unavailable';
 
-  /// الوردية المفتوحة (بدون أوقات ثابتة — 24 ساعة) هي التي يخصّها زر «استثناء».
+  /// الدوام المفتوح تصنيف مستقل عن مناوبة SHIFT_24.
   bool get isOpen => shift == 'OPEN';
 
   /// تسميات `$typeOfShift` القديمة: 1 إداري · 2 كاميرات · 3 مفتوح · 6 مناوبين 17 · 7 مناوبين 24.
   String get shiftLabel => switch (shift) {
-        'REGULAR' => 'دوام إداري',
-        'CAMERAS' => 'ورديات كاميرات',
-        'OPEN' => 'وردية مفتوحة (24 ساعة)',
-        'SHIFT_17' => 'مناوبين 17',
-        'SHIFT_24' => 'مناوبين 24',
-        _ => 'غير محدد',
-      };
+    'REGULAR' => 'دوام إداري',
+    'CAMERAS' => 'ورديات كاميرات',
+    'OPEN' => 'دوام مفتوح',
+    'SHIFT_17' => 'مناوبين 17',
+    'SHIFT_24' => 'مناوبين 24',
+    _ => 'غير محدد',
+  };
 
   /// طريقة عدّ أيام السنوية/الطارئة كما ينفّذها الـ API (`planLeave`).
   String get countingHint => switch (shift) {
-        'REGULAR' =>
-          'أيام تقويمية؛ الجمعة لا تُخصم من السنوية لذوي الأسبوع الإداري',
-        'CAMERAS' => 'يومان لكل وردية عمل فعلية ضمن الفترة، وقد يُغطّى الرصيد جزءاً منها',
-        'SHIFT_17' || 'SHIFT_24' => 'تُقرَّب المدة لأعلى إلى دورات من 3 أيام وتُمدَّد النهاية',
-        'OPEN' =>
-          'تُقرَّب المدة لأعلى إلى دورات من 4 أيام — أو يوماً بيوم عند طلب «استثناء»',
-        _ => 'لا يمكن تحديد طريقة العدّ حتى يُعرف نوع الدوام',
-      };
+    'REGULAR' =>
+      'أيام تقويمية؛ الجمعة لا تُخصم من السنوية لذوي الأسبوع الإداري',
+    'CAMERAS' =>
+      'يومان لكل وردية عمل فعلية ضمن الفترة، وقد يُغطّى الرصيد جزءاً منها',
+    'SHIFT_17' ||
+    'SHIFT_24' => 'تُقرَّب المدة لأعلى إلى دورات من 3 أيام وتُمدَّد النهاية',
+    'OPEN' => 'تُقرَّب المدة لأعلى إلى دورات من 4 أيام — أو يوماً بيوم عند طلب «استثناء»',
+    _ => 'لا يمكن تحديد طريقة العدّ حتى يُعرف نوع الدوام',
+  };
 }
 
 /// الأرصدة حتى اليوم (`LeaveBalancesDto`).
@@ -336,8 +338,7 @@ class LeaveRequestOptions {
   final LeaveBalances balances;
   final List<LeaveKindOption> kinds;
 
-  /// زر «طلب إجازة استثناء» القديم (`ShowExcludeBtn == 3`): يحسبه الخادم
-  /// `(isAssigner || isAdmin) && shift == OPEN` لتاريخ البداية المختار.
+  /// صلاحية الاستثناء كما يعيدها الخادم للموظف وتاريخ البداية المختارين.
   /// عند `true` يُرسل الطلب بـ `exception: true` فتُخصم الأيام يوماً بيوم
   /// (شاملة الجمعة) بدل دورات الأربعة أيام. لا يُحسب في الواجهة أبداً.
   final bool exceptionAvailable;
@@ -400,14 +401,19 @@ class LeaveBalanceCheck {
 enum LeaveCoverage { full, partial, none }
 
 LeaveCoverage _coverage(Object? v) => switch (v) {
-      'partial' => LeaveCoverage.partial,
-      'none' => LeaveCoverage.none,
-      _ => LeaveCoverage.full,
-    };
+  'partial' => LeaveCoverage.partial,
+  'none' => LeaveCoverage.none,
+  _ => LeaveCoverage.full,
+};
 
 /// صف واحد سيُدرج في لوحة الطلبات (`LeaveBlockDto`).
 class LeaveBlock {
-  const LeaveBlock({required this.from, required this.to, required this.days, this.id});
+  const LeaveBlock({
+    required this.from,
+    required this.to,
+    required this.days,
+    this.id,
+  });
 
   factory LeaveBlock.fromApi(Map<String, dynamic> json) {
     return LeaveBlock(
@@ -440,8 +446,8 @@ class LeavePlan {
     this.workShifts,
     this.shift,
     this.balance,
-  })  : required = required ?? days,
-        covered = covered ?? days;
+  }) : required = required ?? days,
+       covered = covered ?? days;
 
   factory LeavePlan.fromApi(Map<String, dynamic> json) {
     final balance = _map(json['balance']);
@@ -496,14 +502,14 @@ class LeavePlan {
   bool get isPartial => coverage == LeaveCoverage.partial;
 
   String get methodLabel => switch (method) {
-        'FIXED' => 'مدة ثابتة حسب اللائحة',
-        'CALENDAR' => 'أيام تقويمية',
-        'FRIDAYS_EXCLUDED' => 'أيام تقويمية بدون الجمعة',
-        'ROUNDED_3' => 'مقرّبة لدورات 3 أيام',
-        'ROUNDED_4' => 'مقرّبة لدورات 4 أيام',
-        'CAMERA_SHIFTS' => 'ورديات العمل الفعلية',
-        _ => 'بدون خصم أيام',
-      };
+    'FIXED' => 'مدة ثابتة حسب اللائحة',
+    'CALENDAR' => 'أيام تقويمية',
+    'FRIDAYS_EXCLUDED' => 'أيام تقويمية بدون الجمعة',
+    'ROUNDED_3' => 'مقرّبة لدورات 3 أيام',
+    'ROUNDED_4' => 'مقرّبة لدورات 4 أيام',
+    'CAMERA_SHIFTS' => 'ورديات العمل الفعلية',
+    _ => 'بدون خصم أيام',
+  };
 }
 
 /// المرفق المخزّن (`LeaveAttachmentDto`).
@@ -549,8 +555,9 @@ class LeaveRequestResult {
       state: _str(json['state']) ?? 'تم الإرسال',
       submittedAt: _str(json['submittedAt']) ?? '',
       message: _str(json['message']) ?? 'تم تقديم طلبك بنجاح',
-      attachment:
-          attachment == null ? null : LeaveAttachmentInfo.fromApi(attachment),
+      attachment: attachment == null
+          ? null
+          : LeaveAttachmentInfo.fromApi(attachment),
     );
   }
 

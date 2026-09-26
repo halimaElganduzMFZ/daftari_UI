@@ -25,14 +25,18 @@ final _isoDate = DateFormat('yyyy-MM-dd');
 String isoDate(DateTime d) => _isoDate.format(d);
 
 class ApiPermissionRequestsRepository implements PermissionRequestsRepository {
-  const ApiPermissionRequestsRepository(this._client);
+  const ApiPermissionRequestsRepository(
+    this._client, {
+    this.basePath = '/me/requests',
+  });
 
   final ApiClient _client;
+  final String basePath;
 
   @override
   Future<PermissionRequestOptions> options({DateTime? date}) async {
     final json = await _client.getJson(
-      '/me/requests/options',
+      '$basePath/options',
       query: {if (date != null) 'date': isoDate(date)},
     );
     return PermissionRequestOptions.fromApi(json);
@@ -44,7 +48,7 @@ class ApiPermissionRequestsRepository implements PermissionRequestsRepository {
     required DateTime date,
   }) async {
     final json = await _client.postJson(
-      '/me/requests',
+      basePath,
       body: {'type': type, 'date': isoDate(date)},
       auth: true,
     );
@@ -53,7 +57,8 @@ class ApiPermissionRequestsRepository implements PermissionRequestsRepository {
 }
 
 /// نسخة تجريبية: كل الأنواع الثابتة مسموحة، دوام إداري 08–14، رصيد 3.
-class StaticPermissionRequestsRepository implements PermissionRequestsRepository {
+class StaticPermissionRequestsRepository
+    implements PermissionRequestsRepository {
   StaticPermissionRequestsRepository();
 
   final _submitted = <String>{};

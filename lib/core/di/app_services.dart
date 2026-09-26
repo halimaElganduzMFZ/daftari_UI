@@ -8,6 +8,7 @@ import '../../data/repositories/documents_repository.dart';
 import '../../data/repositories/healthcare_repository.dart';
 import '../../data/repositories/leave_requests_repository.dart';
 import '../../data/repositories/messages_repository.dart';
+import '../../data/repositories/manager_repository.dart';
 import '../../data/repositories/permission_requests_repository.dart';
 import '../../data/repositories/timesheet_repository.dart';
 import '../../data/session/app_session.dart';
@@ -28,6 +29,7 @@ abstract final class AppServices {
   );
 
   static final AuthRepository auth = AuthRepository(apiClient, tokenStorage);
+  static final ManagerRepository manager = ManagerRepository(apiClient);
 
   static final DashboardRepository dashboard = ApiConfig.useRemoteApi
       ? ApiDashboardRepository(apiClient)
@@ -61,8 +63,8 @@ abstract final class AppServices {
   /// تقديم طلب إذن (`/me/requests/options` + `POST /me/requests`).
   static final PermissionRequestsRepository permissionRequests =
       ApiConfig.useRemoteApi
-          ? ApiPermissionRequestsRepository(apiClient)
-          : StaticPermissionRequestsRepository();
+      ? ApiPermissionRequestsRepository(apiClient)
+      : StaticPermissionRequestsRepository();
 
   /// تقديم طلب إجازة (`/me/leave/requests/*`).
   static final LeaveRequestsRepository leaveRequests = ApiConfig.useRemoteApi

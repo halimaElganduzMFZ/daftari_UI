@@ -39,13 +39,13 @@ enum BadgeTone {
   neutral;
 
   static BadgeTone parse(dynamic raw) => switch (_str(raw)) {
-        'red' => BadgeTone.red,
-        'orange' => BadgeTone.orange,
-        'blue' => BadgeTone.blue,
-        'yellow' => BadgeTone.yellow,
-        'green' => BadgeTone.green,
-        _ => BadgeTone.neutral,
-      };
+    'red' => BadgeTone.red,
+    'orange' => BadgeTone.orange,
+    'blue' => BadgeTone.blue,
+    'yellow' => BadgeTone.yellow,
+    'green' => BadgeTone.green,
+    _ => BadgeTone.neutral,
+  };
 }
 
 class TimesheetBadge {
@@ -55,9 +55,9 @@ class TimesheetBadge {
   final String text;
 
   factory TimesheetBadge.fromApi(Map<String, dynamic> json) => TimesheetBadge(
-        tone: BadgeTone.parse(json['tone']),
-        text: _str(json['text']) ?? '—',
-      );
+    tone: BadgeTone.parse(json['tone']),
+    text: _str(json['text']) ?? '—',
+  );
 }
 
 /// تصنيف اليوم بالأولوية القديمة: راحة > إجازة > غياب > عادي.
@@ -68,11 +68,11 @@ enum DayCategory {
   regular;
 
   static DayCategory parse(dynamic raw) => switch (_str(raw)) {
-        'rest' => DayCategory.rest,
-        'leave' => DayCategory.leave,
-        'absence' => DayCategory.absence,
-        _ => DayCategory.regular,
-      };
+    'rest' => DayCategory.rest,
+    'leave' => DayCategory.leave,
+    'absence' => DayCategory.absence,
+    _ => DayCategory.regular,
+  };
 }
 
 /// تظليل الصف في الجدول القديم (`att2-row-*`).
@@ -84,13 +84,13 @@ enum RowTone {
   orange;
 
   static RowTone? parse(dynamic raw) => switch (_str(raw)) {
-        'rest' => RowTone.rest,
-        'leave' => RowTone.leave,
-        'absence' => RowTone.absence,
-        'red' => RowTone.red,
-        'orange' => RowTone.orange,
-        _ => null,
-      };
+    'rest' => RowTone.rest,
+    'leave' => RowTone.leave,
+    'absence' => RowTone.absence,
+    'red' => RowTone.red,
+    'orange' => RowTone.orange,
+    _ => null,
+  };
 }
 
 /// `state_Nm`: A غائب · P مأذون · V إجازة · Z حاضر.
@@ -101,12 +101,12 @@ enum AttendanceState {
   present;
 
   static AttendanceState? parse(dynamic raw) => switch (_str(raw)) {
-        'A' => AttendanceState.absent,
-        'P' => AttendanceState.permitted,
-        'V' => AttendanceState.leave,
-        'Z' => AttendanceState.present,
-        _ => null,
-      };
+    'A' => AttendanceState.absent,
+    'P' => AttendanceState.permitted,
+    'V' => AttendanceState.leave,
+    'Z' => AttendanceState.present,
+    _ => null,
+  };
 }
 
 class TimesheetPunches {
@@ -291,28 +291,28 @@ class TimesheetCar {
   }
 
   factory TimesheetCar.fromApi(Map<String, dynamic> json) => TimesheetCar(
-        number: _str(json['number']),
-        insideMinutes: _int(json['insideMinutes']),
-        gateInCount: _int(json['gateInCount']),
-        gateOutCount: _int(json['gateOutCount']),
-        totalDurationHours: _double(json['totalDurationHours']),
-        timeOutsideHours: _double(json['timeOutsideHours']),
-        permissionHoursUsed: _double(json['permissionHoursUsed']) ?? 0,
-        remainingLeakHours: _double(json['remainingLeakHours']),
-        leakMinutes: _int(json['leakMinutes']) ?? 0,
-        leak: _str(json['leak']) ?? '00:00',
-        permissionMargin: _str(json['permissionMargin']) ?? '- -',
-        exemption: json['exemption'] is Map
-            ? TimesheetExemption.fromApi(_map(json['exemption']))
-            : null,
-        isViolation: _bool(json['isViolation']),
-        inGracePeriod: _bool(json['inGracePeriod']),
-        countsAsViolation: _bool(json['countsAsViolation']),
-        violationLockedAt: _str(json['violationLockedAt']),
-        movementSequence: _str(json['movementSequence']),
-        judgment: TimesheetJudgment.fromApi(_map(json['judgment'])),
-        displayText: _str(json['displayText']),
-      );
+    number: _str(json['number']),
+    insideMinutes: _int(json['insideMinutes']),
+    gateInCount: _int(json['gateInCount']),
+    gateOutCount: _int(json['gateOutCount']),
+    totalDurationHours: _double(json['totalDurationHours']),
+    timeOutsideHours: _double(json['timeOutsideHours']),
+    permissionHoursUsed: _double(json['permissionHoursUsed']) ?? 0,
+    remainingLeakHours: _double(json['remainingLeakHours']),
+    leakMinutes: _int(json['leakMinutes']) ?? 0,
+    leak: _str(json['leak']) ?? '00:00',
+    permissionMargin: _str(json['permissionMargin']) ?? '- -',
+    exemption: json['exemption'] is Map
+        ? TimesheetExemption.fromApi(_map(json['exemption']))
+        : null,
+    isViolation: _bool(json['isViolation']),
+    inGracePeriod: _bool(json['inGracePeriod']),
+    countsAsViolation: _bool(json['countsAsViolation']),
+    violationLockedAt: _str(json['violationLockedAt']),
+    movementSequence: _str(json['movementSequence']),
+    judgment: TimesheetJudgment.fromApi(_map(json['judgment'])),
+    displayText: _str(json['displayText']),
+  );
 }
 
 /// صف واحد لكل يوم عمل مؤرشف.
@@ -331,9 +331,15 @@ class TimesheetDay {
     required this.attendance,
     required this.car,
     this.archivedAt,
+    this.actualAbsence = false,
+    this.gateAbsence = false,
+    this.countedAbsence = false,
   });
 
   final int id;
+  final bool actualAbsence;
+  final bool gateAbsence;
+  final bool countedAbsence;
   final DateTime date;
 
   /// `daytype` (W = يوم عمل).
@@ -358,6 +364,9 @@ class TimesheetDay {
   factory TimesheetDay.fromApi(Map<String, dynamic> json) {
     final rawDate = _str(json['date']) ?? '';
     return TimesheetDay(
+      actualAbsence: _map(json['absence'])['actual'] == true,
+      gateAbsence: _map(json['absence'])['gate'] == true,
+      countedAbsence: _map(json['absence'])['counted'] == true,
       id: _int(json['id']) ?? 0,
       date: DateTime.tryParse(rawDate) ?? DateTime.now(),
       dayType: _str(json['dayType']),
@@ -436,7 +445,8 @@ class TimesheetLastSync {
   final String? targetMonth;
   final String? endSync;
 
-  bool get isEmpty => batchDate == null && targetMonth == null && endSync == null;
+  bool get isEmpty =>
+      batchDate == null && targetMonth == null && endSync == null;
 
   factory TimesheetLastSync.fromApi(Map<String, dynamic> json) =>
       TimesheetLastSync(
@@ -454,6 +464,8 @@ class TimesheetSummary {
     this.leaveDays = 0,
     this.carViolations = 0,
     this.absenceDays = 0,
+    this.gateAbsenceDays,
+    this.totalAbsenceDays,
     this.timesheetViolationDays = 0,
     this.violationCode6 = 0,
     this.totalLeakMinutes = 0,
@@ -474,6 +486,8 @@ class TimesheetSummary {
 
   /// غياب وصفه «غائب» تماماً.
   final int absenceDays;
+  final int? gateAbsenceDays;
+  final int? totalAbsenceDays;
 
   /// غياب بوصف آخر — مخالفات تايم شيت.
   final int timesheetViolationDays;
@@ -490,6 +504,8 @@ class TimesheetSummary {
         leaveDays: _int(json['leaveDays']) ?? 0,
         carViolations: _int(json['carViolations']) ?? 0,
         absenceDays: _int(json['absenceDays']) ?? 0,
+        gateAbsenceDays: _int(json['gateAbsenceDays']),
+        totalAbsenceDays: _int(json['totalAbsenceDays']),
         timesheetViolationDays: _int(json['timesheetViolationDays']) ?? 0,
         violationCode6: _int(json['violationCode6']) ?? 0,
         totalLeakMinutes: _int(json['totalLeakMinutes']) ?? 0,
@@ -531,12 +547,15 @@ class TimesheetResult {
       employee: json['employee'] is Map
           ? TimesheetEmployee.fromApi(_map(json['employee']))
           : null,
-      lastSync: lastSync is Map ? TimesheetLastSync.fromApi(_map(lastSync)) : null,
+      lastSync: lastSync is Map
+          ? TimesheetLastSync.fromApi(_map(lastSync))
+          : null,
       summary: TimesheetSummary.fromApi(_map(json['summary'])),
       days: rawDays is List
           ? [
               for (final d in rawDays)
-                if (d is Map) TimesheetDay.fromApi(Map<String, dynamic>.from(d)),
+                if (d is Map)
+                  TimesheetDay.fromApi(Map<String, dynamic>.from(d)),
             ]
           : const [],
     );

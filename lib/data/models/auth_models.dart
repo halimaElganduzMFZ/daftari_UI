@@ -2,11 +2,7 @@ import 'app_role.dart';
 
 /// نماذج المصادقة — مطابقة لـ `auth.dto.ts` في Nest API (`MeDto` / `TokenPairDto`).
 class StructureRef {
-  const StructureRef({
-    required this.id,
-    this.type,
-    this.name,
-  });
+  const StructureRef({required this.id, this.type, this.name});
 
   /// `taksem.numr1` (= `assignerinfo_tbl.structure_Num`).
   final int id;
@@ -26,20 +22,20 @@ class StructureRef {
 
   /// تسمية نوع الهيكل للعرض (مقابلة أزرار whichApp.php).
   String get typeLabel => switch (type) {
-        1 => 'إدارة عامة',
-        2 => 'إدارة',
-        3 => 'مكتب',
-        4 => 'قسم',
-        5 => 'وحدة',
-        _ => 'هيكل',
-      };
+    1 => 'إدارة عامة',
+    2 => 'إدارة',
+    3 => 'مكتب',
+    4 => 'قسم',
+    5 => 'وحدة',
+    _ => 'هيكل',
+  };
 
   /// تحويل إلى الهيكل المستخدم في الجلسة وشاشات المدير.
   ManagedStructure toManagedStructure() => ManagedStructure(
-        id: id.toString(),
-        name: (name ?? '').trim().isEmpty ? 'هيكل رقم $id' : name!.trim(),
-        typeLabel: typeLabel,
-      );
+    id: id.toString(),
+    name: (name ?? '').trim().isEmpty ? 'هيكل رقم $id' : name!.trim(),
+    typeLabel: typeLabel,
+  );
 }
 
 class AuthUser {
@@ -52,6 +48,7 @@ class AuthUser {
     required this.structures,
     required this.canChangePassword,
     this.canActOnBehalf = false,
+    this.canManageAwol = false,
     this.isRequestReviewer = false,
     this.email,
     this.fullName,
@@ -84,14 +81,16 @@ class AuthUser {
   /// الهيكل الأساسي علوي (Type 1-3): يمكنه الدخول نيابة عن موظفي الهياكل الأدنى.
   final bool canActOnBehalf;
 
+  /// صلاحية المنقطعين من الـ API فقط، مستقلة عن العدد وصلاحية مدير النظام.
+  final bool canManageAwol;
+
   /// مدرج في `AUTH_REQUEST_REVIEWERS`: مراجعة طلبات كل الموظفين.
   final bool isRequestReviewer;
   final bool canChangePassword;
 
-  String get displayName =>
-      (fullName != null && fullName!.trim().isNotEmpty)
-          ? fullName!.trim()
-          : employeeNumber;
+  String get displayName => (fullName != null && fullName!.trim().isNotEmpty)
+      ? fullName!.trim()
+      : employeeNumber;
 
   String get displayRole {
     if (isAdmin) return 'مسؤول النظام';
@@ -103,11 +102,17 @@ class AuthUser {
   bool get canManageStructures => isAssigner && structures.isNotEmpty;
 
   List<ManagedStructure> get managedStructures => [
-        for (final s in structures) s.toManagedStructure(),
-      ];
+    for (final s in structures) s.toManagedStructure(),
+  ];
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     final structuresJson = json['structures'];
+    final structures = structuresJson is List
+        ? structuresJson
+              .whereType<Map<String, dynamic>>()
+              .map(StructureRef.fromJson)
+              .toList()
+        : <StructureRef>[];
     return AuthUser(
       id: (json['id'] as num).toInt(),
       employeeId: (json['employeeId'] as num).toInt(),
@@ -118,14 +123,10 @@ class AuthUser {
       workplaceName: json['workplaceName'] as String?,
       isAdmin: json['isAdmin'] as bool? ?? false,
       isAssigner: json['isAssigner'] as bool? ?? false,
-      structures: structuresJson is List
-          ? structuresJson
-              .whereType<Map<String, dynamic>>()
-              .map(StructureRef.fromJson)
-              .toList()
-          : const [],
+      structures: structures,
       primaryStructure: (json['primaryStructure'] as num?)?.toInt(),
       canActOnBehalf: json['canActOnBehalf'] as bool? ?? false,
+      canManageAwol: json['canManageAwol'] == true,
       isRequestReviewer: json['isRequestReviewer'] as bool? ?? false,
       canChangePassword: json['canChangePassword'] as bool? ?? false,
     );

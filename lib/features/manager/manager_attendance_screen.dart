@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../core/config/api_config.dart';
+import 'remote_manager_attendance_screen.dart';
+
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -152,6 +156,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (ApiConfig.useRemoteApi) return const RemoteManagerAttendanceScreen();
     final structure = AppSession.activeStructure?.name ?? 'الهيكل';
     final results = _results;
     final present = results?.where((r) => r.isPresent).length ?? 0;
@@ -159,7 +164,8 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
     final other = (results?.length ?? 0) - present - absent;
     final matches = _matches;
     // أظهر القائمة أثناء الكتابة، وأخفها بعد اختيار واضح.
-    final showList = _query.trim().isNotEmpty &&
+    final showList =
+        _query.trim().isNotEmpty &&
         (_selectedEmployee == null ||
             _searchController.text !=
                 '${_selectedEmployee!.fullName} · ${_selectedEmployee!.employeeNumber}');
@@ -253,8 +259,9 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                       children: [
                         CircleAvatar(
                           radius: 16,
-                          backgroundColor:
-                              AppColors.gold.withValues(alpha: 0.22),
+                          backgroundColor: AppColors.gold.withValues(
+                            alpha: 0.22,
+                          ),
                           child: Text(
                             _selectedEmployee!.fullName.characters.first,
                             style: const TextStyle(
@@ -324,8 +331,9 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                             contentPadding: EdgeInsets.zero,
                             leading: CircleAvatar(
                               radius: 18,
-                              backgroundColor:
-                                  AppColors.gold.withValues(alpha: 0.16),
+                              backgroundColor: AppColors.gold.withValues(
+                                alpha: 0.16,
+                              ),
                               child: Text(
                                 e.fullName.characters.first,
                                 style: const TextStyle(
@@ -551,13 +559,13 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
               if (_visibleCount < results.length)
                 OutlinedButton.icon(
                   onPressed: () => setState(() {
-                    _visibleCount =
-                        (_visibleCount + _pageSize).clamp(0, results.length);
+                    _visibleCount = (_visibleCount + _pageSize).clamp(
+                      0,
+                      results.length,
+                    );
                   }),
                   icon: const Icon(Icons.expand_more_rounded),
-                  label: Text(
-                    'عرض المزيد (${results.length - _visibleCount})',
-                  ),
+                  label: Text('عرض المزيد (${results.length - _visibleCount})'),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     foregroundColor: AppColors.goldDeep,
@@ -614,8 +622,9 @@ class _DateField extends StatelessWidget {
                     child: Text(
                       value ?? 'اختر التاريخ',
                       style: TextStyle(
-                        color:
-                            value == null ? AppColors.slate : AppColors.charcoal,
+                        color: value == null
+                            ? AppColors.slate
+                            : AppColors.charcoal,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
