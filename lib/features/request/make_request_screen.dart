@@ -8,6 +8,7 @@ import '../../core/utils/request_date_bounds.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/permission_request.dart';
+import '../../data/models/employee.dart';
 import '../../data/models/permission_type.dart';
 import '../../data/repositories/permission_requests_repository.dart';
 import '../../data/session/app_session.dart';
@@ -22,7 +23,10 @@ import 'widgets/single_regulation_sheet.dart';
 /// `GET /me/requests/options?date=` وتتغير مع تغيير التاريخ؛ والإرسال عبر
 /// `POST /me/requests` الذي يطبّق كل قواعد النظام القديم ويعيد رسالة عربية.
 class MakeRequestScreen extends StatefulWidget {
-  const MakeRequestScreen({super.key, this.repository});
+  const MakeRequestScreen({super.key, this.repository, this.employee});
+
+  /// Target employee for an on-behalf request; the caller's session stays intact.
+  final Employee? employee;
 
   /// للاختبار — الافتراضي [AppServices.permissionRequests].
   final PermissionRequestsRepository? repository;
@@ -125,10 +129,8 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _TypePickerSheet(
-        options: options,
-        selectedType: _selected?.type,
-      ),
+      builder: (context) =>
+          _TypePickerSheet(options: options, selectedType: _selected?.type),
     );
     if (picked == null) return;
     final rules = regulationsFor(picked);
@@ -188,7 +190,11 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            FaIcon(FontAwesomeIcons.circleCheck, color: AppColors.success, size: 22),
+            FaIcon(
+              FontAwesomeIcons.circleCheck,
+              color: AppColors.success,
+              size: 22,
+            ),
             SizedBox(width: 10),
             Expanded(child: Text('تم استلام طلبك')),
           ],
@@ -269,12 +275,14 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final employee = AppSession.currentEmployee;
+    final employee = widget.employee ?? AppSession.currentEmployee;
     final dateLabel = DateFormat('yyyy/MM/dd').format(_requestDate);
     final options = _options;
     final selected = _selected;
     final rules = selected == null ? null : regulationsFor(selected);
-    final requested = selected == null ? null : options?.requestedOf(selected.type);
+    final requested = selected == null
+        ? null
+        : options?.requestedOf(selected.type);
     final canSubmit =
         !_submitting && !_loading && options != null && options.canSubmit;
 
@@ -285,10 +293,8 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
         actions: [
           IconButton(
             tooltip: 'اللوائح والمخالفات',
-            onPressed: () => showAllRegulationsSheet(
-              context,
-              initialTabId: 'permissions',
-            ),
+            onPressed: () =>
+                showAllRegulationsSheet(context, initialTabId: 'permissions'),
             icon: const FaIcon(
               FontAwesomeIcons.bookOpen,
               size: 18,
@@ -401,7 +407,8 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
           _TypeSelector(
             selected: selected,
             icon: rules?.icon,
-            enabled: !_loading && options != null && options.allowedTypes.isNotEmpty,
+            enabled:
+                !_loading && options != null && options.allowedTypes.isNotEmpty,
             count: options?.allowedTypes.length,
             onTap: _chooseType,
           ),
@@ -538,11 +545,7 @@ class _EmployeeStrip extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            Color(0xFFF7F1E6),
-            Color(0xFFEFEFEA),
-            Color(0xFFE8E8E4),
-          ],
+          colors: [Color(0xFFF7F1E6), Color(0xFFEFEFEA), Color(0xFFE8E8E4)],
         ),
         border: Border.all(color: AppColors.line),
       ),
@@ -623,10 +626,10 @@ class _DayInfoCard extends StatelessWidget {
                 child: Text(
                   schedule.status == ScheduleStatus.ok
                       ? 'دوامك: ${schedule.profileLabel}'
-                          '${schedule.hoursLabel == null ? '' : ' (${schedule.hoursLabel})'}'
+                            '${schedule.hoursLabel == null ? '' : ' (${schedule.hoursLabel})'}'
                       : schedule.status == ScheduleStatus.unavailable
-                          ? 'نظام البصمة غير متاح حالياً'
-                          : 'لا يوجد سجل دوام لهذا التاريخ',
+                      ? 'نظام البصمة غير متاح حالياً'
+                      : 'لا يوجد سجل دوام لهذا التاريخ',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 13.5,
@@ -643,7 +646,8 @@ class _DayInfoCard extends StatelessWidget {
               child: Text(
                 [
                   ?schedule.scheduleName,
-                  if (schedule.fromToday) 'حسب جدول اليوم لعدم وجود سجل للتاريخ بعد',
+                  if (schedule.fromToday)
+                    'حسب جدول اليوم لعدم وجود سجل للتاريخ بعد',
                 ].join(' · '),
                 style: const TextStyle(fontSize: 12, color: AppColors.slate),
               ),
@@ -670,7 +674,8 @@ class _DayInfoCard extends StatelessWidget {
               if (options.requestedTypes.isNotEmpty)
                 _InfoChip(
                   icon: FontAwesomeIcons.clockRotateLeft,
-                  label: 'مطلوب في هذا اليوم: '
+                  label:
+                      'مطلوب في هذا اليوم: '
                       '${options.requestedTypes.map((t) => t.name).join('، ')}',
                 ),
             ],
@@ -703,7 +708,9 @@ class _InfoChip extends StatelessWidget {
             : AppColors.background,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: highlight ? AppColors.danger.withValues(alpha: 0.4) : AppColors.line,
+          color: highlight
+              ? AppColors.danger.withValues(alpha: 0.4)
+              : AppColors.line,
         ),
       ),
       child: Row(
@@ -731,13 +738,13 @@ class _DayInfoSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double width) => Container(
-          width: width,
-          height: 12,
-          decoration: BoxDecoration(
-            color: AppColors.line,
-            borderRadius: BorderRadius.circular(6),
-          ),
-        );
+      width: width,
+      height: 12,
+      decoration: BoxDecoration(
+        color: AppColors.line,
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
     return AppSurface(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       child: Column(
@@ -745,13 +752,7 @@ class _DayInfoSkeleton extends StatelessWidget {
         children: [
           bar(180),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              bar(120),
-              const SizedBox(width: 8),
-              bar(140),
-            ],
-          ),
+          Row(children: [bar(120), const SizedBox(width: 8), bar(140)]),
           const SizedBox(height: 10),
           const Row(
             children: [
@@ -904,8 +905,8 @@ class _TypeSelector extends StatelessWidget {
                         hasSelection
                             ? selected!.name
                             : enabled
-                                ? 'اضغط لاختيار نوع الإذن'
-                                : 'بانتظار بيانات اليوم…',
+                            ? 'اضغط لاختيار نوع الإذن'
+                            : 'بانتظار بيانات اليوم…',
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 15,
@@ -919,8 +920,8 @@ class _TypeSelector extends StatelessWidget {
                         hasSelection
                             ? 'يمكنك تغيير النوع في أي وقت'
                             : count == null
-                                ? 'الأنواع تعتمد على دوامك في التاريخ المحدد'
-                                : '$count ${count == 1 ? 'نوع متاح' : 'أنواع متاحة'} لهذا اليوم',
+                            ? 'الأنواع تعتمد على دوامك في التاريخ المحدد'
+                            : '$count ${count == 1 ? 'نوع متاح' : 'أنواع متاحة'} لهذا اليوم',
                         style: const TextStyle(
                           color: AppColors.slate,
                           fontSize: 12.5,
@@ -931,7 +932,10 @@ class _TypeSelector extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: enabled ? AppColors.gold : AppColors.line,
                     borderRadius: BorderRadius.circular(99),
@@ -988,7 +992,10 @@ class _CompactRulesCard extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.goldSoft,
                     borderRadius: BorderRadius.circular(99),
@@ -1115,8 +1122,9 @@ class _CompactRulesCard extends StatelessWidget {
                 ],
               ),
             ),
-            crossFadeState:
-                expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            crossFadeState: expanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 220),
           ),
           const SizedBox(height: 8),
@@ -1245,7 +1253,9 @@ class _TypePickerSheet extends StatelessWidget {
                     final selected = type.type == selectedType;
                     final requested = options.requestedOf(type.type);
                     return Material(
-                      color: selected ? AppColors.goldSoft : AppColors.background,
+                      color: selected
+                          ? AppColors.goldSoft
+                          : AppColors.background,
                       borderRadius: BorderRadius.circular(18),
                       child: InkWell(
                         onTap: () => Navigator.of(context).pop(type),

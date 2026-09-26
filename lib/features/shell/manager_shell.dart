@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_strings.dart';
+import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/session/app_session.dart';
 import '../manager/manager_approvals_screen.dart';
 import '../manager/manager_attendance_screen.dart';
 import '../manager/manager_history_screen.dart';
+import '../manager/remote_manager_requests_screen.dart';
 import '../profile/profile_screen.dart';
 
 /// هيكل تنقل المدير — موافقات / سابق / بصمات / حسابي.
@@ -18,21 +20,33 @@ class ManagerShell extends StatefulWidget {
 
 class _ManagerShellState extends State<ManagerShell> {
   int _index = 0;
+  int _revision = 0;
 
   @override
   Widget build(BuildContext context) {
     final structureName = AppSession.activeStructure?.name ?? 'الهيكل';
 
     final pages = <Widget>[
-      ManagerApprovalsScreen(structureName: structureName),
-      const ManagerHistoryScreen(),
+      if (ApiConfig.useRemoteApi)
+        RemoteManagerRequestsScreen(key: ValueKey('inbox-$_revision'))
+      else
+        ManagerApprovalsScreen(structureName: structureName),
+      if (ApiConfig.useRemoteApi)
+        RemoteManagerRequestsScreen(
+          key: ValueKey('history-$_revision'),
+          history: true,
+        )
+      else
+        const ManagerHistoryScreen(),
       const ManagerAttendanceScreen(),
       const ProfileScreen(),
     ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: IndexedStack(index: _index, children: pages),
+      body: ApiConfig.useRemoteApi
+          ? pages[_index]
+          : IndexedStack(index: _index, children: pages),
       bottomNavigationBar: Material(
         elevation: 8,
         shadowColor: const Color(0x22000000),
@@ -45,7 +59,10 @@ class _ManagerShellState extends State<ManagerShell> {
             surfaceTintColor: Colors.transparent,
             indicatorColor: AppColors.goldSoft,
             selectedIndex: _index,
-            onDestinationSelected: (value) => setState(() => _index = value),
+            onDestinationSelected: (value) => setState(() {
+              if (_index != value) _revision++;
+              _index = value;
+            }),
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
             destinations: const [
               NavigationDestination(

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/api_config.dart';
+import 'remote_on_behalf_screen.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../data/models/employee.dart';
@@ -16,7 +19,8 @@ class ManagerImpersonationScreen extends StatefulWidget {
       _ManagerImpersonationScreenState();
 }
 
-class _ManagerImpersonationScreenState extends State<ManagerImpersonationScreen> {
+class _ManagerImpersonationScreenState
+    extends State<ManagerImpersonationScreen> {
   final _searchController = TextEditingController();
   String _query = '';
 
@@ -65,6 +69,7 @@ class _ManagerImpersonationScreenState extends State<ManagerImpersonationScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (ApiConfig.useRemoteApi) return const RemoteOnBehalfEmployeesScreen();
     final structure = AppSession.activeStructure?.name ?? 'الهيكل';
     final results = _results;
 
@@ -177,8 +182,11 @@ class _ManagerImpersonationScreenState extends State<ManagerImpersonationScreen>
             const AppSurface(
               child: Column(
                 children: [
-                  Icon(Icons.person_search_outlined,
-                      size: 36, color: AppColors.gold),
+                  Icon(
+                    Icons.person_search_outlined,
+                    size: 36,
+                    color: AppColors.gold,
+                  ),
                   SizedBox(height: 10),
                   Text(
                     'جرّب اسماً أو رقماً وظيفياً آخر',

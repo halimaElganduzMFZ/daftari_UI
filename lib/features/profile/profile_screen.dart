@@ -8,6 +8,7 @@ import '../../data/session/app_session.dart';
 import '../auth/login_screen.dart';
 import '../auth/which_app_screen.dart';
 import '../manager/manager_impersonation_screen.dart';
+import '../manager/remote_manager_requests_screen.dart';
 import '../shell/main_shell.dart';
 import '../shell/manager_shell.dart';
 
@@ -125,9 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  employee?.department ?? user?.workplaceName ?? '—',
-                ),
+                Text(employee?.department ?? user?.workplaceName ?? '—'),
                 Text(employee?.email ?? user?.email ?? '—'),
                 if (AppSession.isImpersonating) ...[
                   const SizedBox(height: 10),
@@ -138,16 +137,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ] else if (AppSession.isManagerMode) ...[
                   const SizedBox(height: 10),
                   _FlagChip(
-                    label:
-                        'مسؤول: ${AppSession.activeStructure?.name ?? ''}',
+                    label: 'مسؤول: ${AppSession.activeStructure?.name ?? ''}',
                     color: AppColors.goldDeep,
                   ),
                 ] else if (AppSession.activeRole != null) ...[
                   const SizedBox(height: 10),
-                  const _FlagChip(
-                    label: 'دخول كموظف',
-                    color: AppColors.info,
-                  ),
+                  const _FlagChip(label: 'دخول كموظف', color: AppColors.info),
                 ],
                 if (user != null) ...[
                   const SizedBox(height: 10),
@@ -201,11 +196,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
               icon: const Icon(Icons.badge_outlined),
               label: const Text('الدخول كموظف'),
             ),
+            if (AppSession.canActOnBehalf || user?.isAdmin == true) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _openImpersonation,
+                icon: const Icon(Icons.person_search_rounded),
+                label: const Text('الدخول نيابة عن موظف'),
+              ),
+            ],
+          ],
+          if (AppSession.isRemote &&
+              (user?.isRequestReviewer == true || user?.isAdmin == true)) ...[
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: _openImpersonation,
-              icon: const Icon(Icons.person_search_rounded),
-              label: const Text('الدخول نيابة عن موظف'),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(title: const Text('مراجعة طلبات الموظفين')),
+                    body: const RemoteManagerRequestsScreen(review: true),
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.manage_search),
+              label: const Text('مراجعة طلبات الموظفين'),
             ),
           ],
           if (AppSession.canManageStructures &&

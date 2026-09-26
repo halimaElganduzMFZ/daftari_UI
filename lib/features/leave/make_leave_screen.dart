@@ -14,6 +14,7 @@ import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/leave_kind.dart';
+import '../../data/models/employee.dart';
 import '../../data/models/leave_request_form.dart';
 import '../../data/models/request_attachment.dart';
 import '../../data/repositories/leave_requests_repository.dart';
@@ -30,7 +31,15 @@ import '../request/widgets/single_regulation_sheet.dart';
 /// - معاينة الأيام المحسوبة والرصيد قبل الإرسال من `GET /me/leave/requests/preview`.
 /// - الإرسال عبر `POST /me/leave/requests` (multipart عند وجود مستند دراسي).
 class MakeLeaveScreen extends StatefulWidget {
-  const MakeLeaveScreen({super.key, this.onSubmitted, this.repository});
+  const MakeLeaveScreen({
+    super.key,
+    this.onSubmitted,
+    this.repository,
+    this.employee,
+  });
+
+  /// Display identity only; authorization remains the manager's Bearer token.
+  final Employee? employee;
 
   final VoidCallback? onSubmitted;
 
@@ -177,12 +186,8 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
 
   // ─── الاستثناء ──────────────────────────────────────────────────────────
 
-  /// الزر يظهر عندما يسمح الخادم به ويكون النوع من أنواع الرصيد
-  /// (السنوية/الطارئة) — على الأنواع الأخرى لا أثر له بحسب الـ API.
-  bool get _exceptionOffered =>
-      (_options?.exceptionAvailable ?? false) &&
-      _selected != null &&
-      (_selected!.isAnnual || _selected!.isEmergency);
+  /// الخادم وحده يحدد إتاحة الاستثناء للموظف وتاريخ البداية.
+  bool get _exceptionOffered => _options?.exceptionAvailable ?? false;
 
   bool get _exceptionApplies => _exception && _exceptionOffered;
 
@@ -252,7 +257,10 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
     final now = DateTime.now();
     final first = RequestDateBounds.monthBefore(now);
     final last = RequestDateBounds.monthAfter(now);
-    final initial = RequestDateBounds.clampToWindow(_startDate ?? now, now: now);
+    final initial = RequestDateBounds.clampToWindow(
+      _startDate ?? now,
+      now: now,
+    );
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -266,7 +274,9 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
     final changed = _startDate == null || !_sameDay(picked, _startDate!);
     setState(() {
       _startDate = picked;
-      if (_endDate == null && _selected != null && !_selected!.fields.endDateFixed) {
+      if (_endDate == null &&
+          _selected != null &&
+          !_selected!.fields.endDateFixed) {
         _endDate = picked;
       }
       _syncEndDate();
@@ -286,8 +296,9 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
     // قيد "شهر قبل/بعد" ينطبق على البداية فقط؛ الـ API يقبل نهاية حتى سنة من البداية.
     final last = first.add(const Duration(days: 365));
     final initial = _endDate ?? _startDate ?? now;
-    final safeInitial =
-        initial.isBefore(first) ? first : (initial.isAfter(last) ? last : initial);
+    final safeInitial = initial.isBefore(first)
+        ? first
+        : (initial.isAfter(last) ? last : initial);
     final picked = await showDatePicker(
       context: context,
       initialDate: safeInitial,
@@ -313,15 +324,17 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
           title: const Text('الوصول إلى ملفات الجهاز'),
           content: Text(
             kIsWeb
                 ? 'لرفع مستند الإجازة الدراسية سيفتح المتصفح نافذة اختيار من ملفات جهازك.\n'
-                    'اضغط «متابعة» ثم اختر الملف (PDF أو Word أو صورة).\n'
-                    'ملاحظة: المتصفح لا يمنح صلاحية دائمة مسبقاً — الاختيار يتم عند كل إرفاق بموافقتك.'
+                      'اضغط «متابعة» ثم اختر الملف (PDF أو Word أو صورة).\n'
+                      'ملاحظة: المتصفح لا يمنح صلاحية دائمة مسبقاً — الاختيار يتم عند كل إرفاق بموافقتك.'
                 : 'يحتاج التطبيق إذن الوصول إلى الملفات لإرفاق مستند الإجازة الدراسية.\n'
-                    'عند ظهور طلب الصلاحية اضغط «سماح» ثم اختر الملف.',
+                      'عند ظهور طلب الصلاحية اضغط «سماح» ثم اختر الملف.',
             style: const TextStyle(height: 1.5, color: AppColors.slate),
           ),
           actions: [
@@ -368,7 +381,9 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       _toast('تم إرفاق: ${picked.name}');
     } catch (e) {
       if (!mounted) return;
-      _toast('تعذّر فتح مستعرض الملفات. حاول مرة أخرى أو اسمح بالوصول من إعدادات المتصفح.');
+      _toast(
+        'تعذّر فتح مستعرض الملفات. حاول مرة أخرى أو اسمح بالوصول من إعدادات المتصفح.',
+      );
     } finally {
       if (mounted) setState(() => _pickingAttachment = false);
     }
@@ -405,7 +420,9 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       return;
     }
     if (reason.length > LeaveRequestsRepository.reasonMaxLength) {
-      _toast('السبب طويل جداً (الحد ${LeaveRequestsRepository.reasonMaxLength} حرفاً)');
+      _toast(
+        'السبب طويل جداً (الحد ${LeaveRequestsRepository.reasonMaxLength} حرفاً)',
+      );
       return;
     }
     if (kind.fields.attachmentRequired && _attachment == null) {
@@ -468,14 +485,12 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
   }
 
   static String? _contentTypeFor(RequestAttachment a) => switch (a.kind) {
-        AttachmentKind.pdf => 'application/pdf',
-        AttachmentKind.image =>
-          a.extensionLabel == 'PNG' ? 'image/png' : 'image/jpeg',
-        AttachmentKind.word => a.extensionLabel == 'DOC'
-            ? 'application/msword'
-            : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        AttachmentKind.other => null,
-      };
+    AttachmentKind.pdf => 'application/pdf',
+    AttachmentKind.image =>
+      a.extensionLabel == 'PNG' ? 'image/png' : 'image/jpeg',
+    AttachmentKind.word => a.extensionLabel == 'DOC' ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    AttachmentKind.other => null,
+  };
 
   Future<void> _showSuccess(LeaveRequestResult result) {
     final plan = result.plan;
@@ -485,7 +500,11 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            FaIcon(FontAwesomeIcons.circleCheck, color: AppColors.success, size: 22),
+            FaIcon(
+              FontAwesomeIcons.circleCheck,
+              color: AppColors.success,
+              size: 22,
+            ),
             SizedBox(width: 10),
             Expanded(child: Text('تم استلام طلبك')),
           ],
@@ -573,7 +592,9 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
   }
 
   static String _fmtDays(double d) {
-    final text = d == d.roundToDouble() ? d.toStringAsFixed(0) : d.toStringAsFixed(1);
+    final text = d == d.roundToDouble()
+        ? d.toStringAsFixed(0)
+        : d.toStringAsFixed(1);
     return '$text ${d == 1 ? 'يوم' : 'أيام'}';
   }
 
@@ -581,12 +602,13 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final employee = AppSession.currentEmployee;
+    final employee = widget.employee ?? AppSession.currentEmployee;
     final options = _options;
     final kind = _selected;
     final rules = kind == null ? null : leaveRegulationsFor(kind);
     final blocked = options?.blockedReason;
-    final canSubmit = !_submitting &&
+    final canSubmit =
+        !_submitting &&
         !_loading &&
         options != null &&
         blocked == null &&
@@ -599,10 +621,8 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
         actions: [
           IconButton(
             tooltip: 'اللوائح والمخالفات',
-            onPressed: () => showAllRegulationsSheet(
-              context,
-              initialTabId: 'leaves',
-            ),
+            onPressed: () =>
+                showAllRegulationsSheet(context, initialTabId: 'leaves'),
             icon: const FaIcon(
               FontAwesomeIcons.bookOpen,
               size: 18,
@@ -697,10 +717,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                       );
                     },
                     onOpenAll: () {
-                      showAllRegulationsSheet(
-                        context,
-                        initialTabId: 'leaves',
-                      );
+                      showAllRegulationsSheet(context, initialTabId: 'leaves');
                     },
                   ),
           ),
@@ -737,7 +754,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
             const SizedBox(height: 10),
             _ExceptionCard(
               value: _exception,
-              enabled: !_submitting,
+              enabled: !_submitting && !_loading && _loadError == null,
               onChanged: _toggleException,
             ),
           ],
@@ -766,18 +783,21 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                 maxLines: 3,
                 minLines: 2,
                 maxLength: LeaveRequestsRepository.reasonMaxLength,
-                buildCounter: (
-                  _, {
-                  required currentLength,
-                  required isFocused,
-                  maxLength,
-                }) =>
-                    currentLength > 1200
-                        ? Text(
-                            '$currentLength / $maxLength',
-                            style: const TextStyle(fontSize: 11, color: AppColors.slate),
-                          )
-                        : null,
+                buildCounter:
+                    (
+                      _, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) => currentLength > 1200
+                    ? Text(
+                        '$currentLength / $maxLength',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.slate,
+                        ),
+                      )
+                    : null,
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: kind.fields.reasonRequired
@@ -800,10 +820,10 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
               onOpen: _attachment == null
                   ? null
                   : () => AttachmentViewer.show(
-                        context,
-                        attachment: _attachment!,
-                        subtitle: kind?.label,
-                      ),
+                      context,
+                      attachment: _attachment!,
+                      subtitle: kind?.label,
+                    ),
               onClear: () => setState(() => _attachment = null),
             ),
           ],
@@ -963,9 +983,11 @@ class _LeaveTypePickerSheet extends StatelessWidget {
                 final enabled = k.available;
                 final subtitle = enabled
                     ? [
-                        if (k.fixedDays != null) '${k.fixedDays} يوماً — مدة ثابتة',
+                        if (k.fixedDays != null)
+                          '${k.fixedDays} يوماً — مدة ثابتة',
                         if (rules.subtitle.isNotEmpty) rules.subtitle,
-                        if (k.pendingRequests > 0) '${k.pendingRequests} طلب معلّق',
+                        if (k.pendingRequests > 0)
+                          '${k.pendingRequests} طلب معلّق',
                       ].join(' · ')
                     : (k.unavailableLabel ?? 'غير متاح');
                 return Opacity(
@@ -1089,8 +1111,8 @@ class _BalancesCard extends StatelessWidget {
                       _ => 'غير متاح',
                     }
                   : (balances.annualPending ?? 0) > 0
-                      ? '${balances.annualPending} طلب معلّق'
-                      : 'حتى ${balances.asOf}',
+                  ? '${balances.annualPending} طلب معلّق'
+                  : 'حتى ${balances.asOf}',
             ),
           ),
           Container(width: 1, height: 40, color: AppColors.line),
@@ -1173,7 +1195,10 @@ class _BalanceTile extends StatelessWidget {
                   hint,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 10.5, color: AppColors.slate),
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: AppColors.slate,
+                  ),
                 ),
               ],
             ),
@@ -1195,12 +1220,12 @@ class _ShiftHint extends StatelessWidget {
     final text = loading
         ? 'جاري قراءة دوام تاريخ البداية…'
         : shift.isUnavailable
-            ? 'نظام البصمة غير متاح — لا يمكن تحديد طريقة عدّ الأيام الآن'
-            : !shift.isOk
-                ? 'لا يوجد سجل دوام لتاريخ البداية — ${shift.countingHint}'
-                : '${shift.shiftLabel}'
-                    '${shift.scheduleName == null ? '' : ' (${shift.scheduleName})'}'
-                    ' — ${shift.countingHint}';
+        ? 'نظام البصمة غير متاح — لا يمكن تحديد طريقة عدّ الأيام الآن'
+        : !shift.isOk
+        ? 'لا يوجد سجل دوام لتاريخ البداية — ${shift.countingHint}'
+        : '${shift.shiftLabel}'
+              '${shift.scheduleName == null ? '' : ' (${shift.scheduleName})'}'
+              ' — ${shift.countingHint}';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1230,7 +1255,7 @@ class _ShiftHint extends StatelessWidget {
 }
 
 /// زر «طلب إجازة استثناء» القديم (`saveee`) — يظهر فقط عندما يعيد الخادم
-/// `exceptionAvailable == true`: مكلّف على الوردية المفتوحة (24 ساعة).
+/// `exceptionAvailable == true`، دون استنتاج الصلاحية من اسم الوردية.
 class _ExceptionCard extends StatelessWidget {
   const _ExceptionCard({
     required this.value,
@@ -1244,13 +1269,13 @@ class _ExceptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: value ? AppColors.goldSoft.withValues(alpha: 0.6) : AppColors.surface,
+    return Material(
+      color: value
+          ? AppColors.goldSoft.withValues(alpha: 0.6)
+          : AppColors.surface,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: value ? AppColors.gold : AppColors.line,
-        ),
+        side: BorderSide(color: value ? AppColors.gold : AppColors.line),
       ),
       child: SwitchListTile.adaptive(
         value: value,
@@ -1283,8 +1308,7 @@ class _ExceptionCard extends StatelessWidget {
         subtitle: const Padding(
           padding: EdgeInsets.only(top: 3),
           child: Text(
-            'للوردية المفتوحة (24 ساعة): تُخصم الأيام يوماً بيوم شاملةً الجمعة، '
-            'بدلاً من تقريبها إلى دورات من 4 أيام.',
+            'تُعرض مدة الإجازة وتاريخ نهايتها وفق نتيجة المعاينة عند اختيار الاستثناء.',
             style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.slate),
           ),
         ),
@@ -1390,10 +1414,12 @@ class _PlanCard extends StatelessWidget {
                 'من ${d(p.from)} إلى ${d(p.to)} · ${p.methodLabel}'
                     '${exception && p.method == 'CALENDAR' ? ' (استثناء: يوماً بيوم)' : ''}'
                     '${fixedDays != null ? ' ($fixedDays يوماً)' : ''}',
-                if (p.workShifts != null) 'ورديات عمل ضمن الفترة: ${p.workShifts}',
+                if (p.workShifts != null)
+                  'ورديات عمل ضمن الفترة: ${p.workShifts}',
                 if (p.method == 'CAMERA_SHIFTS' && p.required > 0)
                   'المطلوب ${_n(p.required)} يوم (يومان لكل وردية)',
-                if (p.blocks.length > 1) 'سيُسجّل الطلب في ${p.blocks.length} سجلات',
+                if (p.blocks.length > 1)
+                  'سيُسجّل الطلب في ${p.blocks.length} سجلات',
               ].join('\n'),
               style: const TextStyle(
                 fontSize: 12,
@@ -1465,7 +1491,9 @@ class _PlanCard extends StatelessWidget {
                       ? FontAwesomeIcons.circleCheck
                       : FontAwesomeIcons.circleXmark,
                   size: 13,
-                  color: balance.sufficient ? AppColors.success : AppColors.danger,
+                  color: balance.sufficient
+                      ? AppColors.success
+                      : AppColors.danger,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -1476,7 +1504,9 @@ class _PlanCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
-                      color: balance.sufficient ? AppColors.charcoal : AppColors.danger,
+                      color: balance.sufficient
+                          ? AppColors.charcoal
+                          : AppColors.danger,
                     ),
                   ),
                 ),
@@ -1522,7 +1552,10 @@ class _LocationPicker extends StatelessWidget {
             emptySelectionAllowed: true,
             style: SegmentedButton.styleFrom(
               visualDensity: VisualDensity.compact,
-              textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             segments: [
               for (final loc in LeaveLocation.values)
@@ -1690,8 +1723,8 @@ class _TypeSelector extends StatelessWidget {
                   has
                       ? selected!.label
                       : enabled
-                          ? 'اضغط للاختيار من القائمة'
-                          : 'بانتظار تحميل الأنواع…',
+                      ? 'اضغط للاختيار من القائمة'
+                      : 'بانتظار تحميل الأنواع…',
                   style: TextStyle(
                     fontSize: 15.5,
                     fontWeight: FontWeight.w800,
@@ -1857,8 +1890,8 @@ class _AttachmentTile extends StatelessWidget {
                   picking
                       ? 'جاري فتح مستعرض الملفات…'
                       : has
-                          ? fileName!
-                          : 'اختيار من الجهاز — مستند الإجازة الدراسية',
+                      ? fileName!
+                      : 'اختيار من الجهاز — مستند الإجازة الدراسية',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -1877,10 +1910,7 @@ class _AttachmentTile extends StatelessWidget {
                 else if (!picking)
                   const Text(
                     'الأنواع: PDF, DOC, DOCX, JPG, PNG',
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      color: AppColors.slate,
-                    ),
+                    style: TextStyle(fontSize: 11.5, color: AppColors.slate),
                   ),
               ],
             ),
@@ -1951,7 +1981,10 @@ class _CompactRulesCard extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.goldSoft,
                     borderRadius: BorderRadius.circular(99),
