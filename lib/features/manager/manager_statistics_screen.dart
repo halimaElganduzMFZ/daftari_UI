@@ -23,7 +23,7 @@ class ManagerStatisticsEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.only(top: 16, bottom: 12),
     child: Material(
       color: Colors.transparent,
       child: InkWell(
