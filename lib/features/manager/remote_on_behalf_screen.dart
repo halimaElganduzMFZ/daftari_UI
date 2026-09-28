@@ -81,6 +81,7 @@ class _RemoteOnBehalfEmployeesScreenState
           'اختر الموظف لتقديم إذن أو إجازة ومتابعة طلباته.',
           style: TextStyle(height: 1.6),
         ),
+        const SizedBox(height: 14),
         TextField(
           controller: _search,
           maxLength: 100,
@@ -93,6 +94,7 @@ class _RemoteOnBehalfEmployeesScreenState
             ),
           ),
         ),
+        const SizedBox(height: 8),
         if (_opening) const LinearProgressIndicator(),
       ],
       itemBuilder: (item) => AppSurface(

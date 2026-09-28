@@ -136,6 +136,7 @@ class ManagerPagedListState extends State<ManagerPagedList> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         ...widget.header,
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -151,6 +152,7 @@ class ManagerPagedListState extends State<ManagerPagedList> {
             ),
           ],
         ),
+        const SizedBox(height: 8),
         for (final item in _items)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),

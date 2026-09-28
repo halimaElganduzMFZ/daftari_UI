@@ -50,6 +50,7 @@ class AuthUser {
     this.canActOnBehalf = false,
     this.canManageAwol = false,
     this.isRequestReviewer = false,
+    this.canManageAnnouncements = false,
     this.email,
     this.fullName,
     this.workplace,
@@ -86,6 +87,9 @@ class AuthUser {
 
   /// مدرج في `AUTH_REQUEST_REVIEWERS`: مراجعة طلبات كل الموظفين.
   final bool isRequestReviewer;
+
+  /// محرّر لوحة الإعلانات (`AUTH_ANNOUNCEMENT_EDITORS`) أو مشرف.
+  final bool canManageAnnouncements;
   final bool canChangePassword;
 
   String get displayName => (fullName != null && fullName!.trim().isNotEmpty)
@@ -128,6 +132,7 @@ class AuthUser {
       canActOnBehalf: json['canActOnBehalf'] as bool? ?? false,
       canManageAwol: json['canManageAwol'] == true,
       isRequestReviewer: json['isRequestReviewer'] as bool? ?? false,
+      canManageAnnouncements: json['canManageAnnouncements'] == true,
       canChangePassword: json['canChangePassword'] as bool? ?? false,
     );
   }

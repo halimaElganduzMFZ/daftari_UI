@@ -1,6 +1,8 @@
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exception.dart';
+import '../models/announcements.dart';
 import '../models/employee_dashboard.dart';
+import '../models/app_notification.dart';
 import '../static/static_employee_dashboard.dart';
 import '../static/static_permission_types.dart';
 
@@ -109,6 +111,29 @@ class StaticDashboardRepository implements DashboardRepository {
         pending: pending.length,
         approved: approved.length,
         rejected: rejected.length,
+      ),
+      unreadNotifications: 2,
+      notificationCounts: const NotificationUnreadCounts(
+        unread: 2,
+        employee: 1,
+        manager: 1,
+      ),
+      announcements: const AnnouncementsFeed(
+        slideshow: AnnouncementSlideshow(intervalSeconds: 5),
+        items: [
+          AnnouncementItem(
+            id: 'a1',
+            title: 'مرحباً بك في دفتري',
+            body: 'تابع طلباتك ومواعيد دوامك من مكان واحد.',
+            pinned: true,
+          ),
+          AnnouncementItem(
+            id: 'a2',
+            title: 'إعلان إداري',
+            body: 'راجع الرصيد قبل تقديم طلبات الإجازة الجديدة.',
+            linkUrl: 'https://mail.google.com',
+          ),
+        ],
       ),
       asOf: DateTime.now(),
     );

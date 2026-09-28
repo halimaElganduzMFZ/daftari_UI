@@ -15,7 +15,9 @@ import '../assets/employee_assets_screen.dart';
 import '../clips/employee_clips_screen.dart';
 import '../feedback/employee_feedback_screen.dart';
 import '../healthcare/healthcare_specialties_screen.dart';
+import '../notifications/notifications_screen.dart';
 import '../timesheet/timesheet_screen.dart';
+import 'announcements_banner.dart';
 
 /// الصفحة الرئيسية للموظف العادي — من index.php بتوزيع أوضح وأقل ازدحاماً.
 ///
@@ -291,9 +293,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   name: name,
                   jobTitle: employee?.jobTitle ?? 'موظف',
                   department: department,
+                  unreadNotifications: data?.unreadNotifications ?? 0,
+                  onNotifications: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const NotificationsScreen(),
+                      ),
+                    );
+                    if (mounted) _load();
+                  },
                 ),
               ),
             ),
+            if (data != null && data.announcements.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                  child: AnnouncementsBanner(feed: data.announcements),
+                ),
+              ),
             if (AppSession.isImpersonating)
               SliverToBoxAdapter(
                 child: Padding(
@@ -631,11 +649,15 @@ class _WelcomeHeader extends StatelessWidget {
     required this.name,
     required this.jobTitle,
     required this.department,
+    this.unreadNotifications = 0,
+    this.onNotifications,
   });
 
   final String name;
   final String jobTitle;
   final String department;
+  final int unreadNotifications;
+  final VoidCallback? onNotifications;
 
   @override
   Widget build(BuildContext context) {
@@ -658,22 +680,43 @@ class _WelcomeHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              FaIcon(
+              const FaIcon(
                 FontAwesomeIcons.handSparkles,
                 size: 14,
                 color: AppColors.goldDeep,
               ),
-              SizedBox(width: 8),
-              Text(
-                'أهلاً بك',
-                style: TextStyle(
-                  color: AppColors.slate,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'أهلاً بك',
+                  style: TextStyle(
+                    color: AppColors.slate,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
+              if (onNotifications != null)
+                IconButton(
+                  tooltip: 'الإشعارات',
+                  onPressed: onNotifications,
+                  visualDensity: VisualDensity.compact,
+                  icon: Badge(
+                    isLabelVisible: unreadNotifications > 0,
+                    label: Text(
+                      unreadNotifications > 99
+                          ? '99+'
+                          : '$unreadNotifications',
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                    child: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: AppColors.goldDeep,
+                    ),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 6),
