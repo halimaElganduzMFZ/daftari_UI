@@ -372,6 +372,7 @@ class _RemoteManagerRequestsScreenState
       ],
       itemBuilder: (item) {
         final employee = item['employee'] as Map?;
+        final canWithdraw = _onBehalf && item['canWithdraw'] == true;
         final card = AppSurface(
           onTap: () => _open(item),
           child: Column(
@@ -390,10 +391,21 @@ class _RemoteManagerRequestsScreenState
               ManagerInfo('الحالة', item['state'] ?? item['status']),
               ManagerInfo('من', item['fromDate']),
               if (item['toDate'] != null) ManagerInfo('إلى', item['toDate']),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Icon(Icons.chevron_left),
-              ),
+              if (canWithdraw)
+                TextButton.icon(
+                  onPressed: () => _withdrawOnBehalf(item),
+                  icon: const Icon(Icons.undo_rounded, size: 18),
+                  label: const Text('تراجع عن الطلب'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.danger,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                )
+              else
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Icon(Icons.chevron_left),
+                ),
             ],
           ),
         );
@@ -412,6 +424,41 @@ class _RemoteManagerRequestsScreenState
       },
     ),
   );
+
+  Future<void> _withdrawOnBehalf(ManagerJson item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('التراجع عن الطلب'),
+        content: Text(
+          'هل تريد التراجع عن طلب «${managerText(item['type'])}» نيابة عن الموظف؟',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('تراجع'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      final result = await _repo.withdraw(_path, item['id']);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(managerText(result['message']))),
+      );
+      await _list.currentState?.refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(managerError(e))));
+    }
+  }
 
   Future<void> _decideFromList(ManagerJson item, {required bool approve}) async {
     try {

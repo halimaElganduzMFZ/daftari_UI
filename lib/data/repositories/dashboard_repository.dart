@@ -1,4 +1,5 @@
 import '../../core/network/api_client.dart';
+import '../../core/network/api_exception.dart';
 import '../models/employee_dashboard.dart';
 import '../static/static_employee_dashboard.dart';
 import '../static/static_permission_types.dart';
@@ -9,6 +10,7 @@ import '../static/static_permission_types.dart';
 /// - `load()`         → `GET /me/dashboard`
 /// - `requests()`     → `GET /me/requests?status=&type=&page=&limit=`
 /// - `requestTypes()` → `GET /lookups/request-types` (قائمة «بحث حسب النوع»)
+/// - `withdraw(id)`   → `POST /me/requests/:id/withdraw`
 abstract class DashboardRepository {
   Future<EmployeeDashboardData> load();
 
@@ -23,6 +25,9 @@ abstract class DashboardRepository {
   });
 
   Future<List<RequestPanelType>> requestTypes();
+
+  /// يسحب طلباً ما زال قابلاً للتراجع (`canWithdraw`).
+  Future<Map<String, dynamic>> withdraw(String id);
 }
 
 /// تنفيذ عبر الـ API. الرقم الوظيفي يأتي من التوكن؛ لا نرسل معرّف الموظف.
@@ -66,6 +71,10 @@ class ApiDashboardRepository implements DashboardRepository {
         if (item is Map<String, dynamic>) RequestPanelType.fromApi(item),
     ];
   }
+
+  @override
+  Future<Map<String, dynamic>> withdraw(String id) =>
+      _client.postJson('/me/requests/$id/withdraw', auth: true);
 }
 
 /// تنفيذ ثابت — نفس السلوك (تأخير بسيط + تصفح) فوق البيانات التجريبية.
@@ -179,5 +188,22 @@ class StaticDashboardRepository implements DashboardRepository {
         isLeave: true,
       ),
     ];
+  }
+
+  @override
+  Future<Map<String, dynamic>> withdraw(String id) async {
+    await Future<void>.delayed(latency);
+    final removed = StaticEmployeeDashboard.data.requests
+        .where((r) => r.id == id && r.canWithdraw)
+        .toList();
+    if (removed.isEmpty) {
+      throw const ApiException(
+        statusCode: 409,
+        code: 'CANNOT_WITHDRAW',
+        message: 'لا يمكن التراجع عن هذا الطلب حالياً.',
+      );
+    }
+    StaticEmployeeDashboard.data.requests.removeWhere((r) => r.id == id);
+    return {'message': 'تم التراجع عن الطلب وحذفه من قائمتك.'};
   }
 }

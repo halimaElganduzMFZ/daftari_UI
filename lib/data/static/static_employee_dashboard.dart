@@ -46,6 +46,7 @@ abstract final class StaticEmployeeDashboard {
         status: RequestStatus.pending,
         requestedAt: DateTime(2026, 9, 11),
         note: 'إجازة دراسية — فصل الخريف مع مرفق القبول',
+        canWithdraw: true,
         attachment: RequestAttachment.demoStudy(
           fileName: 'قبول_جامعي_خريف_2026.pdf',
           sizeBytes: 918000,
@@ -57,6 +58,7 @@ abstract final class StaticEmployeeDashboard {
         status: RequestStatus.pending,
         requestedAt: DateTime(2026, 9, 10),
         note: 'ظرف عائلي طارئ — يوم واحد',
+        canWithdraw: true,
       ),
       EmployeeRequest(
         id: 'r${id++}',
@@ -64,6 +66,7 @@ abstract final class StaticEmployeeDashboard {
         status: RequestStatus.pending,
         requestedAt: DateTime(2026, 9, 8),
         note: 'مراجعة طبية صباحية',
+        canWithdraw: true,
       ),
     ]);
 

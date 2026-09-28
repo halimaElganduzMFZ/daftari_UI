@@ -64,6 +64,10 @@ class ManagerRepository {
     body: reason == null ? null : {'reason': reason.trim()},
   );
 
+  /// Employee or on-behalf withdraw: `POST {path}/:id/withdraw`.
+  Future<ManagerJson> withdraw(String path, Object id) =>
+      client.postJson('$path/$id/withdraw', auth: true);
+
   Future<ManagerJson> confirmAwol(Object id, String notes) => client.postJson(
     '/manager/awol/$id/confirm',
     auth: true,

@@ -69,6 +69,13 @@ class _RequestsFeed {
     }
   }
 
+  bool remove(String id) {
+    if (!_ids.remove(id)) return false;
+    items.removeWhere((r) => r.id == id);
+    visible = visible.clamp(0, items.length);
+    return true;
+  }
+
   void reset() {
     items.clear();
     _ids.clear();
@@ -190,6 +197,50 @@ class _HomeScreenState extends State<HomeScreen> {
   void _changeFilter(RequestStatus status) {
     setState(() => _filter = status);
     if (!_feed.started && _data != null) _loadMore(status);
+  }
+
+  Future<void> _withdraw(EmployeeRequest request) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('التراجع عن الطلب'),
+        content: Text(
+          'هل تريد التراجع عن طلب «${request.displayTitle}» وحذفه من قائمتك؟',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('تراجع'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      final result = await _repo.withdraw(request.id);
+      if (!mounted) return;
+      setState(() => _feeds[request.status]?.remove(request.id));
+      final message = result['message']?.toString().trim();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            (message == null || message.isEmpty)
+                ? 'تم التراجع عن الطلب وحذفه من قائمتك.'
+                : message,
+          ),
+        ),
+      );
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_errorMessage(error))),
+      );
+    }
   }
 
   static String _errorMessage(Object error) {
@@ -513,11 +564,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   itemCount: visible.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
+                    final request = visible[index];
                     return AnimatedSwitcher(
                       duration: const Duration(milliseconds: 220),
                       child: _RequestTile(
-                        key: ValueKey('${_filter.name}-${visible[index].id}'),
-                        request: visible[index],
+                        key: ValueKey('${_filter.name}-${request.id}'),
+                        request: request,
+                        onWithdraw: request.canWithdraw
+                            ? () => _withdraw(request)
+                            : null,
                       ),
                     );
                   },
@@ -997,33 +1052,45 @@ class _InfoBanner extends StatelessWidget {
 }
 
 class _RequestTile extends StatelessWidget {
-  const _RequestTile({super.key, required this.request});
+  const _RequestTile({
+    super.key,
+    required this.request,
+    this.onWithdraw,
+  });
 
   final EmployeeRequest request;
+  final VoidCallback? onWithdraw;
 
   @override
   Widget build(BuildContext context) {
     final date = EmployeeRequest.formatDay(request.requestedAt);
+    final icon = _typeIcon(request);
+    final accent = _typeAccent(request);
 
     return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 54,
+                height: 54,
                 decoration: BoxDecoration(
-                  color: AppColors.goldSoft,
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [
+                      accent.withValues(alpha: .18),
+                      AppColors.goldSoft,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: accent.withValues(alpha: .28)),
                 ),
                 alignment: Alignment.center,
-                child: FaIcon(
-                  _kindIcon(request.kind),
-                  color: AppColors.goldDeep,
-                  size: 18,
-                ),
+                child: FaIcon(icon, color: accent, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1032,10 +1099,14 @@ class _RequestTile extends StatelessWidget {
                   children: [
                     Text(
                       request.displayTitle,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15.5,
+                        color: AppColors.charcoal,
+                      ),
                     ),
                     if (request.note.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         request.note,
                         maxLines: 2,
@@ -1043,17 +1114,30 @@ class _RequestTile extends StatelessWidget {
                         style: const TextStyle(
                           color: AppColors.slate,
                           fontSize: 13,
+                          height: 1.35,
                         ),
                       ),
                     ],
-                    const SizedBox(height: 4),
-                    Text(
-                      date,
-                      style: const TextStyle(
-                        color: AppColors.slate,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        FaIcon(
+                          FontAwesomeIcons.calendarDay,
+                          size: 11,
+                          color: AppColors.slate.withValues(alpha: .9),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            date,
+                            style: const TextStyle(
+                              color: AppColors.slate,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1074,19 +1158,80 @@ class _RequestTile extends StatelessWidget {
                   '${request.displayTitle} · ${_statusLabel(request.status)}',
             ),
           ],
+          if (onWithdraw != null) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: onWithdraw,
+                icon: const FaIcon(FontAwesomeIcons.rotateLeft, size: 13),
+                label: const Text('تراجع عن الطلب'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.danger,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  static FaIconData _kindIcon(RequestKind kind) => switch (kind) {
-        RequestKind.delayPermission => FontAwesomeIcons.hourglassHalf,
-        RequestKind.earlyLeavePermission => FontAwesomeIcons.doorOpen,
-        RequestKind.emergencyLeave => FontAwesomeIcons.triangleExclamation,
-        RequestKind.annualLeave => FontAwesomeIcons.calendarCheck,
-        RequestKind.studyLeave => FontAwesomeIcons.graduationCap,
-        RequestKind.other => FontAwesomeIcons.fileLines,
-      };
+  /// Prefer the server label / code so each leave flavour gets its own cue.
+  static FaIconData _typeIcon(EmployeeRequest request) {
+    final code = (request.code ?? '').toUpperCase();
+    final title = request.displayTitle;
+    if (code.contains('ANNUAL') || title.contains('سنوي')) {
+      return FontAwesomeIcons.umbrellaBeach;
+    }
+    if (code.contains('EMERGENCY') || title.contains('طارئ')) {
+      return FontAwesomeIcons.bolt;
+    }
+    if (code.contains('STUDY') || title.contains('دراس')) {
+      return FontAwesomeIcons.graduationCap;
+    }
+    if (title.contains('وضع') || title.contains('أمومة')) {
+      return FontAwesomeIcons.baby;
+    }
+    if (title.contains('حج')) return FontAwesomeIcons.kaaba;
+    if (title.contains('زواج')) return FontAwesomeIcons.heart;
+    if (title.contains('عدة')) return FontAwesomeIcons.spa;
+    if (title.contains('مهمة')) return FontAwesomeIcons.briefcase;
+    if (title.contains('بوابة') || title.contains('إعفاء')) {
+      return FontAwesomeIcons.road;
+    }
+    if (code.contains('LATE') || title.contains('تأخير')) {
+      return FontAwesomeIcons.hourglassHalf;
+    }
+    if (code.contains('EARLY') ||
+        title.contains('خروج مبكر') ||
+        title.contains('استئذان')) {
+      return FontAwesomeIcons.doorOpen;
+    }
+    return switch (request.kind) {
+      RequestKind.delayPermission => FontAwesomeIcons.hourglassHalf,
+      RequestKind.earlyLeavePermission => FontAwesomeIcons.doorOpen,
+      RequestKind.emergencyLeave => FontAwesomeIcons.bolt,
+      RequestKind.annualLeave => FontAwesomeIcons.umbrellaBeach,
+      RequestKind.studyLeave => FontAwesomeIcons.graduationCap,
+      RequestKind.other => FontAwesomeIcons.fileLines,
+    };
+  }
+
+  static Color _typeAccent(EmployeeRequest request) {
+    final title = request.displayTitle;
+    if (title.contains('طارئ') || request.kind == RequestKind.emergencyLeave) {
+      return AppColors.warning;
+    }
+    if (title.contains('مهمة') || title.contains('بوابة')) {
+      return AppColors.info;
+    }
+    if (title.contains('زواج') || title.contains('وضع')) {
+      return const Color(0xFF9A6B8A);
+    }
+    return AppColors.goldDeep;
+  }
 
   static String _statusLabel(RequestStatus status) => switch (status) {
         RequestStatus.pending => 'معلّقة',
