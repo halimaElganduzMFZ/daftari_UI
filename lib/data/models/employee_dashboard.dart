@@ -331,7 +331,7 @@ class EmployeeDashboardData {
   }
 
   static Map<String, dynamic>? _map(Object? value) =>
-      value is Map<String, dynamic> ? value : null;
+      value is Map ? Map<String, dynamic>.from(value) : null;
 }
 
 /// نوع مخزّن في `employee_app_request_panel.permission_type`

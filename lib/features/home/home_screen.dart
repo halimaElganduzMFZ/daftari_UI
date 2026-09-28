@@ -8,6 +8,7 @@ import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_pill.dart';
+import '../../data/models/announcements.dart';
 import '../../data/models/employee_dashboard.dart';
 import '../../data/repositories/dashboard_repository.dart';
 import '../../data/session/app_session.dart';
@@ -101,6 +102,9 @@ class _HomeScreenState extends State<HomeScreen> {
   EmployeeDashboardData? _data;
   Object? _error;
   bool _loading = true;
+  AnnouncementsFeed _announcements = AnnouncementsFeed.demo;
+  bool _announcementsAreDemo = true;
+  int _unreadNotifications = 0;
 
   final Map<RequestStatus, _RequestsFeed> _feeds = {
     for (final s in RequestStatus.values) s: _RequestsFeed(),
@@ -126,14 +130,59 @@ class _HomeScreenState extends State<HomeScreen> {
         _data = data;
         _seedFeeds(data);
         _loading = false;
+        _unreadNotifications = data.unreadNotifications;
+        if (data.announcements.isNotEmpty) {
+          _announcements = data.announcements;
+          _announcementsAreDemo = false;
+        }
       });
       if (!_feed.started) _loadMore(_filter);
+      await Future.wait([_refreshAnnouncements(), _refreshUnread()]);
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error;
         _loading = false;
+        // حتى مع فشل اللوحة نبقي بانر المعاينة ظاهراً على الويب.
+        _announcements = AnnouncementsFeed.demo;
+        _announcementsAreDemo = true;
       });
+    }
+  }
+
+  Future<void> _refreshAnnouncements() async {
+    try {
+      final feed = await AppServices.announcements.mine();
+      if (!mounted) return;
+      if (feed.isNotEmpty) {
+        setState(() {
+          _announcements = feed;
+          _announcementsAreDemo = false;
+        });
+      } else if (_announcements.isEmpty || _announcementsAreDemo) {
+        setState(() {
+          _announcements = AnnouncementsFeed.demo;
+          _announcementsAreDemo = true;
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      if (_data?.announcements.isNotEmpty != true) {
+        setState(() {
+          _announcements = AnnouncementsFeed.demo;
+          _announcementsAreDemo = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _refreshUnread() async {
+    try {
+      final counts = await AppServices.notifications.unreadCount();
+      if (!mounted) return;
+      setState(() => _unreadNotifications = counts.unread);
+    } catch (_) {
+      // نُبقي قيمة اللوحة إن فشل المسار المستقل.
     }
   }
 
@@ -293,25 +342,43 @@ class _HomeScreenState extends State<HomeScreen> {
                   name: name,
                   jobTitle: employee?.jobTitle ?? 'موظف',
                   department: department,
-                  unreadNotifications: data?.unreadNotifications ?? 0,
+                  unreadNotifications: _unreadNotifications,
                   onNotifications: () async {
                     await Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => const NotificationsScreen(),
                       ),
                     );
-                    if (mounted) _load();
+                    if (mounted) {
+                      await _refreshUnread();
+                      _load();
+                    }
                   },
                 ),
               ),
             ),
-            if (data != null && data.announcements.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                  child: AnnouncementsBanner(feed: data.announcements),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_announcementsAreDemo)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          'معاينة بانر الإعلانات (بيانات تجريبية حتى تُنشر إعلانات حقيقية)',
+                          style: TextStyle(
+                            color: AppColors.slate,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ),
+                    AnnouncementsBanner(feed: _announcements),
+                  ],
                 ),
               ),
+            ),
             if (AppSession.isImpersonating)
               SliverToBoxAdapter(
                 child: Padding(

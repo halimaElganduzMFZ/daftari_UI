@@ -99,4 +99,31 @@ class AnnouncementsFeed {
     slideshow: AnnouncementSlideshow(),
     items: [],
   );
+
+  /// شرائح تصميمية تظهر عندما لا توجد إعلانات من الـ API بعد.
+  static const demo = AnnouncementsFeed(
+    slideshow: AnnouncementSlideshow(intervalSeconds: 5),
+    items: [
+      AnnouncementItem(
+        id: 'demo-1',
+        title: 'مرحباً بك في دفتري',
+        body: 'هنا تظهر إعلانات الإدارة — صورة، نص، ورابط عند توفرها.',
+        pinned: true,
+        displaySeconds: 5,
+      ),
+      AnnouncementItem(
+        id: 'demo-2',
+        title: 'مثال: رابط خارجي',
+        body: 'اضغط الشريحة لفتح رابط (جيميل / موقع الإدارة…).',
+        linkUrl: 'https://mail.google.com',
+        displaySeconds: 5,
+      ),
+      AnnouncementItem(
+        id: 'demo-3',
+        title: 'تابع رصيد إجازاتك',
+        body: 'يمكنك تقديم إذن أو إجازة مباشرة من الرئيسية.',
+        displaySeconds: 5,
+      ),
+    ],
+  );
 }

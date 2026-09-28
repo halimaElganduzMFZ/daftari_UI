@@ -35,9 +35,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       _error = null;
     });
     try {
+      // لا نفرض audience هنا: إشعارات الموافقة للموظف قد تأتي بدون فلتر
+      // أو بجمهور مختلف حسب نسخة الـ API.
       final page = await _repo.list(
         unread: _unreadOnly ? true : null,
-        audience: 'employee',
       );
       if (!mounted) return;
       setState(() {
@@ -157,7 +158,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             )
           else if (_items.isEmpty)
             const AppSurface(
-              child: Text('لا توجد إشعارات', textAlign: TextAlign.center),
+              child: Text(
+                'لا توجد إشعارات حالياً.\n'
+                'بعد موافقة/رفض طلبك اسحب للتحديث، أو تأكد أن خادم الإشعارات مفعّل.',
+                textAlign: TextAlign.center,
+              ),
             )
           else
             for (final item in _items)

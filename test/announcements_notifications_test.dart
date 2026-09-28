@@ -54,4 +54,9 @@ void main() {
   test('announcements feed tolerates missing section', () {
     expect(AnnouncementsFeed.fromApi(null).isEmpty, isTrue);
   });
+
+  test('demo announcements feed is ready for web preview', () {
+    expect(AnnouncementsFeed.demo.isNotEmpty, isTrue);
+    expect(AnnouncementsFeed.demo.items.length, greaterThanOrEqualTo(2));
+  });
 }

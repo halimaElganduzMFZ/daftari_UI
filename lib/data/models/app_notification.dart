@@ -81,9 +81,11 @@ class NotificationsPage {
 
   factory NotificationsPage.fromApi(Map<String, dynamic> json) {
     final meta = _map(json['meta']) ?? const {};
+    final raw = json['data'] ?? json['items'] ?? json['notifications'];
+    final list = raw is List ? raw : const [];
     return NotificationsPage(
       items: [
-        for (final item in (json['data'] as List? ?? const []))
+        for (final item in list)
           if (item is Map)
             AppNotification.fromApi(Map<String, dynamic>.from(item)),
       ],
