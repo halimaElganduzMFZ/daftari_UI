@@ -9,6 +9,7 @@ abstract final class AppStrings {
   static const usernameHint = 'رقم الموظف';
   static const password = 'كلمة المرور';
   static const login = 'تسجيل الدخول';
+  static const rememberMe = 'تذكرني';
   static const loginFailedTitle = 'مع الأسف';
   static const loginFailedMessage = 'رقم الموظف أو كلمة المرور غير صحيحة';
   static const loginRateLimitedTitle = 'تنبيه';

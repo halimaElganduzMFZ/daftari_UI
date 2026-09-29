@@ -32,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   bool _obscure = true;
   bool _submitting = false;
+  bool _rememberMe = false;
   late final AnimationController _intro;
   late final Animation<double> _fade;
   late final Animation<Offset> _slide;
@@ -49,6 +50,27 @@ class _LoginScreenState extends State<LoginScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic));
     _intro.forward();
+    _loadRememberedLogin();
+  }
+
+  Future<void> _loadRememberedLogin() async {
+    final storage = AppServices.auth.tokenStorage;
+    final remember = await storage.readRememberMe();
+    final number = await storage.readRememberedEmployeeNumber();
+    if (!mounted) return;
+    setState(() {
+      _rememberMe = remember;
+      if (number != null) {
+        _employeeNumberController.text = number;
+      }
+    });
+  }
+
+  Future<void> _persistRememberedLogin() async {
+    await AppServices.auth.tokenStorage.saveRememberedEmployee(
+      remember: _rememberMe,
+      employeeNumber: _employeeNumberController.text,
+    );
   }
 
   @override
@@ -90,6 +112,7 @@ class _LoginScreenState extends State<LoginScreen>
       );
       return;
     }
+    await _persistRememberedLogin();
     AppSession.applyDemoLogin(account);
     _routeAfterLogin();
   }
@@ -103,6 +126,7 @@ class _LoginScreenState extends State<LoginScreen>
         portal: AppPortal.employee,
       );
       if (!mounted) return;
+      await _persistRememberedLogin();
       AppSession.applyLogin(pair);
       _routeAfterLogin();
     } on ApiException catch (error) {
@@ -413,7 +437,29 @@ class _LoginScreenState extends State<LoginScreen>
                                       return null;
                                     },
                                   ),
-                                  const SizedBox(height: 22),
+                                  const SizedBox(height: 8),
+                                  CheckboxListTile(
+                                    value: _rememberMe,
+                                    onChanged: _submitting
+                                        ? null
+                                        : (value) => setState(
+                                              () => _rememberMe = value ?? false,
+                                            ),
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    contentPadding: EdgeInsets.zero,
+                                    dense: true,
+                                    activeColor: AppColors.goldDeep,
+                                    title: const Text(
+                                      AppStrings.rememberMe,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.charcoal,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 14),
                                   SizedBox(
                                     height: 54,
                                     child: FilledButton(
