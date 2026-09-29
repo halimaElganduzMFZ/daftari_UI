@@ -5,6 +5,8 @@ class TokenStorage {
   static const _accessKey = 'auth.accessToken';
   static const _refreshKey = 'auth.refreshToken';
   static const _tokenTypeKey = 'auth.tokenType';
+  static const _rememberKey = 'auth.rememberMe';
+  static const _rememberedEmployeeKey = 'auth.rememberedEmployeeNumber';
 
   Future<void> save({
     required String accessToken,
@@ -32,5 +34,37 @@ class TokenStorage {
     await prefs.remove(_accessKey);
     await prefs.remove(_refreshKey);
     await prefs.remove(_tokenTypeKey);
+  }
+
+  /// «تذكرني»: يحفظ رقم الموظف فقط — لا تُخزَّن كلمة المرور.
+  Future<void> saveRememberedEmployee({
+    required bool remember,
+    required String employeeNumber,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!remember) {
+      await prefs.setBool(_rememberKey, false);
+      await prefs.remove(_rememberedEmployeeKey);
+      return;
+    }
+    final number = employeeNumber.trim();
+    await prefs.setBool(_rememberKey, true);
+    if (number.isEmpty) {
+      await prefs.remove(_rememberedEmployeeKey);
+    } else {
+      await prefs.setString(_rememberedEmployeeKey, number);
+    }
+  }
+
+  Future<bool> readRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_rememberKey) ?? false;
+  }
+
+  Future<String?> readRememberedEmployeeNumber() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool(_rememberKey) ?? false)) return null;
+    final value = prefs.getString(_rememberedEmployeeKey)?.trim();
+    return (value == null || value.isEmpty) ? null : value;
   }
 }

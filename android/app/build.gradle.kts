@@ -6,6 +6,7 @@ plugins {
 
 android {
     namespace = "com.freezone.employee_affairs"
+
     compileSdk = 36
     // مطلوب لأن Flutter يحدد هذا الإصدار؛ نضع stub محلي أو NDK حقيقي من Android Studio
     ndkVersion = "28.2.13676358"
@@ -18,7 +19,7 @@ android {
     defaultConfig {
         applicationId = "com.freezone.employee_affairs"
         minSdk = flutter.minSdkVersion
-        targetSdk = 34
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

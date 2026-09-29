@@ -9,12 +9,13 @@ abstract final class AppStrings {
   static const usernameHint = 'رقم الموظف';
   static const password = 'كلمة المرور';
   static const login = 'تسجيل الدخول';
+  static const rememberMe = 'تذكرني';
   static const loginFailedTitle = 'مع الأسف';
   static const loginFailedMessage = 'رقم الموظف أو كلمة المرور غير صحيحة';
   static const loginRateLimitedTitle = 'تنبيه';
   static const loginConnectionError =
       'تعذّر الاتصال بالخادم. تأكد أن الـ API يعمل وأن العنوان صحيح.';
-  static const apiLoginHint = 'الدخول برقم الموظف وكلمة مرور النظام · الخادم:';
+  static const apiLoginHint = 'الدخول برقم الموظف وكلمة مرور النظام';
   static const footerRights = 'جميع الحقوق محفوظة';
   static const footerOrg = 'إدارة تقنية المعلومات - المنطقة الحرة بمصراتة';
   static const demoHint =

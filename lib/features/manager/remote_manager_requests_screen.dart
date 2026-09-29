@@ -6,6 +6,7 @@ import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
 import '../../data/repositories/manager_repository.dart';
 import '../../data/session/app_session.dart';
+import '../notifications/notifications_screen.dart';
 import 'remote_manager_widgets.dart';
 import 'remote_manager_awol_screen.dart';
 import 'remote_on_behalf_screen.dart';
@@ -48,7 +49,10 @@ class _RemoteManagerRequestsScreenState
   int _awolGeneration = 0;
   int? _awolCount;
   Object? _awolError;
+  int _unreadNotifications = 0;
   bool get _onBehalf => widget.employeeId != null;
+  bool get _showInboxChrome =>
+      !widget.history && !widget.review && !_onBehalf;
   String get _path => _onBehalf
       ? '/manager/on-behalf/employees/${widget.employeeId}/requests'
       : widget.review
@@ -71,12 +75,26 @@ class _RemoteManagerRequestsScreenState
   Future<void> _summary() async {
     await Future.wait([
       _requestSummary(),
-      if (!widget.history &&
-          !widget.review &&
-          !_onBehalf &&
-          AppSession.currentUser?.canManageAwol == true)
+      if (_showInboxChrome) _loadUnreadNotifications(),
+      if (_showInboxChrome && AppSession.currentUser?.canManageAwol == true)
         _loadAwolCount(),
     ]);
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    try {
+      final counts = await AppServices.notifications.unreadCount();
+      if (mounted) setState(() => _unreadNotifications = counts.unread);
+    } catch (_) {
+      // الشارة اختيارية؛ فشلها لا يمنع صندوق الموافقات.
+    }
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const NotificationsScreen()),
+    );
+    if (mounted) await _loadUnreadNotifications();
   }
 
   Future<void> _loadAwolCount() async {
@@ -191,19 +209,44 @@ class _RemoteManagerRequestsScreenState
       load: (page) => _repo.page(_path, page: page, filters: _filters),
       onRefresh: _summary,
       header: [
-        Text(
-          _onBehalf
-              ? 'طلبات ${widget.employeeName}'
-              : widget.review
-              ? 'مراجعة طلبات الموظفين'
-              : widget.history
-              ? 'سجل الطلبات'
-              : 'موافقات المدراء',
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: AppColors.charcoal,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                _onBehalf
+                    ? 'طلبات ${widget.employeeName}'
+                    : widget.review
+                    ? 'مراجعة طلبات الموظفين'
+                    : widget.history
+                    ? 'سجل الطلبات'
+                    : 'موافقات المدراء',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.charcoal,
+                ),
+              ),
+            ),
+            if (_showInboxChrome)
+              IconButton(
+                tooltip: 'الإشعارات',
+                onPressed: _openNotifications,
+                visualDensity: VisualDensity.compact,
+                icon: Badge(
+                  isLabelVisible: _unreadNotifications > 0,
+                  label: Text(
+                    _unreadNotifications > 99
+                        ? '99+'
+                        : '$_unreadNotifications',
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                  child: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: AppColors.goldDeep,
+                  ),
+                ),
+              ),
+          ],
         ),
         if (!_onBehalf)
           Padding(
@@ -215,7 +258,7 @@ class _RemoteManagerRequestsScreenState
               style: const TextStyle(color: AppColors.slate),
             ),
           ),
-        if (!widget.history && !widget.review && !_onBehalf)
+        if (_showInboxChrome)
           Wrap(
             spacing: 8,
             children: [
