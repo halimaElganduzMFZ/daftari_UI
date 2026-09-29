@@ -1,5 +1,21 @@
 import 'app_role.dart';
 
+/// نوع الدخول في الجلسة (`user.portal` / ادّعاء التوكن) — ليس صلاحية.
+enum AppPortal {
+  employee,
+  manager;
+
+  static AppPortal parse(Object? raw) {
+    final s = '$raw'.trim().toLowerCase();
+    if (s == 'manager') return AppPortal.manager;
+    return AppPortal.employee;
+  }
+
+  String get apiValue => name;
+
+  bool get isManager => this == AppPortal.manager;
+}
+
 /// نماذج المصادقة — مطابقة لـ `auth.dto.ts` في Nest API (`MeDto` / `TokenPairDto`).
 class StructureRef {
   const StructureRef({required this.id, this.type, this.name});
@@ -47,6 +63,7 @@ class AuthUser {
     required this.isAssigner,
     required this.structures,
     required this.canChangePassword,
+    this.portal = AppPortal.employee,
     this.canActOnBehalf = false,
     this.canManageAwol = false,
     this.isRequestReviewer = false,
@@ -72,6 +89,9 @@ class AuthUser {
   /// `employee_card.MakenH` (legacy MAKAN).
   final int? workplace;
   final String? workplaceName;
+
+  /// دخول الجلسة الفعلي من الخادم (`employee` | `manager`).
+  final AppPortal portal;
   final bool isAdmin;
 
   /// مسؤول عن هيكل واحد على الأقل (`assignerinfo_tbl`).
@@ -125,6 +145,7 @@ class AuthUser {
       fullName: json['fullName'] as String?,
       workplace: (json['workplace'] as num?)?.toInt(),
       workplaceName: json['workplaceName'] as String?,
+      portal: AppPortal.parse(json['portal']),
       isAdmin: json['isAdmin'] as bool? ?? false,
       isAssigner: json['isAssigner'] as bool? ?? false,
       structures: structures,

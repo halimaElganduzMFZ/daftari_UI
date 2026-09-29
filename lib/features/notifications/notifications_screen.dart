@@ -35,8 +35,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       _error = null;
     });
     try {
-      // لا نفرض audience هنا: إشعارات الموافقة للموظف قد تأتي بدون فلتر
-      // أو بجمهور مختلف حسب نسخة الـ API.
+      // الصندوق يتبع portal الجلسة على الخادم — بلا معامل audience.
       final page = await _repo.list(
         unread: _unreadOnly ? true : null,
       );

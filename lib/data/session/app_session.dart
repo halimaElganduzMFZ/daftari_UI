@@ -33,6 +33,13 @@ abstract final class AppSession {
   /// هل الجلسة الحالية من الـ API (وليست تجريبية)؟
   static bool get isRemote => currentUser != null && demoAccount == null;
 
+  /// دخول الجلسة حسب `user.portal` من الخادم، مع احتياطي للدور المحلي.
+  static AppPortal get activePortal {
+    final fromUser = currentUser?.portal;
+    if (fromUser != null) return fromUser;
+    return isManagerMode ? AppPortal.manager : AppPortal.employee;
+  }
+
   static bool get isManagerMode =>
       activeRole == AppRole.structureManager && activeStructure != null;
 
@@ -83,13 +90,20 @@ abstract final class AppSession {
     _applyUser(user);
   }
 
-  /// تحديث التوكنات بعد `/auth/refresh` دون المساس بالدور المختار.
+  /// تحديث التوكنات بعد `/auth/refresh` — يحفظ `user.portal` الفعلي من الخادم.
   static void applyRefreshedTokens(TokenPair pair) {
     accessToken = pair.accessToken;
     refreshToken = pair.refreshToken;
     currentUser = pair.user;
     if (!isImpersonating) {
       currentEmployee = Employee.fromAuthUser(pair.user);
+    }
+    // إن هُبِّط الدخول إلى موظف (إلغاء تكليف) نُصفّر وضع المدير المحلي.
+    if (pair.user.portal == AppPortal.employee &&
+        activeRole == AppRole.structureManager &&
+        !isImpersonating) {
+      activeRole = AppRole.employee;
+      activeStructure = null;
     }
   }
 

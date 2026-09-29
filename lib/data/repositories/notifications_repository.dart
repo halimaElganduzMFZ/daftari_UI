@@ -1,12 +1,12 @@
 import '../../core/network/api_client.dart';
 import '../models/announcements.dart';
 import '../models/app_notification.dart';
+import '../session/app_session.dart';
 
-/// إشعارات الموظف/المدير — `GET/POST /me/notifications`.
+/// إشعارات الموظف/المدير — الصندوق يتبع `user.portal` على الخادم.
 abstract class NotificationsRepository {
   Future<NotificationsPage> list({
     bool? unread,
-    String? audience,
     String? kind,
     int page = 1,
     int limit = 20,
@@ -26,16 +26,15 @@ class ApiNotificationsRepository implements NotificationsRepository {
   @override
   Future<NotificationsPage> list({
     bool? unread,
-    String? audience,
     String? kind,
     int page = 1,
     int limit = 20,
   }) async {
+    // لا ترسل `audience` — الخادم يرفضه بـ 400؛ الفلترة بالـ portal في التوكن.
     final json = await _client.getJson(
       '/me/notifications',
       query: {
         if (unread != null) 'unread': unread ? 'true' : 'false',
-        'audience': ?audience,
         'kind': ?kind,
         'page': '$page',
         'limit': '$limit',
@@ -87,16 +86,16 @@ class StaticNotificationsRepository implements NotificationsRepository {
   @override
   Future<NotificationsPage> list({
     bool? unread,
-    String? audience,
     String? kind,
     int page = 1,
     int limit = 20,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
+    final portal = AppSession.activePortal.apiValue;
     final filtered = [
       for (final n in _items)
         if ((unread == null || (unread ? !n.isRead : n.isRead)) &&
-            (audience == null || n.audience == audience) &&
+            (n.audience == portal || n.audience == 'all') &&
             (kind == null || n.kind == kind))
           n,
     ];
@@ -109,11 +108,20 @@ class StaticNotificationsRepository implements NotificationsRepository {
 
   @override
   Future<NotificationUnreadCounts> unreadCount() async {
-    final unread = _items.where((n) => !n.isRead).length;
+    bool matches(String audience, String portal) =>
+        audience == portal || audience == 'all';
+    final employee = _items
+        .where((n) => !n.isRead && matches(n.audience, 'employee'))
+        .length;
+    final manager = _items
+        .where((n) => !n.isRead && matches(n.audience, 'manager'))
+        .length;
+    final portal = AppSession.activePortal;
     return NotificationUnreadCounts(
-      unread: unread,
-      employee: _items.where((n) => !n.isRead && n.audience == 'employee').length,
-      manager: _items.where((n) => !n.isRead && n.audience == 'manager').length,
+      portal: portal,
+      unread: portal.isManager ? manager : employee,
+      employee: employee,
+      manager: manager,
     );
   }
 

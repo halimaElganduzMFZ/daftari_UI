@@ -20,7 +20,12 @@ void main() {
         'rejected': [],
         'counts': {'pending': 0, 'approved': 0, 'rejected': 0},
       },
-      'notifications': {'unread': 4, 'employee': 3, 'manager': 1},
+      'notifications': {
+        'portal': 'employee',
+        'unread': 4,
+        'employee': 3,
+        'manager': 1,
+      },
       'announcements': {
         'slideshow': {
           'intervalSeconds': 7,
@@ -41,6 +46,7 @@ void main() {
       },
     });
     expect(data.unreadNotifications, 4);
+    expect(data.notificationCounts.portal.name, 'employee');
     expect(data.notificationCounts.manager, 1);
     expect(data.announcements.items, hasLength(1));
     expect(data.announcements.items.single.hasLink, isTrue);
@@ -49,6 +55,18 @@ void main() {
 
   test('notification unread accepts numeric payload', () {
     expect(NotificationUnreadCounts.fromApi(5).unread, 5);
+  });
+
+  test('notification unread parses portal field', () {
+    final counts = NotificationUnreadCounts.fromApi({
+      'portal': 'manager',
+      'unread': 2,
+      'employee': 1,
+      'manager': 2,
+    });
+    expect(counts.portal.name, 'manager');
+    expect(counts.unread, 2);
+    expect(counts.employee, 1);
   });
 
   test('announcements feed tolerates missing section', () {

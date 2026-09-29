@@ -1,5 +1,7 @@
-/// إشعارات التطبيق (`GET /me/notifications`).
+/// إشعارات التطبيق (`GET /me/notifications`) — مقيَّدة بـ `user.portal`.
 library;
+
+import 'auth_models.dart';
 
 int? _int(Object? v) =>
     v is int ? v : (v is num ? v.toInt() : int.tryParse('$v'));
@@ -9,6 +11,7 @@ Map<String, dynamic>? _map(Object? v) =>
 
 class NotificationUnreadCounts {
   const NotificationUnreadCounts({
+    this.portal = AppPortal.employee,
     this.unread = 0,
     this.employee = 0,
     this.manager = 0,
@@ -23,13 +26,20 @@ class NotificationUnreadCounts {
     if (json == null) return const NotificationUnreadCounts();
     final unread = _int(json['unread']) ?? 0;
     return NotificationUnreadCounts(
+      portal: AppPortal.parse(json['portal']),
       unread: unread,
       employee: _int(json['employee']) ?? unread,
       manager: _int(json['manager']) ?? 0,
     );
   }
 
+  /// دخول الجلسة الحالي من الخادم.
+  final AppPortal portal;
+
+  /// شارة الصندوق الحالي (`portal`).
   final int unread;
+
+  /// لشاشة اختيار الدخول.
   final int employee;
   final int manager;
 }
@@ -63,6 +73,8 @@ class AppNotification {
   final String title;
   final String body;
   final String kind;
+
+  /// جمهور الصف: `employee` | `manager` | `all` (ليس فلتر قائمة).
   final String audience;
   final String? requestId;
   final String? route;

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../data/models/auth_models.dart';
 import '../../data/session/app_session.dart';
 import '../auth/login_screen.dart';
 import '../auth/which_app_screen.dart';
@@ -72,11 +74,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _enterAsEmployeeSelf() {
+  Future<void> _enterAsEmployeeSelf() async {
     if (AppSession.isImpersonating) {
       AppSession.endImpersonation();
     }
+    if (ApiConfig.useRemoteApi && AppSession.isRemote) {
+      try {
+        await AppServices.auth.refresh(portal: AppPortal.employee);
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذّر تبديل الدخول إلى موظف.')),
+        );
+        return;
+      }
+    }
     AppSession.enterAsEmployee();
+    if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const MainShell()),
       (_) => false,
