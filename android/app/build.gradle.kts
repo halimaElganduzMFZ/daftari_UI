@@ -6,9 +6,10 @@ plugins {
 
 android {
     namespace = "com.freezone.employee_affairs"
-    compileSdk = 34
-    // مطلوب لأن Flutter يحدد هذا الإصدار؛ نضع stub محلي أو NDK حقيقي من Android Studio
-    ndkVersion = "28.2.13676358"
+    // الإضافات (url_launcher / shared_preferences / android_file_picker) تتطلب API 36+.
+    compileSdk = 36
+    // NDK 30 متوفر كاملاً محلياً (28 ناقص llvm-objcopy فيسقط extractReleaseNativeSymbolTables).
+    ndkVersion = "30.0.16248370"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -18,7 +19,7 @@ android {
     defaultConfig {
         applicationId = "com.freezone.employee_affairs"
         minSdk = flutter.minSdkVersion
-        targetSdk = 34
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -31,17 +32,8 @@ android {
 
     packaging {
         jniLibs {
-            // لا تُفرَّغ مكتبات Flutter أثناء التعبئة
-            keepDebugSymbols += listOf("**/*.so")
             useLegacyPackaging = true
         }
-    }
-}
-
-// امنع strip من إتلاف libflutter.so إذا كان llvm-strip غير حقيقي
-tasks.configureEach {
-    if (name.contains("strip", ignoreCase = true) && name.contains("DebugSymbols", ignoreCase = true)) {
-        enabled = false
     }
 }
 
