@@ -19,7 +19,11 @@ import '../shell/main_shell.dart';
 /// أثناء الحركة تُستعاد الجلسة المحفوظة (`/auth/me`)؛ فإن صلحت ندخل مباشرة
 /// (موظف أو صفحة تحديد نوع الدخول)، وإلا نذهب لتسجيل الدخول.
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key, this.restoreSession});
+
+  /// بديل استعادة الجلسة في الاختبارات؛ يعيد `true` إن استُعيدت الجلسة.
+  @visibleForTesting
+  final Future<bool> Function()? restoreSession;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -39,11 +43,11 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _subFade;
   late final Animation<double> _bar;
 
-  /// أقل مدة تبقى فيها الشاشة حتى لا تقفز الحركة.
-  static const _minimumDisplay = Duration(milliseconds: 2800);
+  /// أقل مدة تبقى فيها الشاشة حتى تكتمل حركة الدخول؛ تطول فقط ما دامت الجلسة تُستعاد.
+  static const _minimumDisplay = Duration(milliseconds: 800);
 
   /// حد قراءة التخزين المحلي (يحمي من تعليق المنصة). أول وصول إلى
-  /// Keystore / Keychain قد يتجاوز ثانية على الأجهزة البطيئة، ويبقى أقل من [_minimumDisplay].
+  /// Keystore / Keychain قد يتجاوز ثانية على الأجهزة البطيئة.
   static const _storageTimeout = Duration(seconds: 2);
 
   /// حد أعلى لانتظار الخادم قبل الاكتفاء بشاشة الدخول.
@@ -61,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     _enter = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 700),
     );
     _breathe = AnimationController(
       vsync: this,
@@ -69,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _progress = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2800),
+      duration: _minimumDisplay,
     );
     _orb = AnimationController(
       vsync: this,
@@ -128,10 +132,10 @@ class _SplashScreenState extends State<SplashScreen>
   /// المؤقّت قابل للإلغاء في [dispose] حتى لا يبقى معلّقاً بعد إزالة الشاشة.
   void _bootstrap() {
     _dwellTimer = Timer(_minimumDisplay, () {
-      _dwellDone = true;
+      setState(() => _dwellDone = true);
       _maybeNavigate();
     });
-    _restoreSession().then((restored) {
+    (widget.restoreSession ?? _restoreSession)().then((restored) {
       if (!mounted) return;
       _restoreDone = true;
       _restored = restored;
@@ -318,7 +322,9 @@ class _SplashScreenState extends State<SplashScreen>
                             return ClipRRect(
                               borderRadius: BorderRadius.circular(999),
                               child: LinearProgressIndicator(
-                                value: _bar.value,
+                                value: _dwellDone && !_restoreDone
+                                    ? null
+                                    : _bar.value,
                                 minHeight: 3.5,
                                 backgroundColor:
                                     AppColors.gold.withValues(alpha: 0.16),

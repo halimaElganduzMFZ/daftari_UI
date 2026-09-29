@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen>
                 ? 'لا يوجد اتصال'
                 : AppStrings.loginFailedTitle,
         message: message,
-        // السبب التقني يظهر بخط صغير لتشخيص مشاكل الشبكة من لقطة الشاشة.
+        // في نسخ debug يظهر السبب التقني بخط صغير لتشخيص مشاكل الشبكة من لقطة الشاشة.
         detail: error.isNetwork ? error.cause : null,
       );
     } catch (_) {
