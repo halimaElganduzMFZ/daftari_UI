@@ -14,16 +14,33 @@ double _contrast(Color a, Color b) {
 }
 
 /// WCAG AA minimum for normal-size text; the app's labels are 12–14 px.
-const _aa = 4.5;
+const _text = 4.5;
 
-void _expectReadable(Color text, Color background, String pair) {
-  final ratio = _contrast(text, background);
+/// WCAG AA minimum for borders, focus rings, icons and selection indicators.
+const _nonText = 3.0;
+
+const _lightBackgrounds = {
+  'background': AppColors.background,
+  'surface': AppColors.surface,
+  'white': Colors.white,
+};
+
+void _expectContrast(
+  Color foreground,
+  Color background,
+  String pair,
+  double minimum,
+) {
+  final ratio = _contrast(foreground, background);
   expect(
     ratio,
-    greaterThanOrEqualTo(_aa),
+    greaterThanOrEqualTo(minimum),
     reason: '$pair is ${ratio.toStringAsFixed(2)}:1',
   );
 }
+
+void _expectReadable(Color text, Color background, String pair) =>
+    _expectContrast(text, background, pair, _text);
 
 void main() {
   test('contrast formula matches the WCAG reference values', () {
@@ -41,15 +58,10 @@ void main() {
       'danger': AppColors.danger,
       'info': AppColors.info,
     };
-    const backgrounds = {
-      'background': AppColors.background,
-      'surface': AppColors.surface,
-      'white': Colors.white,
-    };
 
     for (final text in texts.entries) {
       test(text.key, () {
-        for (final background in backgrounds.entries) {
+        for (final background in _lightBackgrounds.entries) {
           _expectReadable(
             text.value,
             background.value,
@@ -61,6 +73,29 @@ void main() {
 
     test('goldDeep on goldSoft', () {
       _expectReadable(AppColors.goldDeep, AppColors.goldSoft, 'goldDeep');
+    });
+  });
+
+  group('borders, focus rings and icons', () {
+    test('gold on light surfaces', () {
+      for (final background in _lightBackgrounds.entries) {
+        _expectContrast(
+          AppColors.gold,
+          background.value,
+          'gold on ${background.key}',
+          _nonText,
+        );
+      }
+    });
+
+    test('focused text field border', () {
+      final input = AppTheme.light().inputDecorationTheme;
+      _expectContrast(
+        input.focusedBorder!.borderSide.color,
+        input.fillColor!,
+        'focus border',
+        _nonText,
+      );
     });
   });
 
