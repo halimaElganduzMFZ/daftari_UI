@@ -132,7 +132,8 @@ class LeaveKindOption extends LeaveKindSummary {
 
   bool get isAnnual => code == 'ANNUAL_LEAVE';
   bool get isEmergency => code == 'EMERGENCY_LEAVE';
-  bool get isGateExemption => category == LeaveKindCategory.exemption;
+  bool get isGateExemption =>
+      code == 'GATE_EXEMPTION' || category == LeaveKindCategory.exemption;
 
   /// شرح مختصر لسبب عدم التوفر.
   String? get unavailableLabel => switch (unavailableReason) {
@@ -141,12 +142,78 @@ class LeaveKindOption extends LeaveKindSummary {
     'ALREADY_GRANTED' => 'مُنحت هذه الإجازة مسبقاً (مرة واحدة في الخدمة)',
     'FEMALE_ONLY' => 'متاحة للموظفات فقط',
     'NOT_ELIGIBLE' => 'متاحة لمسؤولي الهياكل الرئيسية فقط',
+    'NOT_DEPARTMENT_MANAGER' =>
+      'متاحة لمديري الإدارات العامة (Type_Structure = 1) فقط',
     'EMPLOYEE_INACTIVE' => 'الموظف خارج الخدمة حالياً',
     'CONTRACT_NOT_ELIGIBLE' => 'عقد التعاون لا يخوّل أخذ إجازة',
     'MISSING_START_DATE' => 'لا يوجد تاريخ بداية عمل مسجّل',
     'MONTH_LOCKED' => 'شهر التاريخ المطلوب مقفل للمرتبات',
     final other => 'غير متاح حالياً ($other)',
   };
+}
+
+/// زر «إعفاء حركة البوابة» — يأتي بعد `kinds` في
+/// `GET …/leave/requests/options` باسم `gateExemption`.
+///
+/// متاح فقط لمكلّفي `Type_Structure = 1`؛ وإلا `NOT_DEPARTMENT_MANAGER`.
+/// لا يمر بجدول الطلبات في الإدراج؛ `requiresApproval: false`.
+class GateExemptionInfo {
+  const GateExemptionInfo({
+    required this.available,
+    required this.requiresApproval,
+    this.unavailableReason,
+    this.label = 'إعفاء حركة البوابة',
+    this.code = 'GATE_EXEMPTION',
+    this.notesMaxLength = 250,
+    this.maxRangeDays = 366,
+  });
+
+  static GateExemptionInfo? tryParse(Object? raw) {
+    final json = _map(raw);
+    if (json == null) return null;
+    final limits = _map(json['limits']);
+    return GateExemptionInfo(
+      available: json['available'] == true,
+      requiresApproval: json['requiresApproval'] == true,
+      unavailableReason: _str(json['unavailableReason']),
+      label: _str(json['label']) ?? 'إعفاء حركة البوابة',
+      code: _str(json['code']) ?? 'GATE_EXEMPTION',
+      notesMaxLength:
+          _int(limits?['notesMaxLength'] ?? json['notesMaxLength']) ?? 250,
+      maxRangeDays:
+          _int(
+            limits?['maxDays'] ?? limits?['maxRangeDays'] ?? json['maxDays'],
+          ) ??
+          366,
+    );
+  }
+
+  final bool available;
+  final bool requiresApproval;
+  final String? unavailableReason;
+  final String label;
+  final String code;
+  final int notesMaxLength;
+  final int maxRangeDays;
+
+  /// يُخفى عن غير مديري الإدارات العامة.
+  bool get offeredInPicker => unavailableReason != 'NOT_DEPARTMENT_MANAGER';
+
+  LeaveKindOption toKindOption() => LeaveKindOption(
+    code: code,
+    label: label,
+    holidayType: 0,
+    category: LeaveKindCategory.exemption,
+    fields: const LeaveKindFields(
+      reasonRequired: false,
+      locationEnabled: false,
+      attachmentRequired: false,
+      endDateFixed: false,
+    ),
+    available: available,
+    pendingRequests: 0,
+    unavailableReason: unavailableReason,
+  );
 }
 
 /// أهلية الموظف (`LeaveEligibilityDto`).
@@ -307,10 +374,21 @@ class LeaveRequestOptions {
     required this.balances,
     required this.kinds,
     this.exceptionAvailable = false,
+    this.gateExemption,
   });
 
   factory LeaveRequestOptions.fromApi(Map<String, dynamic> json) {
     final range = _map(json['dateRange']);
+    final kinds = [
+      for (final k in (json['kinds'] as List? ?? const []))
+        LeaveKindOption.fromApi((k as Map).cast<String, dynamic>()),
+    ];
+    final gate = GateExemptionInfo.tryParse(json['gateExemption']);
+    if (gate != null &&
+        gate.offeredInPicker &&
+        !kinds.any((k) => k.code == gate.code)) {
+      kinds.add(gate.toKindOption());
+    }
     return LeaveRequestOptions(
       date: _str(json['date']) ?? '',
       today: _str(json['today']) ?? '',
@@ -320,11 +398,9 @@ class LeaveRequestOptions {
       shift: LeaveShiftInfo.fromApi(_map(json['shift'])),
       monthLocked: json['monthLocked'] == true,
       balances: LeaveBalances.fromApi(_map(json['balances'])),
-      kinds: [
-        for (final k in (json['kinds'] as List? ?? const []))
-          LeaveKindOption.fromApi((k as Map).cast<String, dynamic>()),
-      ],
+      kinds: kinds,
       exceptionAvailable: json['exceptionAvailable'] == true,
+      gateExemption: gate,
     );
   }
 
@@ -342,6 +418,9 @@ class LeaveRequestOptions {
   /// عند `true` يُرسل الطلب بـ `exception: true` فتُخصم الأيام يوماً بيوم
   /// (شاملة الجمعة) بدل دورات الأربعة أيام. لا يُحسب في الواجهة أبداً.
   final bool exceptionAvailable;
+
+  /// إعفاء حركة البوابة لمديري الإدارات العامة فقط.
+  final GateExemptionInfo? gateExemption;
 
   LeaveKindOption? kindByCode(String code) {
     for (final k in kinds) {

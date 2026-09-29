@@ -23,7 +23,7 @@ class ManagerStatisticsEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.only(top: 16, bottom: 12),
     child: Material(
       color: Colors.transparent,
       child: InkWell(
@@ -725,36 +725,168 @@ class _ManagerMonthlyApprovalsScreenState
           'حركات الموافقة المسجلة باسمك؛ الموافقة المرحلية لا تعني اكتمال اعتماد الطلب.',
         ),
       ],
-      itemBuilder: (row) => AppSurface(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              managerText(row['employeeName']),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+      itemBuilder: (row) => _MonthlyApprovalCard(
+        row: row,
+        onOpen: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => ManagerRequestDetailScreen(
+              repository: widget.repository,
+              path: '/manager/requests',
+              item: {'id': row['requestId']},
+              canDecide: false,
             ),
-            ManagerInfo('الرقم الوظيفي', row['employeeNumber']),
-            ManagerInfo('نوع الطلب', row['type']),
-            ManagerInfo('تاريخ الموافقة', row['approvedAt']),
-            Text(row['isFinal'] == true ? 'موافقة نهائية' : 'موافقة مرحلية'),
-            TextButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => ManagerRequestDetailScreen(
-                    repository: widget.repository,
-                    path: '/manager/requests',
-                    item: {'id': row['requestId']},
-                    canDecide: false,
-                  ),
-                ),
-              ),
-              child: const Text('تفاصيل الطلب'),
-            ),
-          ],
+          ),
         ),
       ),
     ),
   );
+}
+
+class _MonthlyApprovalCard extends StatelessWidget {
+  const _MonthlyApprovalCard({required this.row, required this.onOpen});
+  final ManagerJson row;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final type = managerText(row['type']);
+    final isFinal = row['isFinal'] == true;
+    final icon = managerRequestTypeIcon(type);
+    final name = managerText(row['employeeName']);
+    final initial = name == '—' ? '?' : name.characters.first;
+    return AppSurface(
+      onTap: onOpen,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.goldSoft,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: AppColors.goldDeep,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: AppColors.charcoal,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'الرقم الوظيفي: ${managerText(row['employeeNumber'])}',
+                      style: const TextStyle(
+                        color: AppColors.slate,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.charcoal.withValues(alpha: .08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: AppColors.goldDeep, size: 22),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.line),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 18, color: AppColors.goldDeep),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    type,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: (isFinal ? AppColors.success : AppColors.info)
+                        .withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    isFinal ? 'نهائية' : 'مرحلية',
+                    style: TextStyle(
+                      color: isFinal ? AppColors.success : AppColors.info,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(
+                Icons.event_available_outlined,
+                size: 16,
+                color: AppColors.slate,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'تاريخ الموافقة: ${managerText(row['approvedAt'])}',
+                  style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
+                ),
+              ),
+              TextButton(
+                onPressed: onOpen,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.goldDeep,
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: const Text('تفاصيل الطلب'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class AbsenceTotals extends StatelessWidget {

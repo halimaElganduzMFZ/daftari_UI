@@ -166,6 +166,55 @@ class _LeavesScreenState extends State<LeavesScreen> {
     }
   }
 
+  Future<void> _withdraw(EmployeeRequest request) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('التراجع عن الطلب'),
+        content: Text(
+          'هل تريد التراجع عن طلب «${request.displayTitle}» وحذفه من قائمتك؟',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('تراجع'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      final result = await _repo.withdraw(request.id);
+      if (!mounted) return;
+      final message = result['message']?.toString().trim();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            (message == null || message.isEmpty)
+                ? 'تم التراجع عن الطلب وحذفه من قائمتك.'
+                : message,
+          ),
+        ),
+      );
+      await Future.wait([_reload(), _loadSummary()]);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is ApiException
+                ? error.message
+                : 'تعذّر التراجع عن الطلب. حاول مرة أخرى.',
+          ),
+        ),
+      );
+    }
+  }
+
   // ─── العرض ──────────────────────────────────────────────────────────────
 
   @override
@@ -326,7 +375,12 @@ class _LeavesScreenState extends State<LeavesScreen> {
               for (final request in visible)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: _RequestCard(request: request),
+                  child: _RequestCard(
+                    request: request,
+                    onWithdraw: request.canWithdraw
+                        ? () => _withdraw(request)
+                        : null,
+                  ),
                 ),
               if (_error != null) _ErrorCard(error: _error!, onRetry: _loadMore),
               if (_loading)
@@ -384,9 +438,10 @@ class _LeavesScreenState extends State<LeavesScreen> {
 // ─── بطاقة الطلب ─────────────────────────────────────────────────────────────
 
 class _RequestCard extends StatelessWidget {
-  const _RequestCard({required this.request});
+  const _RequestCard({required this.request, this.onWithdraw});
 
   final EmployeeRequest request;
+  final VoidCallback? onWithdraw;
 
   static FaIconData _kindIcon(EmployeeRequest r) {
     final code = r.code ?? '';
@@ -532,6 +587,21 @@ class _RequestCard extends StatelessWidget {
                   fontSize: 12.5,
                   height: 1.4,
                   color: AppColors.charcoal,
+                ),
+              ),
+            ),
+          ],
+          if (onWithdraw != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: onWithdraw,
+                icon: const FaIcon(FontAwesomeIcons.rotateLeft, size: 13),
+                label: const Text('تراجع عن الطلب'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.danger,
+                  visualDensity: VisualDensity.compact,
                 ),
               ),
             ),

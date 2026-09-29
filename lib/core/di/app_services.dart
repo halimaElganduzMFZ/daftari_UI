@@ -9,6 +9,7 @@ import '../../data/repositories/healthcare_repository.dart';
 import '../../data/repositories/leave_requests_repository.dart';
 import '../../data/repositories/messages_repository.dart';
 import '../../data/repositories/manager_repository.dart';
+import '../../data/repositories/notifications_repository.dart';
 import '../../data/repositories/permission_requests_repository.dart';
 import '../../data/repositories/timesheet_repository.dart';
 import '../../data/session/app_session.dart';
@@ -70,6 +71,16 @@ abstract final class AppServices {
   static final LeaveRequestsRepository leaveRequests = ApiConfig.useRemoteApi
       ? ApiLeaveRequestsRepository(apiClient)
       : StaticLeaveRequestsRepository();
+
+  /// إشعارات التطبيق (`/me/notifications`).
+  static final NotificationsRepository notifications = ApiConfig.useRemoteApi
+      ? ApiNotificationsRepository(apiClient)
+      : StaticNotificationsRepository();
+
+  /// إعلانات الشرائح (`/me/announcements` — غالباً تُضمَّن في اللوحة).
+  static final AnnouncementsRepository announcements = ApiConfig.useRemoteApi
+      ? ApiAnnouncementsRepository(apiClient)
+      : const StaticAnnouncementsRepository();
 
   /// يُستدعى عندما تنتهي الجلسة نهائياً (فشل تجديد التوكن بغير خطأ شبكة).
   /// يضبطه `main.dart` للعودة إلى شاشة الدخول من أي مكان.

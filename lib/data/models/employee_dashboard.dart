@@ -1,3 +1,5 @@
+import 'announcements.dart';
+import 'app_notification.dart';
 import 'request_attachment.dart';
 
 enum RequestKind {
@@ -209,6 +211,8 @@ class EmployeeDashboardData {
     this.workplaceName,
     this.counts,
     this.unreadNotifications = 0,
+    this.notificationCounts = const NotificationUnreadCounts(),
+    this.announcements = AnnouncementsFeed.empty,
     this.warnings = const [],
     this.asOf,
   });
@@ -248,6 +252,8 @@ class EmployeeDashboardData {
   final String? workplaceName;
   final RequestCounts? counts;
   final int unreadNotifications;
+  final NotificationUnreadCounts notificationCounts;
+  final AnnouncementsFeed announcements;
 
   /// أقسام لم تُحمّل (`warnings[].section`).
   final List<String> warnings;
@@ -267,6 +273,8 @@ class EmployeeDashboardData {
     final leave = _map(json['leave']);
     final requests = _map(json['requests']);
     final notifications = _map(json['notifications']);
+    final notificationCounts =
+        NotificationUnreadCounts.fromApi(notifications ?? json['notifications']);
 
     final emergency = _map(leave?['emergency']);
     final annual = _map(leave?['annual']);
@@ -314,14 +322,16 @@ class EmployeeDashboardData {
       counts: requests?['counts'] is Map<String, dynamic>
           ? RequestCounts.fromApi(requests!['counts'] as Map<String, dynamic>)
           : null,
-      unreadNotifications: (notifications?['unread'] as num?)?.toInt() ?? 0,
+      unreadNotifications: notificationCounts.unread,
+      notificationCounts: notificationCounts,
+      announcements: AnnouncementsFeed.fromApi(json['announcements']),
       warnings: warnings,
       asOf: json['asOf'] is String ? DateTime.tryParse(json['asOf']) : null,
     );
   }
 
   static Map<String, dynamic>? _map(Object? value) =>
-      value is Map<String, dynamic> ? value : null;
+      value is Map ? Map<String, dynamic>.from(value) : null;
 }
 
 /// نوع مخزّن في `employee_app_request_panel.permission_type`

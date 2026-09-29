@@ -144,8 +144,10 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       });
       return;
     }
-    if (!kind.fields.endDateFixed && _endDate == null) {
-      // ننتظر تاريخ النهاية للأنواع القابلة للتعديل.
+    // إعفاء البوابة: `to` اختياري — نعاين بـ from فقط إن لم يُحدَّد.
+    if (!kind.fields.endDateFixed &&
+        _endDate == null &&
+        !kind.isGateExemption) {
       setState(() {
         _plan = null;
         _planError = null;
@@ -276,7 +278,8 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       _startDate = picked;
       if (_endDate == null &&
           _selected != null &&
-          !_selected!.fields.endDateFixed) {
+          !_selected!.fields.endDateFixed &&
+          !_selected!.isGateExemption) {
         _endDate = picked;
       }
       _syncEndDate();
@@ -293,8 +296,11 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
     final first = _startDate != null && _startDate!.isAfter(windowFirst)
         ? _startDate!
         : windowFirst;
-    // قيد "شهر قبل/بعد" ينطبق على البداية فقط؛ الـ API يقبل نهاية حتى سنة من البداية.
-    final last = first.add(const Duration(days: 365));
+    // قيد "شهر قبل/بعد" على البداية؛ إعفاء البوابة حتى 366 يوماً، وغيره سنة.
+    final span = (_selected?.isGateExemption ?? false)
+        ? LeaveRequestsRepository.gateMaxRangeDays - 1
+        : 365;
+    final last = first.add(Duration(days: span));
     final initial = _endDate ?? _startDate ?? now;
     final safeInitial = initial.isBefore(first)
         ? first
@@ -410,7 +416,9 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       _toast('فضلاً حدّد تاريخ البداية');
       return;
     }
-    if (!kind.fields.endDateFixed && _endDate == null) {
+    if (!kind.fields.endDateFixed &&
+        _endDate == null &&
+        !kind.isGateExemption) {
       _toast('فضلاً حدّد تاريخ النهاية');
       return;
     }
@@ -419,11 +427,27 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       _toast('فضلاً اكتب سبب الإجازة الطارئة');
       return;
     }
-    if (reason.length > LeaveRequestsRepository.reasonMaxLength) {
+    final notesLimit = kind.isGateExemption
+        ? (_options?.gateExemption?.notesMaxLength ??
+              LeaveRequestsRepository.gateNotesMaxLength)
+        : LeaveRequestsRepository.reasonMaxLength;
+    if (reason.length > notesLimit) {
       _toast(
-        'السبب طويل جداً (الحد ${LeaveRequestsRepository.reasonMaxLength} حرفاً)',
+        kind.isGateExemption
+            ? 'الملاحظة طويلة جداً (الحد $notesLimit حرفاً)'
+            : 'السبب طويل جداً (الحد $notesLimit حرفاً)',
       );
       return;
+    }
+    if (kind.isGateExemption && _startDate != null && _endDate != null) {
+      final span = _endDate!.difference(_startDate!).inDays + 1;
+      final maxSpan =
+          _options?.gateExemption?.maxRangeDays ??
+          LeaveRequestsRepository.gateMaxRangeDays;
+      if (span > maxSpan) {
+        _toast('مدة إعفاء حركة البوابة لا تتجاوز $maxSpan يوماً');
+        return;
+      }
     }
     if (kind.fields.attachmentRequired && _attachment == null) {
       _toast('فضلاً أرفق المستند المطلوب');
@@ -739,7 +763,9 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: _DateTile(
-                  label: 'إلى تاريخ',
+                  label: kind?.isGateExemption == true
+                      ? 'إلى تاريخ (اختياري)'
+                      : 'إلى تاريخ',
                   value: _endDate,
                   onTap: _pickEnd,
                   locked: kind?.fields.endDateFixed == true,
@@ -782,25 +808,35 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                 controller: _reasonController,
                 maxLines: 3,
                 minLines: 2,
-                maxLength: LeaveRequestsRepository.reasonMaxLength,
+                maxLength: kind.isGateExemption
+                    ? (_options?.gateExemption?.notesMaxLength ??
+                          LeaveRequestsRepository.gateNotesMaxLength)
+                    : LeaveRequestsRepository.reasonMaxLength,
                 buildCounter:
                     (
                       _, {
                       required currentLength,
                       required isFocused,
                       maxLength,
-                    }) => currentLength > 1200
-                    ? Text(
-                        '$currentLength / $maxLength',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.slate,
-                        ),
-                      )
-                    : null,
+                    }) {
+                  final showAlways = kind.isGateExemption;
+                  final threshold = kind.isGateExemption ? 180 : 1200;
+                  if (!showAlways && currentLength <= threshold) {
+                    return null;
+                  }
+                  return Text(
+                    '$currentLength / $maxLength',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.slate,
+                    ),
+                  );
+                },
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: kind.fields.reasonRequired
+                  hintText: kind.isGateExemption
+                      ? 'ملاحظة (اختياري)…'
+                      : kind.fields.reasonRequired
                       ? 'سبب الإجازة الطارئة (مطلوب)…'
                       : 'سبب الإجازة (اختياري)…',
                   hintStyle: const TextStyle(color: AppColors.slate),

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exception.dart';
 import '../models/leave_request_form.dart';
+import '../session/app_session.dart';
 import '../static/static_employee_dashboard.dart';
 
 /// مرفق يُرسل مع طلب الإجازة الدراسية.
@@ -28,6 +29,12 @@ class LeaveAttachmentUpload {
 abstract class LeaveRequestsRepository {
   /// الحد الأقصى لسبب الإجازة (textarea القديم `maxlength=1500`).
   static const reasonMaxLength = 1500;
+
+  /// حد ملاحظة إعفاء حركة البوابة (`gateExemption.notes`).
+  static const gateNotesMaxLength = 250;
+
+  /// أقصى مدى لتواريخ إعفاء البوابة (من→إلى).
+  static const gateMaxRangeDays = 366;
 
   /// الحد الأقصى لحجم المرفق (5 م.ب).
   static const attachmentMaxBytes = 5 * 1024 * 1024;
@@ -105,12 +112,13 @@ class ApiLeaveRequestsRepository implements LeaveRequestsRepository {
     bool exception = false,
   }) async {
     final trimmedReason = reason?.trim();
+    final isGate = kind == 'GATE_EXEMPTION';
     final fields = <String, String>{
       'kind': kind,
       'from': _iso(from),
       if (to != null) 'to': _iso(to),
       if (trimmedReason != null && trimmedReason.isNotEmpty)
-        'reason': trimmedReason,
+        isGate ? 'notes' : 'reason': trimmedReason,
       if (location != null) 'location': location.code,
     };
 
@@ -152,11 +160,24 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
     ('MATERNITY_LEAVE', 'إجازة وضع', 7, LeaveKindCategory.fixed, 90),
     ('STUDY_LEAVE', 'إجازة دراسية', 9, LeaveKindCategory.attachment, null),
     ('IDDAH_LEAVE', 'عدة', 10, LeaveKindCategory.fixed, 130),
+    (
+      'GATE_EXEMPTION',
+      'إعفاء حركة البوابة',
+      0,
+      LeaveKindCategory.exemption,
+      null,
+    ),
   ];
+
+  bool get _isDepartmentManager =>
+      AppSession.currentUser?.structures.any((s) => s.type == 1) == true ||
+      AppSession.activeStructure?.typeLabel == 'إدارة عامة';
 
   LeaveKindOption _kind((String, String, int, LeaveKindCategory, int?) k) {
     final (code, label, holidayType, category, fixedDays) = k;
     final pending = _pending[code] ?? 0;
+    final isGate = code == 'GATE_EXEMPTION';
+    final gateAllowed = !isGate || _isDepartmentManager;
     return LeaveKindOption(
       code: code,
       label: label,
@@ -165,13 +186,17 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
       fixedDays: fixedDays,
       fields: LeaveKindFields(
         reasonRequired: code == 'EMERGENCY_LEAVE',
-        locationEnabled: true,
+        locationEnabled: !isGate,
         attachmentRequired: category == LeaveKindCategory.attachment,
         endDateFixed: category == LeaveKindCategory.fixed,
       ),
-      available: pending == 0,
+      available: gateAllowed && pending == 0,
       pendingRequests: pending,
-      unavailableReason: pending == 0 ? null : 'SAME_KIND_PENDING',
+      unavailableReason: !gateAllowed
+          ? 'NOT_DEPARTMENT_MANAGER'
+          : pending == 0
+          ? null
+          : 'SAME_KIND_PENDING',
     );
   }
 
@@ -180,6 +205,11 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
     await Future<void>.delayed(const Duration(milliseconds: 350));
     final now = DateTime.now();
     final dash = StaticEmployeeDashboard.data;
+    final isDeptManager = _isDepartmentManager;
+    final kinds = [
+      for (final def in _kinds)
+        if (def.$1 != 'GATE_EXEMPTION' || isDeptManager) _kind(def),
+    ];
     return LeaveRequestOptions(
       date: _iso(date ?? now),
       today: _iso(now),
@@ -212,7 +242,12 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
         annualExact: dash.annualBalance.toDouble(),
         annualPending: _pending['ANNUAL_LEAVE'] ?? 0,
       ),
-      kinds: _kinds.map(_kind).toList(),
+      kinds: kinds,
+      gateExemption: GateExemptionInfo(
+        available: isDeptManager,
+        requiresApproval: false,
+        unavailableReason: isDeptManager ? null : 'NOT_DEPARTMENT_MANAGER',
+      ),
     );
   }
 
@@ -229,10 +264,25 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
       throw const ApiException(statusCode: 400, message: 'نوع إجازة غير معروف');
     }
     final option = _kind(def.first);
+    if (option.isGateExemption && !_isDepartmentManager) {
+      throw const ApiException(
+        statusCode: 403,
+        code: 'NOT_DEPARTMENT_MANAGER',
+        message: 'إعفاء حركة البوابة متاح لمديري الإدارات العامة فقط',
+      );
+    }
     final start = DateTime(from.year, from.month, from.day);
     final end = option.fixedDays != null
         ? start.add(Duration(days: option.fixedDays! - 1))
         : DateTime((to ?? from).year, (to ?? from).month, (to ?? from).day);
+    if (option.isGateExemption &&
+        end.difference(start).inDays + 1 > LeaveRequestsRepository.gateMaxRangeDays) {
+      throw const ApiException(
+        statusCode: 400,
+        code: 'INVALID_DATE_RANGE',
+        message: 'مدة إعفاء حركة البوابة لا تتجاوز 366 يوماً',
+      );
+    }
     if (end.isBefore(start)) {
       throw const ApiException(
         statusCode: 400,
@@ -241,9 +291,11 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
       );
     }
     var days = 0;
-    for (var d = start; !d.isAfter(end); d = d.add(const Duration(days: 1))) {
-      if (option.isAnnual && d.weekday == DateTime.friday) continue;
-      days++;
+    if (!option.isGateExemption) {
+      for (var d = start; !d.isAfter(end); d = d.add(const Duration(days: 1))) {
+        if (option.isAnnual && d.weekday == DateTime.friday) continue;
+        days++;
+      }
     }
     final dash = StaticEmployeeDashboard.data;
     LeaveBalanceCheck? balance;
@@ -276,7 +328,9 @@ class StaticLeaveRequestsRepository implements LeaveRequestsRepository {
       blocks: [
         LeaveBlock(from: _iso(start), to: _iso(end), days: days.toDouble()),
       ],
-      method: option.fixedDays != null
+      method: option.isGateExemption
+          ? 'NONE'
+          : option.fixedDays != null
           ? 'FIXED'
           : (option.isAnnual ? 'FRIDAYS_EXCLUDED' : 'CALENDAR'),
       balance: balance,

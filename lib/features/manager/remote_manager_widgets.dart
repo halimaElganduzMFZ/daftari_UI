@@ -12,6 +12,30 @@ String managerError(Object error) => error is ApiException
 String managerText(Object? value) =>
     value == null || value.toString().trim().isEmpty ? '—' : value.toString();
 
+/// Visual cue for leave / permission / mission request types.
+IconData managerRequestTypeIcon(Object? type) {
+  final label = managerText(type);
+  if (label.contains('مهمة')) return Icons.work_outline_rounded;
+  if (label.contains('بوابة') || label.contains('إعفاء')) {
+    return Icons.directions_car_outlined;
+  }
+  if (label.contains('إذن') || label.contains('استئذان')) {
+    return Icons.schedule_rounded;
+  }
+  if (label.contains('وضع') || label.contains('أمومة')) {
+    return Icons.child_friendly_outlined;
+  }
+  if (label.contains('دراس')) return Icons.school_outlined;
+  if (label.contains('حج')) return Icons.mosque_outlined;
+  if (label.contains('زواج')) return Icons.favorite_border_rounded;
+  if (label.contains('عدة')) return Icons.spa_outlined;
+  if (label.contains('طارئ')) return Icons.flash_on_outlined;
+  if (label.contains('إجازة') || label.contains('سنوي')) {
+    return Icons.event_available_outlined;
+  }
+  return Icons.assignment_turned_in_outlined;
+}
+
 class ManagerError extends StatelessWidget {
   const ManagerError({super.key, required this.error, required this.retry});
   final Object error;
@@ -112,6 +136,7 @@ class ManagerPagedListState extends State<ManagerPagedList> {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         ...widget.header,
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -127,6 +152,7 @@ class ManagerPagedListState extends State<ManagerPagedList> {
             ),
           ],
         ),
+        const SizedBox(height: 8),
         for (final item in _items)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),

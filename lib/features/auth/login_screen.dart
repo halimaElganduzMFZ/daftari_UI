@@ -6,6 +6,7 @@ import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/brand_mark.dart';
+import '../../data/models/auth_models.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_auth.dart';
 import '../shell/main_shell.dart';
@@ -95,9 +96,11 @@ class _LoginScreenState extends State<LoginScreen>
 
   Future<void> _submitRemote() async {
     try {
+      // الدخول الأولي كموظف؛ التبديل لـ manager يتم من whichApp عبر refresh.
       final pair = await AppServices.auth.login(
         employeeNumber: _employeeNumberController.text,
         password: _passwordController.text,
+        portal: AppPortal.employee,
       );
       if (!mounted) return;
       AppSession.applyLogin(pair);

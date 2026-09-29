@@ -24,12 +24,14 @@ class AuthRepository {
   Future<TokenPair> login({
     required String employeeNumber,
     required String password,
+    AppPortal? portal,
   }) async {
     final json = await _client.postJson(
       '/auth/login',
       body: {
         'employeeNumber': employeeNumber.trim(),
         'password': password,
+        if (portal != null) 'portal': portal.apiValue,
       },
     );
     final pair = TokenPair.fromJson(json);
@@ -37,7 +39,8 @@ class AuthRepository {
     return pair;
   }
 
-  Future<TokenPair> refresh() async {
+  /// تجديد التوكن؛ مرّر [portal] للتبديل بين دخول الموظف/المسؤول.
+  Future<TokenPair> refresh({AppPortal? portal}) async {
     final refreshToken =
         AppSession.refreshToken ?? await _tokens.readRefreshToken();
     if (refreshToken == null || refreshToken.isEmpty) {
@@ -45,7 +48,10 @@ class AuthRepository {
     }
     final json = await _client.postJson(
       '/auth/refresh',
-      body: {'refreshToken': refreshToken},
+      body: {
+        'refreshToken': refreshToken,
+        if (portal != null) 'portal': portal.apiValue,
+      },
     );
     final pair = TokenPair.fromJson(json);
     await _persist(pair);
