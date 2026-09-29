@@ -3,14 +3,14 @@
     <!-- الاتصال بـ Nest API (مطلوب في نسخة الإصدار أيضاً، لا في debug فقط) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- لا نسخ احتياطي: التطبيق لا يحفظ إلا بيانات الجلسة، ومفاتيح Keystore لا تُنسخ فيتعذّر فك ما يُستعاد -->
+    <!-- HTTP غير المشفّر مسموح في src/debug و src/profile فقط؛ نسخة الإصدار تتصل عبر HTTPS -->
     <application
         android:label="شؤون الموظفين"
         android:name="${applicationName}"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
-        android:extractNativeLibs="true"
-        android:usesCleartextTraffic="true">
+        android:extractNativeLibs="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
