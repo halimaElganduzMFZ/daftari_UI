@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
@@ -57,24 +58,19 @@ class _LoginScreenState extends State<LoginScreen>
     final storage = AppServices.auth.tokenStorage;
     final remember = await storage.readRememberMe();
     final number = await storage.readRememberedEmployeeNumber();
-    final password = await storage.readRememberedPassword();
     if (!mounted) return;
     setState(() {
       _rememberMe = remember;
       if (number != null) {
         _employeeNumberController.text = number;
       }
-      if (password != null) {
-        _passwordController.text = password;
-      }
     });
   }
 
   Future<void> _persistRememberedLogin() async {
-    await AppServices.auth.tokenStorage.saveRememberedCredentials(
+    await AppServices.auth.tokenStorage.saveRememberedEmployeeNumber(
       remember: _rememberMe,
       employeeNumber: _employeeNumberController.text,
-      password: _passwordController.text,
     );
   }
 
@@ -163,6 +159,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   /// نفس المنطق للوضعين: مسؤول هيكل → whichApp، وإلا → واجهة الموظف.
   void _routeAfterLogin() {
+    // بعد نجاح الدخول فقط يعرض النظام حفظ بيانات الدخول في مدير كلمات المرور.
+    TextInput.finishAutofillContext();
     if (!AppSession.canManageStructures) {
       AppSession.enterAsEmployee();
       Navigator.of(context).pushReplacement(
@@ -342,140 +340,143 @@ class _LoginScreenState extends State<LoginScreen>
                                 ),
                               ],
                             ),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  const Text(
-                                    AppStrings.welcomeEmployee,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.charcoal,
-                                      letterSpacing: 0.2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 26),
-                                  const Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      AppStrings.username,
+                            child: AutofillGroup(
+                              onDisposeAction: AutofillContextAction.cancel,
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    const Text(
+                                      AppStrings.welcomeEmployee,
+                                      textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontWeight: FontWeight.w700,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w800,
                                         color: AppColors.charcoal,
+                                        letterSpacing: 0.2,
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _employeeNumberController,
-                                    textInputAction: TextInputAction.next,
-                                    keyboardType: TextInputType.text,
-                                    autofillHints: const [
-                                      AutofillHints.username,
-                                    ],
-                                    decoration: const InputDecoration(
-                                      hintText: AppStrings.usernameHint,
-                                      prefixIcon: Icon(Icons.badge_outlined),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null ||
-                                          value.trim().isEmpty) {
-                                        return 'أدخل رقم الموظف';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  const Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      AppStrings.password,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.charcoal,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    obscureText: _obscure,
-                                    autofillHints: const [
-                                      AutofillHints.password,
-                                    ],
-                                    onFieldSubmitted: (_) => _submit(),
-                                    decoration: InputDecoration(
-                                      hintText: '********',
-                                      prefixIcon:
-                                          const Icon(Icons.lock_outline),
-                                      suffixIcon: IconButton(
-                                        onPressed: () => setState(
-                                          () => _obscure = !_obscure,
-                                        ),
-                                        icon: Icon(
-                                          _obscure
-                                              ? Icons.visibility_outlined
-                                              : Icons.visibility_off_outlined,
-                                        ),
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'أدخل كلمة المرور';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 8),
-                                  // خلفية البطاقة الملوّنة تحجب أثر اللمس بدون Material شفاف (ويفشل تأكيد ListTile).
-                                  Material(
-                                    type: MaterialType.transparency,
-                                    child: CheckboxListTile(
-                                      value: _rememberMe,
-                                      onChanged: _submitting
-                                          ? null
-                                          : (value) => setState(
-                                                () => _rememberMe =
-                                                    value ?? false,
-                                              ),
-                                      controlAffinity:
-                                          ListTileControlAffinity.leading,
-                                      contentPadding: EdgeInsets.zero,
-                                      dense: true,
-                                      activeColor: AppColors.goldDeep,
-                                      title: const Text(
-                                        AppStrings.rememberMe,
+                                    const SizedBox(height: 26),
+                                    const Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        AppStrings.username,
                                         style: TextStyle(
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                           color: AppColors.charcoal,
-                                          fontSize: 14,
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  SizedBox(
-                                    height: 54,
-                                    child: FilledButton(
-                                      onPressed:
-                                          _submitting ? null : _submit,
-                                      child: _submitting
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                strokeWidth: 2.4,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : const Text(AppStrings.login),
+                                    const SizedBox(height: 8),
+                                    TextFormField(
+                                      controller: _employeeNumberController,
+                                      textInputAction: TextInputAction.next,
+                                      keyboardType: TextInputType.text,
+                                      autofillHints: const [
+                                        AutofillHints.username,
+                                      ],
+                                      decoration: const InputDecoration(
+                                        hintText: AppStrings.usernameHint,
+                                        prefixIcon: Icon(Icons.badge_outlined),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return 'أدخل رقم الموظف';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 16),
+                                    const Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        AppStrings.password,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: AppColors.charcoal,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextFormField(
+                                      controller: _passwordController,
+                                      obscureText: _obscure,
+                                      autofillHints: const [
+                                        AutofillHints.password,
+                                      ],
+                                      onFieldSubmitted: (_) => _submit(),
+                                      decoration: InputDecoration(
+                                        hintText: '********',
+                                        prefixIcon:
+                                            const Icon(Icons.lock_outline),
+                                        suffixIcon: IconButton(
+                                          onPressed: () => setState(
+                                            () => _obscure = !_obscure,
+                                          ),
+                                          icon: Icon(
+                                            _obscure
+                                                ? Icons.visibility_outlined
+                                                : Icons.visibility_off_outlined,
+                                          ),
+                                        ),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'أدخل كلمة المرور';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    // خلفية البطاقة الملوّنة تحجب أثر اللمس بدون Material شفاف (ويفشل تأكيد ListTile).
+                                    Material(
+                                      type: MaterialType.transparency,
+                                      child: CheckboxListTile(
+                                        value: _rememberMe,
+                                        onChanged: _submitting
+                                            ? null
+                                            : (value) => setState(
+                                                  () => _rememberMe =
+                                                      value ?? false,
+                                                ),
+                                        controlAffinity:
+                                            ListTileControlAffinity.leading,
+                                        contentPadding: EdgeInsets.zero,
+                                        dense: true,
+                                        activeColor: AppColors.goldDeep,
+                                        title: const Text(
+                                          AppStrings.rememberMe,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.charcoal,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 14),
+                                    SizedBox(
+                                      height: 54,
+                                      child: FilledButton(
+                                        onPressed:
+                                            _submitting ? null : _submit,
+                                        child: _submitting
+                                            ? const SizedBox(
+                                                width: 22,
+                                                height: 22,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  strokeWidth: 2.4,
+                                                  color: Colors.white,
+                                                ),
+                                              )
+                                            : const Text(AppStrings.login),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

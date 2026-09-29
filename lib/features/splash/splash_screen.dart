@@ -42,8 +42,9 @@ class _SplashScreenState extends State<SplashScreen>
   /// أقل مدة تبقى فيها الشاشة حتى لا تقفز الحركة.
   static const _minimumDisplay = Duration(milliseconds: 2800);
 
-  /// حد قراءة التخزين المحلي (فوري على الأجهزة؛ يحمي من تعليق المنصة).
-  static const _storageTimeout = Duration(milliseconds: 500);
+  /// حد قراءة التخزين المحلي (يحمي من تعليق المنصة). أول وصول إلى
+  /// Keystore / Keychain قد يتجاوز ثانية على الأجهزة البطيئة، ويبقى أقل من [_minimumDisplay].
+  static const _storageTimeout = Duration(seconds: 2);
 
   /// حد أعلى لانتظار الخادم قبل الاكتفاء بشاشة الدخول.
   static const _restoreTimeout = Duration(seconds: 6);
