@@ -1,11 +1,29 @@
 /// إعلانات لوحة الموظف (`GET /me/announcements` أو قسم `announcements` في اللوحة).
 library;
 
+import '../../core/config/api_config.dart';
+
 int? _int(Object? v) =>
     v is int ? v : (v is num ? v.toInt() : int.tryParse('$v'));
-String? _str(Object? v) => v == null ? null : '$v'.trim();
+String? _str(Object? v) {
+  if (v == null) return null;
+  final s = '$v'.trim();
+  return s.isEmpty ? null : s;
+}
+
 Map<String, dynamic>? _map(Object? v) =>
     v is Map ? Map<String, dynamic>.from(v) : null;
+
+/// يحوّل مسار الصورة النسبي من الـ API إلى رابط مطلق مع نفس المضيف.
+String? resolveAnnouncementMediaUrl(Object? raw) {
+  final url = _str(raw);
+  if (url == null) return null;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  final base = Uri.parse(ApiConfig.baseUrl);
+  final origin = '${base.scheme}://${base.authority}';
+  if (url.startsWith('/')) return '$origin$url';
+  return '$origin/${url.replaceFirst(RegExp(r'^/+'), '')}';
+}
 
 class AnnouncementSlideshow {
   const AnnouncementSlideshow({
@@ -38,18 +56,28 @@ class AnnouncementItem {
     this.linkUrl,
     this.displaySeconds,
     this.pinned = false,
+    this.sortOrder = 0,
   });
 
   factory AnnouncementItem.fromApi(Map<String, dynamic> json) {
     final image = _map(json['image']);
+    final imageUrl = resolveAnnouncementMediaUrl(
+      image?['url'] ??
+          image?['href'] ??
+          image?['path'] ??
+          json['imageUrl'] ??
+          json['imagePath'] ??
+          (json['image'] is String ? json['image'] : null),
+    );
     return AnnouncementItem(
       id: '${json['id'] ?? ''}',
       title: _str(json['title']) ?? '',
-      body: _str(json['body'] ?? json['text']),
-      imageUrl: _str(image?['url'] ?? json['imageUrl']),
-      linkUrl: _str(json['linkUrl'] ?? json['link']),
-      displaySeconds: _int(json['displaySeconds']),
-      pinned: json['pinned'] == true,
+      body: _str(json['body'] ?? json['text'] ?? json['content']),
+      imageUrl: imageUrl,
+      linkUrl: _str(json['linkUrl'] ?? json['link'] ?? json['url']),
+      displaySeconds: _int(json['displaySeconds'] ?? json['durationSeconds']),
+      pinned: json['pinned'] == true || json['isPinned'] == true,
+      sortOrder: _int(json['sortOrder'] ?? json['order'] ?? json['rank']) ?? 0,
     );
   }
 
@@ -60,8 +88,11 @@ class AnnouncementItem {
   final String? linkUrl;
   final int? displaySeconds;
   final bool pinned;
+  final int sortOrder;
 
   bool get hasLink => (linkUrl ?? '').isNotEmpty;
+  bool get hasImage => (imageUrl ?? '').isNotEmpty;
+  bool get hasBody => (body ?? '').isNotEmpty;
 }
 
 class AnnouncementsFeed {
@@ -73,19 +104,35 @@ class AnnouncementsFeed {
   factory AnnouncementsFeed.fromApi(Object? raw) {
     final json = _map(raw);
     if (json == null) {
-      return const AnnouncementsFeed(
-        slideshow: AnnouncementSlideshow(),
-        items: [],
-      );
+      // بعض الاستجابات تُرجع القائمة مباشرة.
+      if (raw is List) {
+        final items = [
+          for (final item in raw)
+            if (item is Map)
+              AnnouncementItem.fromApi(Map<String, dynamic>.from(item)),
+        ]..sort((a, b) {
+            if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
+            return a.sortOrder.compareTo(b.sortOrder);
+          });
+        return AnnouncementsFeed(
+          slideshow: const AnnouncementSlideshow(),
+          items: items,
+        );
+      }
+      return empty;
     }
-    final list = json['items'] ?? json['data'];
+    final list = json['items'] ?? json['data'] ?? json['announcements'];
+    final items = [
+      for (final item in (list as List? ?? const []))
+        if (item is Map)
+          AnnouncementItem.fromApi(Map<String, dynamic>.from(item)),
+    ]..sort((a, b) {
+        if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
+        return a.sortOrder.compareTo(b.sortOrder);
+      });
     return AnnouncementsFeed(
       slideshow: AnnouncementSlideshow.fromApi(_map(json['slideshow'])),
-      items: [
-        for (final item in (list as List? ?? const []))
-          if (item is Map)
-            AnnouncementItem.fromApi(Map<String, dynamic>.from(item)),
-      ],
+      items: items,
     );
   }
 
@@ -98,32 +145,5 @@ class AnnouncementsFeed {
   static const empty = AnnouncementsFeed(
     slideshow: AnnouncementSlideshow(),
     items: [],
-  );
-
-  /// شرائح تصميمية تظهر عندما لا توجد إعلانات من الـ API بعد.
-  static const demo = AnnouncementsFeed(
-    slideshow: AnnouncementSlideshow(intervalSeconds: 5),
-    items: [
-      AnnouncementItem(
-        id: 'demo-1',
-        title: 'مرحباً بك في دفتري',
-        body: 'هنا تظهر إعلانات الإدارة — صورة، نص، ورابط عند توفرها.',
-        pinned: true,
-        displaySeconds: 5,
-      ),
-      AnnouncementItem(
-        id: 'demo-2',
-        title: 'مثال: رابط خارجي',
-        body: 'اضغط الشريحة لفتح رابط (جيميل / موقع الإدارة…).',
-        linkUrl: 'https://mail.google.com',
-        displaySeconds: 5,
-      ),
-      AnnouncementItem(
-        id: 'demo-3',
-        title: 'تابع رصيد إجازاتك',
-        body: 'يمكنك تقديم إذن أو إجازة مباشرة من الرئيسية.',
-        displaySeconds: 5,
-      ),
-    ],
   );
 }

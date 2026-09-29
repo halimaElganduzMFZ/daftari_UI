@@ -55,8 +55,22 @@ void main() {
     expect(AnnouncementsFeed.fromApi(null).isEmpty, isTrue);
   });
 
-  test('demo announcements feed is ready for web preview', () {
-    expect(AnnouncementsFeed.demo.isNotEmpty, isTrue);
-    expect(AnnouncementsFeed.demo.items.length, greaterThanOrEqualTo(2));
+  test('resolves relative announcement image urls against API host', () {
+    final item = AnnouncementItem.fromApi({
+      'id': 1,
+      'title': 'إعلان',
+      'image': {'url': '/api/v1/me/announcements/1/image'},
+    });
+    expect(item.imageUrl, contains('/api/v1/me/announcements/1/image'));
+    expect(item.imageUrl, startsWith('http'));
+  });
+
+  test('parses bare list announcements payload', () {
+    final feed = AnnouncementsFeed.fromApi([
+      {'id': 2, 'title': 'أ', 'order': 2},
+      {'id': 1, 'title': 'ب', 'pinned': true, 'order': 9},
+    ]);
+    expect(feed.items.first.pinned, isTrue);
+    expect(feed.items.first.title, 'ب');
   });
 }

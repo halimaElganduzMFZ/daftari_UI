@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import '../../core/config/api_config.dart';
 import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
@@ -102,8 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
   EmployeeDashboardData? _data;
   Object? _error;
   bool _loading = true;
-  AnnouncementsFeed _announcements = AnnouncementsFeed.demo;
-  bool _announcementsAreDemo = true;
+  AnnouncementsFeed _announcements = AnnouncementsFeed.empty;
+  Object? _announcementsError;
   int _unreadNotifications = 0;
 
   final Map<RequestStatus, _RequestsFeed> _feeds = {
@@ -133,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _unreadNotifications = data.unreadNotifications;
         if (data.announcements.isNotEmpty) {
           _announcements = data.announcements;
-          _announcementsAreDemo = false;
+          _announcementsError = null;
         }
       });
       if (!_feed.started) _loadMore(_filter);
@@ -143,9 +144,6 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _error = error;
         _loading = false;
-        // حتى مع فشل اللوحة نبقي بانر المعاينة ظاهراً على الويب.
-        _announcements = AnnouncementsFeed.demo;
-        _announcementsAreDemo = true;
       });
     }
   }
@@ -154,24 +152,20 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final feed = await AppServices.announcements.mine();
       if (!mounted) return;
-      if (feed.isNotEmpty) {
-        setState(() {
-          _announcements = feed;
-          _announcementsAreDemo = false;
-        });
-      } else if (_announcements.isEmpty || _announcementsAreDemo) {
-        setState(() {
-          _announcements = AnnouncementsFeed.demo;
-          _announcementsAreDemo = true;
-        });
-      }
-    } catch (_) {
+      setState(() {
+        _announcements = feed;
+        _announcementsError = null;
+      });
+    } catch (e) {
       if (!mounted) return;
-      if (_data?.announcements.isNotEmpty != true) {
+      // إن فشلت `/me/announcements` نُبقي ما جاء من اللوحة إن وُجد.
+      if (_data?.announcements.isNotEmpty == true) {
         setState(() {
-          _announcements = AnnouncementsFeed.demo;
-          _announcementsAreDemo = true;
+          _announcements = _data!.announcements;
+          _announcementsError = null;
         });
+      } else {
+        setState(() => _announcementsError = e);
       }
     }
   }
@@ -357,28 +351,46 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_announcementsAreDemo)
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          'معاينة بانر الإعلانات (بيانات تجريبية حتى تُنشر إعلانات حقيقية)',
-                          style: TextStyle(
-                            color: AppColors.slate,
-                            fontSize: 11.5,
+            if (_announcements.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                  child: AnnouncementsBanner(feed: _announcements),
+                ),
+              )
+            else if (_announcementsError != null && ApiConfig.useRemoteApi)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                  child: AppSurface(
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.campaign_outlined,
+                          color: AppColors.goldDeep,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _announcementsError is ApiException
+                                ? (_announcementsError as ApiException).message
+                                : 'تعذّر تحميل الإعلانات من الخادم.',
+                            style: const TextStyle(
+                              color: AppColors.slate,
+                              fontSize: 12.5,
+                              height: 1.4,
+                            ),
                           ),
                         ),
-                      ),
-                    AnnouncementsBanner(feed: _announcements),
-                  ],
+                        TextButton(
+                          onPressed: _refreshAnnouncements,
+                          child: const Text('إعادة'),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
             if (AppSession.isImpersonating)
               SliverToBoxAdapter(
                 child: Padding(
