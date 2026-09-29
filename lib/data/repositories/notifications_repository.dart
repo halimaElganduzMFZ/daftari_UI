@@ -35,8 +35,8 @@ class ApiNotificationsRepository implements NotificationsRepository {
       '/me/notifications',
       query: {
         if (unread != null) 'unread': unread ? 'true' : 'false',
-        if (audience != null) 'audience': audience,
-        if (kind != null) 'kind': kind,
+        'audience': ?audience,
+        'kind': ?kind,
         'page': '$page',
         'limit': '$limit',
         'withTotal': 'true',

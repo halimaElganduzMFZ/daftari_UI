@@ -55,7 +55,7 @@ Map<String, dynamic> optionsBody({
     'requiresApproval': false,
     'code': 'GATE_EXEMPTION',
     'label': 'إعفاء حركة البوابة',
-    if (unavailableReason != null) 'unavailableReason': unavailableReason,
+    'unavailableReason': ?unavailableReason,
     'limits': {'maxDays': 366, 'notesMaxLength': 250},
   },
 };
