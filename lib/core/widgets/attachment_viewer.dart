@@ -523,7 +523,7 @@ class _StudioPreview extends StatelessWidget {
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'بعد ربط الخادم يُجلب الملف من التخزين (مرفق/URL) أو يُفك Base64 عند الحاجة للمعاينة.',
+                  'لقراءة المستند بوضوح اضغط زر «ملء الشاشة» أعلى العارض.',
                   style: TextStyle(
                     color: AppColors.goldDeep,
                     fontWeight: FontWeight.w600,

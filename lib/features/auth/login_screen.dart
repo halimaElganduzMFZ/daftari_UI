@@ -430,24 +430,29 @@ class _LoginScreenState extends State<LoginScreen>
                                     },
                                   ),
                                   const SizedBox(height: 8),
-                                  CheckboxListTile(
-                                    value: _rememberMe,
-                                    onChanged: _submitting
-                                        ? null
-                                        : (value) => setState(
-                                              () => _rememberMe = value ?? false,
-                                            ),
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    contentPadding: EdgeInsets.zero,
-                                    dense: true,
-                                    activeColor: AppColors.goldDeep,
-                                    title: const Text(
-                                      AppStrings.rememberMe,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.charcoal,
-                                        fontSize: 14,
+                                  // خلفية البطاقة الملوّنة تحجب أثر اللمس بدون Material شفاف (ويفشل تأكيد ListTile).
+                                  Material(
+                                    type: MaterialType.transparency,
+                                    child: CheckboxListTile(
+                                      value: _rememberMe,
+                                      onChanged: _submitting
+                                          ? null
+                                          : (value) => setState(
+                                                () => _rememberMe =
+                                                    value ?? false,
+                                              ),
+                                      controlAffinity:
+                                          ListTileControlAffinity.leading,
+                                      contentPadding: EdgeInsets.zero,
+                                      dense: true,
+                                      activeColor: AppColors.goldDeep,
+                                      title: const Text(
+                                        AppStrings.rememberMe,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.charcoal,
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     ),
                                   ),
