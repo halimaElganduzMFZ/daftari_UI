@@ -57,19 +57,24 @@ class _LoginScreenState extends State<LoginScreen>
     final storage = AppServices.auth.tokenStorage;
     final remember = await storage.readRememberMe();
     final number = await storage.readRememberedEmployeeNumber();
+    final password = await storage.readRememberedPassword();
     if (!mounted) return;
     setState(() {
       _rememberMe = remember;
       if (number != null) {
         _employeeNumberController.text = number;
       }
+      if (password != null) {
+        _passwordController.text = password;
+      }
     });
   }
 
   Future<void> _persistRememberedLogin() async {
-    await AppServices.auth.tokenStorage.saveRememberedEmployee(
+    await AppServices.auth.tokenStorage.saveRememberedCredentials(
       remember: _rememberMe,
       employeeNumber: _employeeNumberController.text,
+      password: _passwordController.text,
     );
   }
 
@@ -213,9 +218,6 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final year = DateTime.now().year;
-    final hint = ApiConfig.useRemoteApi
-        ? AppStrings.apiLoginHint
-        : AppStrings.demoHint;
     final size = MediaQuery.sizeOf(context);
 
     return Scaffold(
@@ -355,16 +357,6 @@ class _LoginScreenState extends State<LoginScreen>
                                       letterSpacing: 0.2,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    AppStrings.loginSubtitle,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: AppColors.slate,
-                                      fontSize: 13,
-                                      height: 1.45,
-                                    ),
-                                  ),
                                   const SizedBox(height: 26),
                                   const Align(
                                     alignment: Alignment.centerRight,
@@ -476,16 +468,6 @@ class _LoginScreenState extends State<LoginScreen>
                                               ),
                                             )
                                           : const Text(AppStrings.login),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  Text(
-                                    hint,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: AppColors.slate,
-                                      fontSize: 12,
-                                      height: 1.45,
                                     ),
                                   ),
                                 ],
