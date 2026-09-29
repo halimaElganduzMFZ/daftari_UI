@@ -190,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen>
   Widget build(BuildContext context) {
     final year = DateTime.now().year;
     final hint = ApiConfig.useRemoteApi
-        ? '${AppStrings.apiLoginHint} ${ApiConfig.displayHost}'
+        ? AppStrings.apiLoginHint
         : AppStrings.demoHint;
     final size = MediaQuery.sizeOf(context);
 
