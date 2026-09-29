@@ -314,7 +314,7 @@ class _AnnouncementSlide extends StatelessWidget {
 class _Chip extends StatelessWidget {
   const _Chip({required this.label, required this.icon});
   final String label;
-  final IconData icon;
+  final FaIconData icon;
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
