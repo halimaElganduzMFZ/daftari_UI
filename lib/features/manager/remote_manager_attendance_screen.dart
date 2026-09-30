@@ -11,8 +11,15 @@ import 'remote_manager_widgets.dart';
 import 'manager_statistics_screen.dart';
 
 class RemoteManagerAttendanceScreen extends StatefulWidget {
-  const RemoteManagerAttendanceScreen({super.key, this.repository});
+  const RemoteManagerAttendanceScreen({
+    super.key,
+    this.repository,
+    this.quietRefresh,
+  });
   final ManagerRepository? repository;
+
+  /// See [ManagerPagedList.quietRefresh].
+  final Listenable? quietRefresh;
   @override
   State<RemoteManagerAttendanceScreen> createState() =>
       _RemoteManagerAttendanceScreenState();
@@ -39,6 +46,7 @@ class _RemoteManagerAttendanceScreenState
   Widget build(BuildContext context) => SafeArea(
     child: ManagerPagedList(
       key: _list,
+      quietRefresh: widget.quietRefresh,
       load: (page) => _repo.page(
         '/manager/attendance/employees',
         page: page,

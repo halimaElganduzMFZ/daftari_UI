@@ -21,12 +21,16 @@ class RemoteManagerRequestsScreen extends StatefulWidget {
     this.employeeId,
     this.employeeName,
     this.repository,
+    this.quietRefresh,
   });
   final bool history;
   final bool review;
   final String? employeeId;
   final String? employeeName;
   final ManagerRepository? repository;
+
+  /// See [ManagerPagedList.quietRefresh].
+  final Listenable? quietRefresh;
   @override
   State<RemoteManagerRequestsScreen> createState() =>
       _RemoteManagerRequestsScreenState();
@@ -76,6 +80,7 @@ class _RemoteManagerRequestsScreenState
   Future<void> _summary() async {
     await Future.wait([
       _requestSummary(),
+      if (_typesError != null) _loadTypes(),
       if (_showInboxChrome) _loadUnreadNotifications(),
       if (_showInboxChrome && AppSession.currentUser?.canManageAwol == true)
         _loadAwolCount(),
@@ -209,6 +214,7 @@ class _RemoteManagerRequestsScreenState
       key: _list,
       load: (page) => _repo.page(_path, page: page, filters: _filters),
       onRefresh: _summary,
+      quietRefresh: widget.quietRefresh,
       header: [
         Row(
           children: [
