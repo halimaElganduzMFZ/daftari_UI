@@ -5,6 +5,7 @@ import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/app_notification.dart';
 import '../../data/repositories/notifications_repository.dart';
 
@@ -108,6 +109,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
       ],
     ),
+    bottomNavigationBar: const BottomInsetSpacer(),
     body: RefreshIndicator(
       onRefresh: _load,
       child: ListView(

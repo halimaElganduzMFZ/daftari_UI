@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:employee_affairs/core/constants/app_strings.dart';
+import 'package:employee_affairs/core/widgets/brand_mark.dart';
 import 'package:employee_affairs/features/auth/login_screen.dart';
 import 'package:employee_affairs/features/splash/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +23,22 @@ Widget _wrap(Widget child) {
   );
 }
 
+Matrix4 _markTransform(WidgetTester tester) => tester
+    .widget<Transform>(
+      find
+          .ancestor(of: find.byType(BrandMark), matching: find.byType(Transform))
+          .first,
+    )
+    .transform;
+
+double _markOpacity(WidgetTester tester) => tester
+    .widget<Opacity>(
+      find
+          .ancestor(of: find.byType(BrandMark), matching: find.byType(Opacity))
+          .first,
+    )
+    .opacity;
+
 void main() {
   testWidgets('splash shows brand mark and titles while loading', (tester) async {
     await tester.pumpWidget(_wrap(const SplashScreen()));
@@ -31,8 +50,6 @@ void main() {
     expect(find.text(AppStrings.appName), findsOneWidget);
     expect(find.text(AppStrings.orgName), findsOneWidget);
     expect(find.textContaining('جاري التجهيز'), findsOneWidget);
-
-    await tester.pump(const Duration(milliseconds: 1000));
     expect(find.byType(SplashScreen), findsOneWidget);
 
     // Dispose repeating animations so the test ends cleanly.
@@ -41,13 +58,91 @@ void main() {
   });
 
   testWidgets('splash navigates to login after dwell', (tester) async {
-    await tester.pumpWidget(_wrap(const SplashScreen()));
+    await tester.pumpWidget(
+      _wrap(SplashScreen(restoreSession: () async => false)),
+    );
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 3000));
-    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.byType(LoginScreen), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 100)); // 800 ms minimum
+    await tester.pump(const Duration(milliseconds: 600)); // page transition
 
     expect(find.byType(LoginScreen), findsOneWidget);
     expect(find.text(AppStrings.login), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('splash waits for a slow session restore', (tester) async {
+    final restore = Completer<bool>();
+    await tester.pumpWidget(
+      _wrap(SplashScreen(restoreSession: () => restore.future)),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    LinearProgressIndicator bar() =>
+        tester.widget(find.byType(LinearProgressIndicator));
+    expect(bar().value, isNotNull);
+
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.byType(SplashScreen), findsOneWidget);
+    expect(bar().value, isNull);
+
+    restore.complete(false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.byType(LoginScreen), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('splash mark moves while animations are on', (tester) async {
+    final restore = Completer<bool>();
+    await tester.pumpWidget(
+      _wrap(SplashScreen(restoreSession: () => restore.future)),
+    );
+    await tester.pump();
+    final first = _markTransform(tester);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(_markTransform(tester), isNot(first));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('splash keeps the mark still when animations are removed', (
+    tester,
+  ) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    final restore = Completer<bool>();
+    await tester.pumpWidget(
+      _wrap(SplashScreen(restoreSession: () => restore.future)),
+    );
+    await tester.pump();
+    final first = _markTransform(tester);
+    expect(_markOpacity(tester), 1);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(_markTransform(tester), first);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('splash falls back to login when storage does not answer',
+      (tester) async {
+    // The storage plugins aren't mocked and get no reply in widget tests, so
+    // the splash gives up at its 2 s storage timeout.
+    await tester.pumpWidget(_wrap(const SplashScreen()));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.byType(LoginScreen), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));

@@ -4,6 +4,7 @@ import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/repositories/manager_repository.dart';
 import '../../data/session/app_session.dart';
 import '../notifications/notifications_screen.dart';
@@ -238,6 +239,11 @@ class _RemoteManagerRequestsScreenState
                     _unreadNotifications > 99
                         ? '99+'
                         : '$_unreadNotifications',
+                    // بدونه يصبح الرقم وحده اسم الزر لقارئ الشاشة.
+                    semanticsLabel:
+                        'الإشعارات، غير المقروءة: $_unreadNotifications',
+                    // الجرس لا يكبر مع الخط؛ لو كبر الرقم لغطّت الشارة الجرس كله.
+                    textScaler: TextScaler.noScaling,
                     style: const TextStyle(fontSize: 10),
                   ),
                   child: const Icon(
@@ -329,6 +335,7 @@ class _RemoteManagerRequestsScreenState
               labelText: 'اسم الموظف أو رقمه الوظيفي',
               errorText: _searchError,
               suffixIcon: IconButton(
+                tooltip: 'بحث',
                 onPressed: _applySearch,
                 icon: const Icon(Icons.search),
               ),
@@ -681,6 +688,7 @@ class _ManagerRequestDetailScreenState
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('تفاصيل الطلب')),
+        bottomNavigationBar: const BottomInsetSpacer(),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null

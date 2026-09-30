@@ -59,6 +59,36 @@ class _AllRegulationsSheetState extends State<_AllRegulationsSheet> {
   RegulationTab get _current =>
       StaticRegulationsCenter.byId(_tabId) ?? StaticRegulationsCenter.tabs.first;
 
+  Widget _tabChip(RegulationTab tab) {
+    final selected = tab.id == _tabId;
+    return ChoiceChip(
+      selected: selected,
+      showCheckmark: false,
+      avatar: FaIcon(
+        tab.icon,
+        size: 12,
+        color: selected ? AppColors.goldDeep : AppColors.slate,
+      ),
+      label: Text(tab.label),
+      selectedColor: AppColors.goldSoft,
+      backgroundColor: AppColors.background,
+      side: BorderSide(
+        color: selected ? AppColors.gold : AppColors.line,
+      ),
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w700,
+        fontSize: 12.5,
+        color: selected ? AppColors.goldDeep : AppColors.charcoal,
+      ),
+      onSelected: (_) {
+        setState(() {
+          _tabId = tab.id;
+          _penaltyIndex = 0;
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.sizeOf(context).height * 0.9;
@@ -99,43 +129,15 @@ class _AllRegulationsSheetState extends State<_AllRegulationsSheet> {
               ],
             ),
           ),
-          SizedBox(
-            height: 46,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: StaticRegulationsCenter.tabs.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final tab = StaticRegulationsCenter.tabs[index];
-                final selected = tab.id == _tabId;
-                return ChoiceChip(
-                  selected: selected,
-                  showCheckmark: false,
-                  avatar: FaIcon(
-                    tab.icon,
-                    size: 12,
-                    color: selected ? AppColors.goldDeep : AppColors.slate,
-                  ),
-                  label: Text(tab.label),
-                  selectedColor: AppColors.goldSoft,
-                  backgroundColor: AppColors.background,
-                  side: BorderSide(
-                    color: selected ? AppColors.gold : AppColors.line,
-                  ),
-                  labelStyle: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12.5,
-                    color: selected ? AppColors.goldDeep : AppColors.charcoal,
-                  ),
-                  onSelected: (_) {
-                    setState(() {
-                      _tabId = tab.id;
-                      _penaltyIndex = 0;
-                    });
-                  },
-                );
-              },
+          // صف قابل للتمرير بدل قائمة بارتفاع ثابت، كي تكبر الشرائح مع حجم الخط.
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              spacing: 8,
+              children: [
+                for (final tab in StaticRegulationsCenter.tabs) _tabChip(tab),
+              ],
             ),
           ),
           const SizedBox(height: 8),

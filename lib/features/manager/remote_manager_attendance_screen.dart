@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/date_range_filter_bar.dart';
 import '../../data/repositories/manager_repository.dart';
 import '../../data/session/app_session.dart';
@@ -60,6 +61,7 @@ class _RemoteManagerAttendanceScreenState
           decoration: InputDecoration(
             labelText: 'اسم الموظف أو الرقم الوظيفي',
             suffixIcon: IconButton(
+              tooltip: 'بحث',
               onPressed: _find,
               icon: const Icon(Icons.search),
             ),
@@ -182,6 +184,7 @@ class _ManagerEmployeeAttendanceScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('جدول الحضور والانصراف')),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -299,7 +302,8 @@ class _ManagerEmployeeAttendanceScreenState
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     dataRowMinHeight: 66,
-                    dataRowMaxHeight: 120,
+                    // الحالة والملاحظة تلتفان في عمود ضيق؛ الصف يطول معهما بدل أن يقصّهما.
+                    dataRowMaxHeight: double.infinity,
                     columns: [
                       for (final title in [
                         'التاريخ / اليوم',

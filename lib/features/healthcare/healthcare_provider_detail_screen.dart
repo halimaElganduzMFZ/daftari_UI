@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/healthcare_provider.dart';
 import '../../data/static/static_healthcare.dart';
 import 'healthcare_by_specialty_screen.dart' show ProviderLogo;
@@ -43,6 +44,7 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [

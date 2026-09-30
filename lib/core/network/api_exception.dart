@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// أخطاء موحّدة لاستدعاءات الـ API.
 ///
 /// تطابق غلاف الخطأ في Nest (`AllExceptionsFilter`):
@@ -26,8 +28,9 @@ class ApiException implements Exception {
   bool get isServerError => statusCode != null && statusCode! >= 500;
   bool get isNetwork => statusCode == null;
 
-  /// السبب التقني الأصلي لخطأ الشبكة (إن وُجد) — للتشخيص لا للمستخدم النهائي.
-  String? get cause => details?['cause'] as String?;
+  /// السبب التقني الأصلي لخطأ الشبكة (إن وُجد) — للتشخيص لا للمستخدم النهائي،
+  /// لذلك يُعاد في نسخ debug فقط: نصه يحوي عنوان الخادم ورسالة الاستثناء الخام.
+  String? get cause => kDebugMode ? (details?['cause'] as String?) : null;
 
   @override
   String toString() =>

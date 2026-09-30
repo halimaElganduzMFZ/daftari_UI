@@ -226,7 +226,7 @@ class ApiClient {
       );
     } catch (error) {
       // نحتفظ بالسبب الأصلي (Connection refused / cleartext / unreachable…)
-      // ليظهر في شاشة الدخول ويسهّل تشخيص مشاكل الشبكة.
+      // ليظهر في نسخ debug ويسهّل تشخيص مشاكل الشبكة.
       throw ApiException(
         message: _connectionError,
         details: {'cause': error.toString(), 'url': ApiConfig.baseUrl},

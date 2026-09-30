@@ -254,6 +254,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('تفاصيل أيام الغياب'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('تفاصيل أيام الغياب'));
       await tester.pumpAndSettle();
       expect(find.text('غياب فعلي'), findsOneWidget);

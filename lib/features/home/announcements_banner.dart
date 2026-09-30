@@ -21,10 +21,15 @@ class _AnnouncementsBannerState extends State<AnnouncementsBanner> {
   final _page = PageController(viewportFraction: 0.96);
   int _index = 0;
   Timer? _timer;
+  bool _autoplayAllowed = true;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // لا تقليب تلقائي مع «إزالة الحركة» أو قارئ الشاشة؛ يبقى التمرير باليد.
+    _autoplayAllowed =
+        !MediaQuery.disableAnimationsOf(context) &&
+        !MediaQuery.accessibleNavigationOf(context);
     _restartTimer();
   }
 
@@ -49,7 +54,9 @@ class _AnnouncementsBannerState extends State<AnnouncementsBanner> {
   void _restartTimer() {
     _timer?.cancel();
     final feed = widget.feed;
-    if (!feed.slideshow.autoplay || feed.items.length < 2) return;
+    if (!_autoplayAllowed || !feed.slideshow.autoplay || feed.items.length < 2) {
+      return;
+    }
     final seconds =
         feed.items[_index.clamp(0, feed.items.length - 1)].displaySeconds ??
         feed.slideshow.intervalSeconds;
@@ -83,10 +90,12 @@ class _AnnouncementsBannerState extends State<AnnouncementsBanner> {
   Widget build(BuildContext context) {
     final items = widget.feed.items;
     if (items.isEmpty) return const SizedBox.shrink();
+    // الشرائح بارتفاع ثابت (PageView)، فيكبر الارتفاع مع حجم الخط كي لا يُقص النص.
+    final textGrowth = MediaQuery.textScalerOf(context).scale(14) / 14;
     return Column(
       children: [
         SizedBox(
-          height: 178,
+          height: 178 * math.max(1, textGrowth),
           child: PageView.builder(
             controller: _page,
             itemCount: items.length,
@@ -210,6 +219,7 @@ class _AnnouncementSlide extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
                         children: [
@@ -232,73 +242,103 @@ class _AnnouncementSlide extends StatelessWidget {
                             ),
                         ],
                       ),
-                      const Spacer(),
-                      if (item.title.isNotEmpty)
-                        Text(
-                          item.title,
-                          maxLines: item.hasBody ? 2 : 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                            height: 1.25,
-                          ),
-                        ),
-                      if (item.hasBody) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: .12),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: .14),
-                            ),
-                          ),
-                          child: Text(
-                            item.body!,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: .92),
-                              fontSize: 12.5,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                      if (item.hasLink) ...[
-                        const SizedBox(height: 10),
-                        Row(
+                      Flexible(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppColors.goldSoft.withValues(alpha: .2),
-                                shape: BoxShape.circle,
+                            if (item.title.isNotEmpty)
+                              Text(
+                                item.title,
+                                maxLines: item.hasBody ? 2 : 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                  height: 1.25,
+                                ),
                               ),
-                              child: const FaIcon(
-                                FontAwesomeIcons.arrowUpRightFromSquare,
-                                size: 10,
-                                color: AppColors.goldSoft,
+                            if (item.hasBody) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: .12),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: .14),
+                                  ),
+                                ),
+                                child: Text(
+                                  item.body!,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: .92),
+                                    fontSize: 12.5,
+                                    height: 1.4,
+                                  ),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'اضغط للفتح',
-                              style: TextStyle(
-                                color: AppColors.goldSoft,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                            ],
+                            if (item.hasLink)
+                              // «اضغط للفتح» يكرر شارة «رابط» أعلاه، فيُخفى حين لا يترك
+                              // العنوان والنص مكاناً له في الارتفاع الثابت للشريحة.
+                              Flexible(
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    final needed = 10 +
+                                        math.max(
+                                          22.0,
+                                          MediaQuery.textScalerOf(
+                                                context,
+                                              ).scale(12) *
+                                              1.3,
+                                        );
+                                    if (constraints.maxHeight < needed) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: const EdgeInsets.only(top: 10),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.goldSoft
+                                                  .withValues(alpha: .2),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const FaIcon(
+                                              FontAwesomeIcons
+                                                  .arrowUpRightFromSquare,
+                                              size: 10,
+                                              color: AppColors.goldSoft,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'اضغط للفتح',
+                                            style: TextStyle(
+                                              color: AppColors.goldSoft,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              height: 1.3,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
                           ],
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),

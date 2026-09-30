@@ -4,6 +4,7 @@ import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/date_range_filter_bar.dart';
 import '../../data/repositories/manager_repository.dart';
 import 'remote_manager_widgets.dart';
@@ -116,6 +117,7 @@ class ManagerStatisticsScreen extends StatelessWidget {
         onPressed: () => Navigator.of(context).pop(),
       ),
     ),
+    bottomNavigationBar: const BottomInsetSpacer(),
     body: ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
@@ -667,6 +669,7 @@ class _ManagerMonthlyApprovalsScreenState
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('تفاصيل الموافقات الشهرية')),
+    bottomNavigationBar: const BottomInsetSpacer(),
     body: ManagerPagedList(
       key: ValueKey(_month),
       load: (page) async {
@@ -762,20 +765,24 @@ class _MonthlyApprovalCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.goldSoft,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: AppColors.goldDeep,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20,
+              // الحرف الأول زخرفة تكرر الاسم المجاور: حجم ثابت ولا يُقرأ.
+              ExcludeSemantics(
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.goldSoft,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    initial,
+                    textScaler: TextScaler.noScaling,
+                    style: const TextStyle(
+                      color: AppColors.goldDeep,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 20,
+                    ),
                   ),
                 ),
               ),
@@ -1001,6 +1008,7 @@ class _ManagerAbsencesScreenState extends State<ManagerAbsencesScreen> {
             : 'غياب ${widget.employeeName ?? 'الموظف'}',
       ),
     ),
+    bottomNavigationBar: const BottomInsetSpacer(),
     body: ManagerPagedList(
       key: ValueKey(_generation),
       load: _load,
