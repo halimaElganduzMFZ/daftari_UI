@@ -71,44 +71,52 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                       return AppSurface(
                         child: Row(
                           children: [
-                            CircleAvatar(
-                              backgroundColor: AppColors.goldSoft,
-                              foregroundColor: AppColors.goldDeep,
-                              child: Text(e.fullName.characters.first),
+                            // الحرف الأول زخرفة تكرر الاسم المجاور: حجم ثابت ولا يُقرأ.
+                            ExcludeSemantics(
+                              child: CircleAvatar(
+                                backgroundColor: AppColors.goldSoft,
+                                foregroundColor: AppColors.goldDeep,
+                                child: Text(
+                                  e.fullName.characters.first,
+                                  textScaler: TextScaler.noScaling,
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    e.fullName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w700,
+                              child: StatusPillRow(
+                                pill: StatusPill(
+                                  label: _statusLabel(e.status),
+                                  tone: _statusTone(e.status),
+                                ),
+                                content: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      e.fullName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${e.jobTitle} • ${e.department}',
-                                    style: const TextStyle(
-                                      color: AppColors.slate,
-                                      fontSize: 12.5,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${e.jobTitle} • ${e.department}',
+                                      style: const TextStyle(
+                                        color: AppColors.slate,
+                                        fontSize: 12.5,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    e.employeeNumber,
-                                    style: const TextStyle(
-                                      color: AppColors.goldDeep,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                    Text(
+                                      e.employeeNumber,
+                                      style: const TextStyle(
+                                        color: AppColors.goldDeep,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            StatusPill(
-                              label: _statusLabel(e.status),
-                              tone: _statusTone(e.status),
                             ),
                           ],
                         ),

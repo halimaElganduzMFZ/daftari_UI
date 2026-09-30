@@ -238,6 +238,11 @@ class _RemoteManagerRequestsScreenState
                     _unreadNotifications > 99
                         ? '99+'
                         : '$_unreadNotifications',
+                    // بدونه يصبح الرقم وحده اسم الزر لقارئ الشاشة.
+                    semanticsLabel:
+                        'الإشعارات، غير المقروءة: $_unreadNotifications',
+                    // الجرس لا يكبر مع الخط؛ لو كبر الرقم لغطّت الشارة الجرس كله.
+                    textScaler: TextScaler.noScaling,
                     style: const TextStyle(fontSize: 10),
                   ),
                   child: const Icon(
@@ -329,6 +334,7 @@ class _RemoteManagerRequestsScreenState
               labelText: 'اسم الموظف أو رقمه الوظيفي',
               errorText: _searchError,
               suffixIcon: IconButton(
+                tooltip: 'بحث',
                 onPressed: _applySearch,
                 icon: const Icon(Icons.search),
               ),

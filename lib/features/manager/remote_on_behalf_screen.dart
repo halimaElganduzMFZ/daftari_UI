@@ -89,6 +89,7 @@ class _RemoteOnBehalfEmployeesScreenState
           decoration: InputDecoration(
             labelText: 'الاسم أو الرقم الوظيفي',
             suffixIcon: IconButton(
+              tooltip: 'بحث',
               onPressed: _find,
               icon: const Icon(Icons.search),
             ),

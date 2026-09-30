@@ -60,6 +60,7 @@ class _RemoteManagerAttendanceScreenState
           decoration: InputDecoration(
             labelText: 'اسم الموظف أو الرقم الوظيفي',
             suffixIcon: IconButton(
+              tooltip: 'بحث',
               onPressed: _find,
               icon: const Icon(Icons.search),
             ),
@@ -299,7 +300,8 @@ class _ManagerEmployeeAttendanceScreenState
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     dataRowMinHeight: 66,
-                    dataRowMaxHeight: 120,
+                    // الحالة والملاحظة تلتفان في عمود ضيق؛ الصف يطول معهما بدل أن يقصّهما.
+                    dataRowMaxHeight: double.infinity,
                     columns: [
                       for (final title in [
                         'التاريخ / اليوم',

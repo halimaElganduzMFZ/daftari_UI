@@ -158,6 +158,7 @@ class _ManagerImpersonationScreenState
               suffixIcon: _query.isEmpty
                   ? null
                   : IconButton(
+                      tooltip: 'مسح البحث',
                       onPressed: () {
                         _searchController.clear();
                         setState(() => _query = '');

@@ -762,20 +762,24 @@ class _MonthlyApprovalCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.goldSoft,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  initial,
-                  style: const TextStyle(
-                    color: AppColors.goldDeep,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 20,
+              // الحرف الأول زخرفة تكرر الاسم المجاور: حجم ثابت ولا يُقرأ.
+              ExcludeSemantics(
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.goldSoft,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    initial,
+                    textScaler: TextScaler.noScaling,
+                    style: const TextStyle(
+                      color: AppColors.goldDeep,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 20,
+                    ),
                   ),
                 ),
               ),

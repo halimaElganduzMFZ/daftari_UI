@@ -5,6 +5,7 @@ import '../../core/config/api_config.dart';
 import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/large_text.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
 import '../../core/widgets/section_header.dart';
@@ -298,6 +299,45 @@ class _HomeScreenState extends State<HomeScreen> {
     return count == null ? '' : ' ($count)';
   }
 
+  Widget _statusFilter(BuildContext context) {
+    // ثلث العرض لا يتسع لـ«مرفوضة» مع الخط الكبير، فتصطف الحالات عمودياً.
+    final vertical = isLargeText(context);
+    final segments = [
+      ButtonSegment(
+        value: RequestStatus.pending,
+        label: Text('معلّقة${_countLabel(RequestStatus.pending)}'),
+      ),
+      ButtonSegment(
+        value: RequestStatus.approved,
+        label: Text('مقبولة${_countLabel(RequestStatus.approved)}'),
+      ),
+      ButtonSegment(
+        value: RequestStatus.rejected,
+        label: Text('مرفوضة${_countLabel(RequestStatus.rejected)}'),
+      ),
+    ];
+    final filter = SegmentedButton<RequestStatus>(
+      showSelectedIcon: false,
+      direction: vertical ? Axis.vertical : Axis.horizontal,
+      // شكل الكبسولة يقص أطراف التسميات حين تتراكب.
+      style: vertical
+          ? SegmentedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            )
+          : null,
+      // Flutter يرتب الأجزاء العمودية من الأسفل في RTL؛ العكس يبقي «معلّقة» أولاً.
+      segments: vertical && Directionality.of(context) == TextDirection.rtl
+          ? segments.reversed.toList()
+          : segments,
+      selected: {_filter},
+      onSelectionChanged: (value) => _changeFilter(value.first),
+    );
+    if (!vertical) return filter;
+    return SizedBox(width: double.infinity, child: filter);
+  }
+
   @override
   Widget build(BuildContext context) {
     final employee = AppSession.currentEmployee;
@@ -425,12 +465,8 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
-                child: GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
+                child: _TileGrid(
+                  spacing: 8,
                   childAspectRatio: 1.45,
                   children: [
                     _BalanceCard(
@@ -494,12 +530,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       subtitle: 'اختصارات يومية بدون تشتيت',
                     ),
                     const SizedBox(height: 12),
-                    GridView.count(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
+                    _TileGrid(
+                      spacing: 10,
                       childAspectRatio: 1.35,
                       children: [
                         _ServiceTile(
@@ -566,32 +598,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       subtitle: 'فلتر حسب الحالة بدل ثلاث جداول مزدحمة',
                     ),
                     const SizedBox(height: 12),
-                    SegmentedButton<RequestStatus>(
-                      showSelectedIcon: false,
-                      segments: [
-                        ButtonSegment(
-                          value: RequestStatus.pending,
-                          label: Text(
-                            'معلّقة${_countLabel(RequestStatus.pending)}',
-                          ),
-                        ),
-                        ButtonSegment(
-                          value: RequestStatus.approved,
-                          label: Text(
-                            'مقبولة${_countLabel(RequestStatus.approved)}',
-                          ),
-                        ),
-                        ButtonSegment(
-                          value: RequestStatus.rejected,
-                          label: Text(
-                            'مرفوضة${_countLabel(RequestStatus.rejected)}',
-                          ),
-                        ),
-                      ],
-                      selected: {_filter},
-                      onSelectionChanged: (value) =>
-                          _changeFilter(value.first),
-                    ),
+                    _statusFilter(context),
                   ],
                 ),
               ),
@@ -788,6 +795,11 @@ class _WelcomeHeader extends StatelessWidget {
                       unreadNotifications > 99
                           ? '99+'
                           : '$unreadNotifications',
+                      // بدونه يصبح الرقم وحده اسم الزر لقارئ الشاشة.
+                      semanticsLabel:
+                          'الإشعارات، غير المقروءة: $unreadNotifications',
+                      // الجرس لا يكبر مع الخط؛ لو كبر الرقم لغطّت الشارة الجرس كله.
+                      textScaler: TextScaler.noScaling,
                       style: const TextStyle(fontSize: 10),
                     ),
                     child: const Icon(
@@ -979,6 +991,40 @@ class _FeedbackInviteCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// شبكة مربعين بنسبة ثابتة. مع الخط الكبير عمود واحد يأخذ فيه كل مربع
+/// ارتفاع محتواه، فلا يُقص العنوان ولا تنكسر كلماته.
+class _TileGrid extends StatelessWidget {
+  const _TileGrid({
+    required this.spacing,
+    required this.childAspectRatio,
+    required this.children,
+  });
+
+  final double spacing;
+  final double childAspectRatio;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLargeText(context)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: spacing,
+        children: [for (final child in children) IntrinsicHeight(child: child)],
+      );
+    }
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: spacing,
+      crossAxisSpacing: spacing,
+      childAspectRatio: childAspectRatio,
+      children: children,
     );
   }
 }
@@ -1216,58 +1262,61 @@ class _RequestTile extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
+                child: StatusPillRow(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      request.displayTitle,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15.5,
-                        color: AppColors.charcoal,
-                      ),
-                    ),
-                    if (request.note.isNotEmpty) ...[
-                      const SizedBox(height: 4),
+                  gap: 8,
+                  pill: StatusPill(
+                    label: _statusLabel(request.status),
+                    tone: _statusTone(request.status),
+                  ),
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        request.note,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        request.displayTitle,
                         style: const TextStyle(
-                          color: AppColors.slate,
-                          fontSize: 13,
-                          height: 1.35,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15.5,
+                          color: AppColors.charcoal,
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        FaIcon(
-                          FontAwesomeIcons.calendarDay,
-                          size: 11,
-                          color: AppColors.slate.withValues(alpha: .9),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            date,
-                            style: const TextStyle(
-                              color: AppColors.slate,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
+                      if (request.note.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          request.note,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.slate,
+                            fontSize: 13,
+                            height: 1.35,
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          FaIcon(
+                            FontAwesomeIcons.calendarDay,
+                            size: 11,
+                            color: AppColors.slate.withValues(alpha: .9),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              date,
+                              style: const TextStyle(
+                                color: AppColors.slate,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              StatusPill(
-                label: _statusLabel(request.status),
-                tone: _statusTone(request.status),
               ),
             ],
           ),

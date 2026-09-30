@@ -506,50 +506,56 @@ class _HistoryCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: (approved ? AppColors.success : AppColors.danger)
-                      .withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  request.employeeName.characters.first,
-                  style: TextStyle(
-                    color: approved ? AppColors.success : AppColors.danger,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
+              // الحرف الأول زخرفة تكرر الاسم المجاور: حجم ثابت ولا يُقرأ.
+              ExcludeSemantics(
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: (approved ? AppColors.success : AppColors.danger)
+                        .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    request.employeeName.characters.first,
+                    textScaler: TextScaler.noScaling,
+                    style: TextStyle(
+                      color: approved ? AppColors.success : AppColors.danger,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      request.employeeName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.charcoal,
+                child: StatusPillRow(
+                  pill: StatusPill(
+                    label: approved ? 'موافق' : 'مرفوض',
+                    tone: approved ? StatusTone.success : StatusTone.danger,
+                  ),
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        request.employeeName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.charcoal,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${request.employeeNumber} · ${request.typeLabel}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.slate,
+                      const SizedBox(height: 2),
+                      Text(
+                        '${request.employeeNumber} · ${request.typeLabel}',
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.slate,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              StatusPill(
-                label: approved ? 'موافق' : 'مرفوض',
-                tone: approved ? StatusTone.success : StatusTone.danger,
               ),
             ],
           ),
@@ -649,23 +655,19 @@ class _RequestDetailsSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    request.employeeName,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.charcoal,
-                    ),
-                  ),
+            StatusPillRow(
+              pill: StatusPill(
+                label: approved ? 'موافق' : 'مرفوض',
+                tone: approved ? StatusTone.success : StatusTone.danger,
+              ),
+              content: Text(
+                request.employeeName,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.charcoal,
                 ),
-                StatusPill(
-                  label: approved ? 'موافق' : 'مرفوض',
-                  tone: approved ? StatusTone.success : StatusTone.danger,
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 6),
             Text(

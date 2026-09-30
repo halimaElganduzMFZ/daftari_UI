@@ -489,7 +489,13 @@ class _NotificationBell extends StatelessWidget {
       onPressed: onTap,
       icon: Badge(
         isLabelVisible: count > 0,
-        label: Text('$count'),
+        label: Text(
+          '$count',
+          // بدونه يصبح الرقم وحده اسم الزر لقارئ الشاشة.
+          semanticsLabel: 'المنقطعون: $count',
+          // الجرس لا يكبر مع الخط؛ لو كبر الرقم لغطّت الشارة الجرس كله.
+          textScaler: TextScaler.noScaling,
+        ),
         backgroundColor: AppColors.danger,
         child: const Icon(
           Icons.notifications_none_rounded,
@@ -628,6 +634,7 @@ class _FocusInbox extends StatelessWidget {
           Row(
             children: [
               IconButton.filledTonal(
+                tooltip: 'الطلب السابق',
                 onPressed: onPrev,
                 icon: const Icon(Icons.chevron_right_rounded),
               ),
@@ -642,6 +649,7 @@ class _FocusInbox extends StatelessWidget {
                 ),
               ),
               IconButton.filledTonal(
+                tooltip: 'الطلب التالي',
                 onPressed: onNext,
                 icon: const Icon(Icons.chevron_left_rounded),
               ),
@@ -748,8 +756,8 @@ class _FocusInbox extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: SizedBox(
-                          height: 52,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 52),
                           child: FilledButton.icon(
                             onPressed: onApprove,
                             icon: const Icon(Icons.check_rounded),
@@ -759,8 +767,8 @@ class _FocusInbox extends StatelessWidget {
                       ),
                       const SizedBox(width: 10),
                       Expanded(
-                        child: SizedBox(
-                          height: 52,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 52),
                           child: OutlinedButton.icon(
                             onPressed: onReject,
                             style: OutlinedButton.styleFrom(
