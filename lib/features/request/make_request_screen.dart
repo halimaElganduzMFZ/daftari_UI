@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/large_text.dart';
 import '../../core/utils/request_date_bounds.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/permission_request.dart';
 import '../../data/models/employee.dart';
@@ -304,6 +305,7 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         physics: const BouncingScrollPhysics(),

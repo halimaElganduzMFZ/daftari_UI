@@ -8,6 +8,7 @@ import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/large_text.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/employee_asset.dart';
 import '../../data/repositories/assets_repository.dart';
 import '../../data/session/app_session.dart';
@@ -126,6 +127,7 @@ class _EmployeeAssetsScreenState extends State<EmployeeAssetsScreen> {
             ),
         ],
       ),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         color: AppColors.goldDeep,
         onRefresh: _load,
@@ -681,6 +683,7 @@ class _AssetsPrintPreviewPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('معاينة الطباعة'),
       ),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: PdfPreview(
         build: _buildPdf,
         canChangeOrientation: false,

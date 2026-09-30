@@ -5,6 +5,7 @@ import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/large_text.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/healthcare_provider.dart';
 import '../../data/repositories/healthcare_repository.dart';
 import '../../data/static/static_healthcare.dart';
@@ -98,6 +99,7 @@ class _HealthcareSpecialtiesScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('المؤسسات الطبية')),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         color: AppColors.goldDeep,
         onRefresh: _load,

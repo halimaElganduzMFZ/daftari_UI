@@ -4,6 +4,7 @@ import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/repositories/manager_repository.dart';
 import '../../data/session/app_session.dart';
 import '../notifications/notifications_screen.dart';
@@ -687,6 +688,7 @@ class _ManagerRequestDetailScreenState
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('تفاصيل الطلب')),
+        bottomNavigationBar: const BottomInsetSpacer(),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/pdf_frame.dart';
 import '../../data/models/employee_clip.dart';
 import '../../data/repositories/documents_repository.dart';
@@ -161,6 +162,7 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
             ),
         ],
       ),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: _buildBody(style),
     );
   }
