@@ -11,7 +11,8 @@ abstract final class AppTheme {
       brightness: Brightness.light,
       fontFamily: family,
       colorScheme: const ColorScheme.light(
-        primary: AppColors.gold,
+        // نصوص TextButton واليوم المحدد في التقويم تأخذ primary، فيلزمه 4.5:1.
+        primary: AppColors.goldDeep,
         onPrimary: Colors.white,
         secondary: AppColors.charcoal,
         onSecondary: Colors.white,
@@ -65,7 +66,7 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.gold,
+          backgroundColor: AppColors.goldDeep,
           foregroundColor: Colors.white,
           elevation: 0,
           textStyle: const TextStyle(
@@ -102,7 +103,8 @@ abstract final class AppTheme {
       dividerTheme: const DividerThemeData(color: AppColors.line, space: 1),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.goldSoft,
-        selectedColor: AppColors.gold,
+        selectedColor: AppColors.goldChip,
+        checkmarkColor: AppColors.charcoal,
         labelStyle: const TextStyle(
           fontFamily: family,
           color: AppColors.charcoal,
