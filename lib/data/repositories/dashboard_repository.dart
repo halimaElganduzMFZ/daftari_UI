@@ -3,6 +3,7 @@ import '../../core/network/api_exception.dart';
 import '../models/announcements.dart';
 import '../models/employee_dashboard.dart';
 import '../models/app_notification.dart';
+import '../session/app_session.dart';
 import '../static/static_employee_dashboard.dart';
 import '../static/static_permission_types.dart';
 
@@ -34,12 +35,29 @@ abstract class DashboardRepository {
 
 /// تنفيذ عبر الـ API. الرقم الوظيفي يأتي من التوكن؛ لا نرسل معرّف الموظف.
 class ApiDashboardRepository implements DashboardRepository {
-  const ApiDashboardRepository(this._client);
+  ApiDashboardRepository(this._client);
 
   final ApiClient _client;
+  Future<EmployeeDashboardData>? _inFlight;
+  String? _inFlightToken;
 
+  /// الرئيسية و«طلباتي» تُبنيان معاً وتطلبان اللوحة في الإطار نفسه، فتشتركان في
+  /// الطلب الجاري ما دام التوكن نفسه. أي تحميل بعد اكتماله يذهب إلى الخادم.
   @override
-  Future<EmployeeDashboardData> load() async {
+  Future<EmployeeDashboardData> load() {
+    final token = AppSession.accessToken;
+    final running = _inFlight;
+    if (running != null && token == _inFlightToken) return running;
+    late final Future<EmployeeDashboardData> request;
+    request = _fetch().whenComplete(() {
+      if (identical(_inFlight, request)) _inFlight = null;
+    });
+    _inFlight = request;
+    _inFlightToken = token;
+    return request;
+  }
+
+  Future<EmployeeDashboardData> _fetch() async {
     final json = await _client.getJson('/me/dashboard');
     return EmployeeDashboardData.fromApi(json);
   }
