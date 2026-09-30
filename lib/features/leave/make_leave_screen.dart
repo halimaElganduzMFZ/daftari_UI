@@ -13,6 +13,7 @@ import '../../core/utils/large_text.dart';
 import '../../core/utils/request_date_bounds.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/section_header.dart';
 import '../../data/models/leave_kind.dart';
 import '../../data/models/employee.dart';
@@ -656,6 +657,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         physics: const BouncingScrollPhysics(),

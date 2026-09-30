@@ -6,6 +6,7 @@ import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/large_text.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/date_range_filter_bar.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../data/models/timesheet.dart';
@@ -125,6 +126,7 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('التايم شيت')),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         color: AppColors.goldDeep,
         onRefresh: _load,
