@@ -1,11 +1,11 @@
 {
-    "name": "employee_affairs",
-    "short_name": "employee_affairs",
+    "name": "شؤون الموظفين",
+    "short_name": "شؤون الموظفين",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F3F3F1",
+    "theme_color": "#B08D57",
+    "description": "تطبيق شؤون الموظفين للمنطقة الحرة بمصراتة",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

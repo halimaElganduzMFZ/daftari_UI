@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
-import '../attendance/attendance_screen.dart';
-import '../employees/employees_screen.dart';
 import '../home/home_screen.dart';
+import '../leave/make_leave_screen.dart';
 import '../leaves/leaves_screen.dart';
 import '../profile/profile_screen.dart';
+import '../request/make_request_screen.dart';
+import '../request/request_kind_chooser.dart';
+import '../request/submit_hub_screen.dart';
 
-/// الهيكل الرئيسي بعد الدخول — IndexedStack يحافظ على الحالة بكفاءة.
+/// هيكل تنقل الموظف العادي (ليس المدير).
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -19,19 +21,40 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _index = 0;
 
-  static const _pages = <Widget>[
-    HomeScreen(),
-    EmployeesScreen(),
-    AttendanceScreen(),
-    LeavesScreen(),
-    ProfileScreen(),
-  ];
+  Future<void> _openNewRequest() async {
+    final kind = await showRequestKindChooser(context);
+    if (!mounted || kind == null) return;
+
+    if (kind == RequestKind.permission) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const MakeRequestScreen(),
+        ),
+      );
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MakeLeaveScreen(
+          onSubmitted: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pages = <Widget>[
+      HomeScreen(onNewRequest: _openNewRequest),
+      const LeavesScreen(),
+      const SubmitHubScreen(),
+      const ProfileScreen(),
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: IndexedStack(index: _index, children: _pages),
+      body: IndexedStack(index: _index, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
@@ -42,19 +65,14 @@ class _MainShellState extends State<MainShell> {
             label: AppStrings.home,
           ),
           NavigationDestination(
-            icon: Icon(Icons.groups_outlined),
-            selectedIcon: Icon(Icons.groups_rounded),
-            label: AppStrings.employees,
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long_rounded),
+            label: 'طلباتي',
           ),
           NavigationDestination(
-            icon: Icon(Icons.fingerprint_outlined),
-            selectedIcon: Icon(Icons.fingerprint),
-            label: AppStrings.attendance,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.event_available_outlined),
-            selectedIcon: Icon(Icons.event_available_rounded),
-            label: AppStrings.leaves,
+            icon: Icon(Icons.add_circle_outline),
+            selectedIcon: Icon(Icons.add_circle_rounded),
+            label: 'تقديم',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),

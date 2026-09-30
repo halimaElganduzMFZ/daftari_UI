@@ -1,17 +1,47 @@
-# employee_affairs
+# شؤون الموظفين — Daftari UI
 
-A new Flutter project.
+تطبيق Flutter (واجهة عربية RTL) لشؤون الموظفين في المنطقة الحرة بمصراتة.
 
-## Getting Started
+حالياً الوضع **تجريبي بدون API** للتصميم من المنزل. عند الرجوع للسيرفر غيّر متغيرين فقط في:
 
-This project is a starting point for a Flutter application.
+`lib/core/config/api_config.dart`
 
-A few resources to get you started if this is your first Flutter project:
+```dart
+static const useRemoteApi = false; // true عند ربط الـ API
+static const baseUrl = 'http://127.0.0.1:3000/api/v1'; // رابط السيرفر لاحقاً
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## التشغيل محلياً
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter pub get
+flutter run -d chrome --web-port=43123
+```
+
+### حسابات تجريبية
+
+| الدور | رقم الموظف | كلمة المرور |
+|--------|------------|-------------|
+| موظف فقط | `FZ-10021` | `123456` |
+| مدير هيكل (+ موظف) | `FZ-20001` | `123456` |
+
+بعد الدخول تظهر صفحة **تحديد نوع الدخول** (مثل `whichApp.php`):
+- الدخول كموظف → شاشات الموظف
+- الدخول مسؤولاً عن هيكل → شاشة موافقات المدير (مثل `Manager_App/index.php`)
+
+## ما هو جاهز
+
+- أيقونة MFZ ذهبية + شاشة افتتاح متحركة خفيفة قبل تسجيل الدخول
+- إعداد عام واحد لرابط الـ API (`ApiConfig`)
+- تسجيل دخول تجريبي + مسار API جاهز عند تفعيل `useRemoteApi`
+- صفحة تحديد نوع الدخول (`whichApp`)
+- شاشة موافقات المدير (موافقة / رفض مع سبب)
+- الصفحة الرئيسية للموظف + تقديم إذن / إجازة + طلباتي + اللوائح
+- أصول الموظف المسجّلة (من الرئيسية) مع معاينة PDF وطباعة
+- تايم شيت: اختيار إبداعي بين حضور/انصراف وسجل البوابة + pagination
+- المؤسسات الطبية: تخصصات → قائمة → تفاصيل غامرة
+- قصاصات الموظف (مستندات PDF) مع عرض المزيد
+
+## ملاحظة أندرويد
+
+تطوير الواجهة يتم عبر Chrome حالياً. بناء APK يحتاج إعداد NDK صحيح على الجهاز المحلي.
