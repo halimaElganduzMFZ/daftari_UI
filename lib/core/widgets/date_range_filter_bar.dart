@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
+import '../utils/large_text.dart';
 
 /// شريط اختيار فترة «من / إلى» مشترك بين التايم شيت وطلباتي.
 class DateRangeFilterBar extends StatelessWidget {
@@ -61,6 +62,16 @@ class DateRangeFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fromField = _DateField(
+      label: 'من تاريخ',
+      value: from == null ? null : _fmt.format(from!),
+      onTap: () => _pick(context, isFrom: true),
+    );
+    final toField = _DateField(
+      label: 'إلى تاريخ',
+      value: to == null ? null : _fmt.format(to!),
+      onTap: () => _pick(context, isFrom: false),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -87,25 +98,21 @@ class DateRangeFilterBar extends StatelessWidget {
           style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: _DateField(
-                label: 'من تاريخ',
-                value: from == null ? null : _fmt.format(from!),
-                onTap: () => _pick(context, isFrom: true),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _DateField(
-                label: 'إلى تاريخ',
-                value: to == null ? null : _fmt.format(to!),
-                onTap: () => _pick(context, isFrom: false),
-              ),
-            ),
-          ],
-        ),
+        // مع الخط الكبير لا يتسع نصف العرض للتاريخ فينكسر وسطه،
+        // فيأخذ كل حقل سطراً كاملاً.
+        if (isLargeText(context))
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [fromField, const SizedBox(height: 10), toField],
+          )
+        else
+          Row(
+            children: [
+              Expanded(child: fromField),
+              const SizedBox(width: 10),
+              Expanded(child: toField),
+            ],
+          ),
       ],
     );
   }

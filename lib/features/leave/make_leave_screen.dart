@@ -9,6 +9,7 @@ import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/services/document_picker.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/large_text.dart';
 import '../../core/utils/request_date_bounds.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/attachment_viewer.dart';
@@ -997,6 +998,7 @@ class _LeaveTypePickerSheet extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'إغلاق',
                   onPressed: () => Navigator.pop(context),
                   icon: const FaIcon(
                     FontAwesomeIcons.xmark,
@@ -1131,48 +1133,61 @@ class _BalancesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final annual = balances.annualBalance;
+    final annualTile = _BalanceTile(
+      icon: FontAwesomeIcons.calendarCheck,
+      label: 'رصيد السنوية',
+      value: annual == null ? '—' : '$annual يوم',
+      hint: annual == null
+          ? switch (balances.annualUnavailableReason) {
+              'MISSING_START_DATE' => 'لا يوجد تاريخ بداية عمل',
+              'INACTIVE' => 'خارج الخدمة',
+              _ => 'غير متاح',
+            }
+          : (balances.annualPending ?? 0) > 0
+          ? '${balances.annualPending} طلب معلّق'
+          : 'حتى ${balances.asOf}',
+    );
+    final emergencyTile = _BalanceTile(
+      icon: FontAwesomeIcons.bolt,
+      label: 'رصيد الطارئة',
+      value: '${_n(balances.emergencyRemaining)} يوم',
+      hint: balances.emergencyPending > 0
+          ? '${balances.emergencyPending} طلب معلّق'
+          : 'من ${balances.emergencyAllowance} سنوياً',
+    );
+    const spinner = Padding(
+      padding: EdgeInsets.only(right: 8),
+      child: SizedBox(
+        width: 14,
+        height: 14,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    );
     return AppSurface(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: _BalanceTile(
-              icon: FontAwesomeIcons.calendarCheck,
-              label: 'رصيد السنوية',
-              value: annual == null ? '—' : '$annual يوم',
-              hint: annual == null
-                  ? switch (balances.annualUnavailableReason) {
-                      'MISSING_START_DATE' => 'لا يوجد تاريخ بداية عمل',
-                      'INACTIVE' => 'خارج الخدمة',
-                      _ => 'غير متاح',
-                    }
-                  : (balances.annualPending ?? 0) > 0
-                  ? '${balances.annualPending} طلب معلّق'
-                  : 'حتى ${balances.asOf}',
+      // مع الخط الكبير يأخذ كل رصيد سطراً كاملاً، فلا يُقص تاريخه أو حدّه السنوي.
+      child: isLargeText(context)
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: annualTile),
+                    if (loading) spinner,
+                  ],
+                ),
+                const Divider(height: 20, color: AppColors.line),
+                emergencyTile,
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: annualTile),
+                Container(width: 1, height: 40, color: AppColors.line),
+                Expanded(child: emergencyTile),
+                if (loading) spinner,
+              ],
             ),
-          ),
-          Container(width: 1, height: 40, color: AppColors.line),
-          Expanded(
-            child: _BalanceTile(
-              icon: FontAwesomeIcons.bolt,
-              label: 'رصيد الطارئة',
-              value: '${_n(balances.emergencyRemaining)} يوم',
-              hint: balances.emergencyPending > 0
-                  ? '${balances.emergencyPending} طلب معلّق'
-                  : 'من ${balances.emergencyAllowance} سنوياً',
-            ),
-          ),
-          if (loading)
-            const Padding(
-              padding: EdgeInsets.only(right: 8),
-              child: SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }
@@ -1229,7 +1244,7 @@ class _BalanceTile extends StatelessWidget {
                 ),
                 Text(
                   hint,
-                  maxLines: 1,
+                  maxLines: isLargeText(context) ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 10.5,
@@ -1624,9 +1639,11 @@ class _LoadingCard extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: 10),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12.5, color: AppColors.slate),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12.5, color: AppColors.slate),
+            ),
           ),
         ],
       ),
@@ -2110,17 +2127,21 @@ class _CompactRulesCard extends StatelessWidget {
                       ),
                     ),
                   ],
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: onOpenFull,
-                        child: const Text('اللائحة الكاملة'),
-                      ),
-                      TextButton(
-                        onPressed: onOpenAll,
-                        child: const Text('كل اللوائح'),
-                      ),
-                    ],
+                  // الرابط الثاني ينزل سطراً حين لا يتسع لهما العرض.
+                  SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      children: [
+                        TextButton(
+                          onPressed: onOpenFull,
+                          child: const Text('اللائحة الكاملة'),
+                        ),
+                        TextButton(
+                          onPressed: onOpenAll,
+                          child: const Text('كل اللوائح'),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

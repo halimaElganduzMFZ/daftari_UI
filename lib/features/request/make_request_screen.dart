@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/large_text.dart';
 import '../../core/utils/request_date_bounds.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../core/widgets/section_header.dart';
@@ -718,12 +719,15 @@ class _InfoChip extends StatelessWidget {
         children: [
           FaIcon(icon, size: 12, color: color),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: highlight ? AppColors.danger : AppColors.charcoal,
+          // التسمية الطويلة تلتف داخل الشارة بدل أن تفيض عن عرض البطاقة.
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: highlight ? AppColors.danger : AppColors.charcoal,
+              ),
             ),
           ),
         ],
@@ -762,9 +766,11 @@ class _DayInfoSkeleton extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
               SizedBox(width: 8),
-              Text(
-                'جاري تحميل بيانات اليوم…',
-                style: TextStyle(fontSize: 12, color: AppColors.slate),
+              Expanded(
+                child: Text(
+                  'جاري تحميل بيانات اليوم…',
+                  style: TextStyle(fontSize: 12, color: AppColors.slate),
+                ),
               ),
             ],
           ),
@@ -1088,36 +1094,40 @@ class _CompactRulesCard extends StatelessWidget {
                       ),
                     ),
                   ],
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: onOpenFull,
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.goldDeep,
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 34),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  // الرابط الثاني ينزل سطراً حين لا يتسع لهما العرض.
+                  SizedBox(
+                    width: double.infinity,
+                    child: Wrap(
+                      spacing: 12,
+                      children: [
+                        TextButton(
+                          onPressed: onOpenFull,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.goldDeep,
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 34),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'اللائحة الكاملة',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
-                        child: const Text(
-                          'اللائحة الكاملة',
-                          style: TextStyle(fontWeight: FontWeight.w700),
+                        TextButton(
+                          onPressed: onOpenAll,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.slate,
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 34),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'كل اللوائح',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      TextButton(
-                        onPressed: onOpenAll,
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.slate,
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 34),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: const Text(
-                          'كل اللوائح',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -1238,91 +1248,98 @@ class _TypePickerSheet extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-                  itemCount: types.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.45,
-                  ),
-                  itemBuilder: (context, index) {
-                    final type = types[index];
-                    final rules = regulationsFor(type);
-                    final selected = type.type == selectedType;
-                    final requested = options.requestedOf(type.type);
-                    return Material(
-                      color: selected
-                          ? AppColors.goldSoft
-                          : AppColors.background,
-                      borderRadius: BorderRadius.circular(18),
-                      child: InkWell(
-                        onTap: () => Navigator.of(context).pop(type),
-                        borderRadius: BorderRadius.circular(18),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: selected ? AppColors.gold : AppColors.line,
-                              width: selected ? 1.4 : 1,
+                child: isLargeText(context)
+                    // عمود واحد يأخذ فيه كل نوع ارتفاع محتواه؛ المربع الثابت يقص الاسم.
+                    ? ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                        itemCount: types.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) => IntrinsicHeight(
+                          child: _typeTile(context, types[index]),
+                        ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+                        itemCount: types.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 10,
+                              crossAxisSpacing: 10,
+                              childAspectRatio: 1.45,
                             ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  FaIcon(
-                                    rules.icon,
-                                    size: 18,
-                                    color: selected
-                                        ? AppColors.goldDeep
-                                        : AppColors.slate,
-                                  ),
-                                  const Spacer(),
-                                  if (requested != null)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 7,
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.goldSoft,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        requested.statusLabel,
-                                        style: const TextStyle(
-                                          fontSize: 10.5,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppColors.goldDeep,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const Spacer(),
-                              Text(
-                                type.name,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13.2,
-                                  height: 1.3,
-                                  color: selected
-                                      ? AppColors.goldDeep
-                                      : AppColors.charcoal,
-                                ),
-                              ),
-                            ],
-                          ),
+                        itemBuilder: (context, index) =>
+                            _typeTile(context, types[index]),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _typeTile(BuildContext context, ApiPermissionType type) {
+    final rules = regulationsFor(type);
+    final selected = type.type == selectedType;
+    final requested = options.requestedOf(type.type);
+    return Material(
+      color: selected ? AppColors.goldSoft : AppColors.background,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: () => Navigator.of(context).pop(type),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? AppColors.gold : AppColors.line,
+              width: selected ? 1.4 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  FaIcon(
+                    rules.icon,
+                    size: 18,
+                    color: selected ? AppColors.goldDeep : AppColors.slate,
+                  ),
+                  const Spacer(),
+                  if (requested != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.goldSoft,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        requested.statusLabel,
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.goldDeep,
                         ),
                       ),
-                    );
-                  },
+                    ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                type.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13.2,
+                  height: 1.3,
+                  color: selected ? AppColors.goldDeep : AppColors.charcoal,
                 ),
               ),
             ],

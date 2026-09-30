@@ -600,28 +600,24 @@ class _MessageCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          StatusPillRow(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  message.body,
-                  style: const TextStyle(
-                    color: AppColors.charcoal,
-                    height: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+            gap: 10,
+            pill: Tooltip(
+              message: message.statusLabel,
+              child: StatusPill(
+                label: EmployeeMessage.shortLabel(message.status),
+                tone: _tone,
               ),
-              const SizedBox(width: 10),
-              Tooltip(
-                message: message.statusLabel,
-                child: StatusPill(
-                  label: EmployeeMessage.shortLabel(message.status),
-                  tone: _tone,
-                ),
+            ),
+            content: Text(
+              message.body,
+              style: const TextStyle(
+                color: AppColors.charcoal,
+                height: 1.5,
+                fontWeight: FontWeight.w600,
               ),
-            ],
+            ),
           ),
           if (message.hasReply) ...[
             const SizedBox(height: 12),

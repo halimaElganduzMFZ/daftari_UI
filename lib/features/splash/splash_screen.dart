@@ -115,10 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _bar = CurvedAnimation(parent: _progress, curve: Curves.easeInOutCubic);
 
-    _enter.forward();
-    _breathe.repeat(reverse: true);
     _progress.forward();
-    _orb.repeat();
 
     // Start the dwell clock only after the first frame so slow web/native
     // bootstrap cannot skip past the splash before it is visible.
@@ -126,6 +123,23 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       _bootstrap();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // «إزالة الحركة» في إعدادات الجهاز: شعار وخلفية ثابتان.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _enter.value = 1;
+      _breathe
+        ..stop()
+        ..value = 0;
+      _orb.stop();
+    } else {
+      if (!_enter.isCompleted) _enter.forward();
+      if (!_breathe.isAnimating) _breathe.repeat(reverse: true);
+      if (!_orb.isAnimating) _orb.repeat();
+    }
   }
 
   /// يشغّل استعادة الجلسة والحد الأدنى للعرض معاً، ثم يوجّه حسب النتيجة.

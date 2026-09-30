@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:employee_affairs/core/constants/app_strings.dart';
+import 'package:employee_affairs/core/widgets/brand_mark.dart';
 import 'package:employee_affairs/features/auth/login_screen.dart';
 import 'package:employee_affairs/features/splash/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,22 @@ Widget _wrap(Widget child) {
     ),
   );
 }
+
+Matrix4 _markTransform(WidgetTester tester) => tester
+    .widget<Transform>(
+      find
+          .ancestor(of: find.byType(BrandMark), matching: find.byType(Transform))
+          .first,
+    )
+    .transform;
+
+double _markOpacity(WidgetTester tester) => tester
+    .widget<Opacity>(
+      find
+          .ancestor(of: find.byType(BrandMark), matching: find.byType(Opacity))
+          .first,
+    )
+    .opacity;
 
 void main() {
   testWidgets('splash shows brand mark and titles while loading', (tester) async {
@@ -77,6 +94,40 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     expect(find.byType(LoginScreen), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('splash mark moves while animations are on', (tester) async {
+    final restore = Completer<bool>();
+    await tester.pumpWidget(
+      _wrap(SplashScreen(restoreSession: () => restore.future)),
+    );
+    await tester.pump();
+    final first = _markTransform(tester);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(_markTransform(tester), isNot(first));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('splash keeps the mark still when animations are removed', (
+    tester,
+  ) async {
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    final restore = Completer<bool>();
+    await tester.pumpWidget(
+      _wrap(SplashScreen(restoreSession: () => restore.future)),
+    );
+    await tester.pump();
+    final first = _markTransform(tester);
+    expect(_markOpacity(tester), 1);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(_markTransform(tester), first);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 1));

@@ -800,8 +800,8 @@ class _FooterActions extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: SizedBox(
-                height: 52,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 52),
                 child: FilledButton.icon(
                   onPressed: immersive ? onClosePreview : onOpen,
                   style: FilledButton.styleFrom(
@@ -818,8 +818,8 @@ class _FooterActions extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            SizedBox(
-              height: 52,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 52),
               child: OutlinedButton(
                 onPressed: onDone,
                 style: OutlinedButton.styleFrom(

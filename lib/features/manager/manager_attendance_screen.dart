@@ -391,8 +391,8 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 50,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 50),
                   child: FilledButton.icon(
                     onPressed: _loading ? null : _fetch,
                     icon: _loading

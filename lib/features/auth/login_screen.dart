@@ -50,8 +50,18 @@ class _LoginScreenState extends State<LoginScreen>
       begin: const Offset(0, 0.06),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _intro, curve: Curves.easeOutCubic));
-    _intro.forward();
     _loadRememberedLogin();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // «إزالة الحركة» في إعدادات الجهاز: تظهر البطاقة مباشرة بلا انزلاق.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _intro.value = 1;
+    } else if (_intro.isDismissed) {
+      _intro.forward();
+    }
   }
 
   Future<void> _loadRememberedLogin() async {
@@ -358,76 +368,106 @@ class _LoginScreenState extends State<LoginScreen>
                                       ),
                                     ),
                                     const SizedBox(height: 26),
-                                    const Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        AppStrings.username,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.charcoal,
+                                    // اسم الحقل يُقرأ مع الحقل نفسه (Semantics أدناه)، فلا يتكرر.
+                                    const ExcludeSemantics(
+                                      child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          AppStrings.username,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.charcoal,
+                                          ),
                                         ),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    TextFormField(
-                                      controller: _employeeNumberController,
-                                      textInputAction: TextInputAction.next,
-                                      keyboardType: TextInputType.text,
-                                      autofillHints: const [
-                                        AutofillHints.username,
-                                      ],
-                                      decoration: const InputDecoration(
-                                        hintText: AppStrings.usernameHint,
-                                        prefixIcon: Icon(Icons.badge_outlined),
+                                    Semantics(
+                                      label: AppStrings.username,
+                                      child: TextFormField(
+                                        controller: _employeeNumberController,
+                                        textInputAction: TextInputAction.next,
+                                        keyboardType: TextInputType.text,
+                                        autofillHints: const [
+                                          AutofillHints.username,
+                                        ],
+                                        decoration: const InputDecoration(
+                                          hintText: AppStrings.usernameHint,
+                                          prefixIcon:
+                                              Icon(Icons.badge_outlined),
+                                        ),
+                                        validator: (value) {
+                                          if (value == null ||
+                                              value.trim().isEmpty) {
+                                            return 'أدخل رقم الموظف';
+                                          }
+                                          return null;
+                                        },
                                       ),
-                                      validator: (value) {
-                                        if (value == null ||
-                                            value.trim().isEmpty) {
-                                          return 'أدخل رقم الموظف';
-                                        }
-                                        return null;
-                                      },
                                     ),
                                     const SizedBox(height: 16),
-                                    const Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        AppStrings.password,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: AppColors.charcoal,
+                                    const ExcludeSemantics(
+                                      child: Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Text(
+                                          AppStrings.password,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.charcoal,
+                                          ),
                                         ),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    TextFormField(
-                                      controller: _passwordController,
-                                      obscureText: _obscure,
-                                      autofillHints: const [
-                                        AutofillHints.password,
-                                      ],
-                                      onFieldSubmitted: (_) => _submit(),
-                                      decoration: InputDecoration(
-                                        hintText: '********',
-                                        prefixIcon:
-                                            const Icon(Icons.lock_outline),
-                                        suffixIcon: IconButton(
-                                          onPressed: () => setState(
-                                            () => _obscure = !_obscure,
+                                    Semantics(
+                                      label: AppStrings.password,
+                                      child: TextFormField(
+                                        controller: _passwordController,
+                                        obscureText: _obscure,
+                                        autofillHints: const [
+                                          AutofillHints.password,
+                                        ],
+                                        onFieldSubmitted: (_) => _submit(),
+                                        decoration: InputDecoration(
+                                          // النجوم للعين فقط: قارئ الشاشة ينطقها رمزاً رمزاً.
+                                          // الودجت المخصص لا يأخذ نمط التلميح، فيُبنى من السمة.
+                                          hint: ExcludeSemantics(
+                                            child: Text(
+                                              '********',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.merge(
+                                                    Theme.of(context)
+                                                        .inputDecorationTheme
+                                                        .hintStyle,
+                                                  ),
+                                            ),
                                           ),
-                                          icon: Icon(
-                                            _obscure
-                                                ? Icons.visibility_outlined
-                                                : Icons.visibility_off_outlined,
+                                          prefixIcon:
+                                              const Icon(Icons.lock_outline),
+                                          suffixIcon: IconButton(
+                                            tooltip: _obscure
+                                                ? AppStrings.showPassword
+                                                : AppStrings.hidePassword,
+                                            onPressed: () => setState(
+                                              () => _obscure = !_obscure,
+                                            ),
+                                            icon: Icon(
+                                              _obscure
+                                                  ? Icons.visibility_outlined
+                                                  : Icons
+                                                      .visibility_off_outlined,
+                                            ),
                                           ),
                                         ),
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'أدخل كلمة المرور';
+                                          }
+                                          return null;
+                                        },
                                       ),
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'أدخل كلمة المرور';
-                                        }
-                                        return null;
-                                      },
                                     ),
                                     const SizedBox(height: 8),
                                     // خلفية البطاقة الملوّنة تحجب أثر اللمس بدون Material شفاف (ويفشل تأكيد ListTile).
@@ -457,8 +497,10 @@ class _LoginScreenState extends State<LoginScreen>
                                       ),
                                     ),
                                     const SizedBox(height: 14),
-                                    SizedBox(
-                                      height: 54,
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        minHeight: 54,
+                                      ),
                                       child: FilledButton(
                                         onPressed:
                                             _submitting ? null : _submit,
