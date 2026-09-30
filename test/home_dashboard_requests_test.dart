@@ -50,7 +50,7 @@ Map<String, Object?> _dashboard({
 void main() {
   setUpAll(() => initializeDateFormatting('ar'));
 
-  testWidgets('home gets announcements and the unread count from the dashboard', (
+  testWidgets('home takes announcements and unread count from the dashboard', (
     tester,
   ) async {
     final paths = <String>[];
