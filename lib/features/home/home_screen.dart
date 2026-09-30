@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../../core/config/api_config.dart';
 import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
@@ -24,14 +23,17 @@ import 'announcements_banner.dart';
 
 /// الصفحة الرئيسية للموظف العادي — من index.php بتوزيع أوضح وأقل ازدحاماً.
 ///
-/// المصدر: [DashboardRepository] (`GET /me/dashboard` للأرصدة والمعلّقة/المرفوضة،
-/// و`GET /me/requests?status=` للتصفح). في وضع التصميم يعمل نفس الكود فوق
-/// البيانات الثابتة.
+/// المصدر: [DashboardRepository] (`GET /me/dashboard` للأرصدة والمعلّقة/المرفوضة
+/// والإعلانات وعدد الإشعارات غير المقروءة، و`GET /me/requests?status=` للتصفح).
+/// في وضع التصميم يعمل نفس الكود فوق البيانات الثابتة.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, this.onNewRequest});
+  const HomeScreen({super.key, this.onNewRequest, this.repository});
 
   /// ينقل المستخدم لتبويب تقديم الطلب من الـ Shell.
   final VoidCallback? onNewRequest;
+
+  /// للاختبارات؛ الافتراضي `AppServices.dashboard`.
+  final DashboardRepository? repository;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -98,14 +100,13 @@ class _HomeScreenState extends State<HomeScreen> {
   /// حجم القائمة المضمّنة في `/me/dashboard` لكل حالة.
   static const _dashboardListSize = 20;
 
-  final DashboardRepository _repo = AppServices.dashboard;
+  DashboardRepository get _repo => widget.repository ?? AppServices.dashboard;
 
   RequestStatus _filter = RequestStatus.pending;
   EmployeeDashboardData? _data;
   Object? _error;
   bool _loading = true;
   AnnouncementsFeed _announcements = AnnouncementsFeed.empty;
-  Object? _announcementsError;
   int _unreadNotifications = 0;
 
   final Map<RequestStatus, _RequestsFeed> _feeds = {
@@ -132,52 +133,18 @@ class _HomeScreenState extends State<HomeScreen> {
         _data = data;
         _seedFeeds(data);
         _loading = false;
+        // الخادم يضع في اللوحة ما يعيده `/me/announcements` و
+        // `/me/notifications/unread-count` نفسه، فلا نطلبهما مرة أخرى.
         _unreadNotifications = data.unreadNotifications;
-        if (data.announcements.isNotEmpty) {
-          _announcements = data.announcements;
-          _announcementsError = null;
-        }
+        _announcements = data.announcements;
       });
       if (!_feed.started) _loadMore(_filter);
-      await Future.wait([_refreshAnnouncements(), _refreshUnread()]);
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error;
         _loading = false;
       });
-    }
-  }
-
-  Future<void> _refreshAnnouncements() async {
-    try {
-      final feed = await AppServices.announcements.mine();
-      if (!mounted) return;
-      setState(() {
-        _announcements = feed;
-        _announcementsError = null;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      // إن فشلت `/me/announcements` نُبقي ما جاء من اللوحة إن وُجد.
-      if (_data?.announcements.isNotEmpty == true) {
-        setState(() {
-          _announcements = _data!.announcements;
-          _announcementsError = null;
-        });
-      } else {
-        setState(() => _announcementsError = e);
-      }
-    }
-  }
-
-  Future<void> _refreshUnread() async {
-    try {
-      final counts = await AppServices.notifications.unreadCount();
-      if (!mounted) return;
-      setState(() => _unreadNotifications = counts.unread);
-    } catch (_) {
-      // نُبقي قيمة اللوحة إن فشل المسار المستقل.
     }
   }
 
@@ -383,10 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (_) => const NotificationsScreen(),
                       ),
                     );
-                    if (mounted) {
-                      await _refreshUnread();
-                      _load();
-                    }
+                    if (mounted) _load();
                   },
                 ),
               ),
@@ -396,39 +360,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
                   child: AnnouncementsBanner(feed: _announcements),
-                ),
-              )
-            else if (_announcementsError != null && ApiConfig.useRemoteApi)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                  child: AppSurface(
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.campaign_outlined,
-                          color: AppColors.goldDeep,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            _announcementsError is ApiException
-                                ? (_announcementsError as ApiException).message
-                                : 'تعذّر تحميل الإعلانات من الخادم.',
-                            style: const TextStyle(
-                              color: AppColors.slate,
-                              fontSize: 12.5,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: _refreshAnnouncements,
-                          child: const Text('إعادة'),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ),
             if (AppSession.isImpersonating)
