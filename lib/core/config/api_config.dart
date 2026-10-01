@@ -22,14 +22,14 @@ abstract final class ApiConfig {
   );
 
   /// عنوان الـ API الأساسي.
-  /// نسخ التطوير (debug / profile) تتصل افتراضياً بجهاز المبرمج على شبكة المكتب
-  /// http://10.10.17.70:3000/api/v1
+  /// نسخ التطوير (debug / profile) تتصل افتراضياً بخادم التجربة على شبكة المكتب
+  /// http://10.10.10.97:3000/api/v1
   /// (لا تستخدم 127.0.0.1 على الجوال — يشير إلى الهاتف نفسه لا إلى الحاسوب).
   /// نسخة الإصدار بلا عنوان افتراضي: بدون `API_BASE_URL` بصيغة https تعرض
   /// شاشة خطأ ولا ترسل أي طلب ([hasInsecureReleaseConfig]).
   static const baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: kReleaseMode ? '' : 'http://10.10.17.70:3000/api/v1',
+    defaultValue: kReleaseMode ? '' : 'http://10.10.10.97:3000/api/v1',
   );
 
   /// `true` في نسخة إصدار تتصل بالخادم بعنوان غير https.
