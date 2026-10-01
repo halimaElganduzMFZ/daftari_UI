@@ -49,7 +49,12 @@ class _ManagerShellState extends State<ManagerShell> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: ThemeController.instance,
+    builder: (context, _) => _buildShell(context),
+  );
+
+  Widget _buildShell(BuildContext context) {
     final structureName = AppSession.activeStructure?.name ?? 'الهيكل';
 
     final pages = <Widget>[

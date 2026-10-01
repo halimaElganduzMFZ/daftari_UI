@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/theme_controller.dart';
 import '../home/home_screen.dart';
 import '../leave/make_leave_screen.dart';
 import '../leaves/leaves_screen.dart';
@@ -27,60 +28,63 @@ class _MainShellState extends State<MainShell> {
 
     if (kind == RequestKind.permission) {
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const MakeRequestScreen(),
-        ),
+        MaterialPageRoute<void>(builder: (_) => const MakeRequestScreen()),
       );
       return;
     }
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => MakeLeaveScreen(
-          onSubmitted: () => Navigator.of(context).pop(),
-        ),
+        builder: (_) =>
+            MakeLeaveScreen(onSubmitted: () => Navigator.of(context).pop()),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final pages = <Widget>[
-      HomeScreen(onNewRequest: _openNewRequest),
-      const LeavesScreen(),
-      const SubmitHubScreen(),
-      const ProfileScreen(),
-    ];
+    // الاستماع لتبديل المظهر حتى تُعاد رسم كل التبويبات بالألوان الجديدة.
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        final pages = <Widget>[
+          HomeScreen(onNewRequest: _openNewRequest),
+          const LeavesScreen(),
+          const SubmitHubScreen(),
+          const ProfileScreen(),
+        ];
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: IndexedStack(index: _index, children: pages),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (value) => setState(() => _index = value),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: AppStrings.home,
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: IndexedStack(index: _index, children: pages),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _index,
+            onDestinationSelected: (value) => setState(() => _index = value),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home_rounded),
+                label: AppStrings.home,
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long_rounded),
+                label: 'طلباتي',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.add_circle_outline),
+                selectedIcon: Icon(Icons.add_circle_rounded),
+                label: 'تقديم',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(Icons.person_rounded),
+                label: AppStrings.profile,
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long_rounded),
-            label: 'طلباتي',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle_rounded),
-            label: 'تقديم',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: AppStrings.profile,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

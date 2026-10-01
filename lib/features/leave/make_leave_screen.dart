@@ -524,15 +524,15 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
             FaIcon(
               FontAwesomeIcons.circleCheck,
               color: AppColors.success,
               size: 22,
             ),
-            SizedBox(width: 10),
-            Expanded(child: Text('تم استلام طلبك')),
+            const SizedBox(width: 10),
+            const Expanded(child: Text('تم استلام طلبك')),
           ],
         ),
         content: Column(
@@ -541,7 +541,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
           children: [
             Text(
               result.message,
-              style: const TextStyle(height: 1.5, color: AppColors.charcoal),
+              style: TextStyle(height: 1.5, color: AppColors.charcoal),
             ),
             const SizedBox(height: 10),
             Text(
@@ -555,7 +555,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                   'المرفق: ${result.attachment!.fileName}',
                 'الحالة: ${result.state} — سيظهر ضمن الطلبات المعلّقة حتى اعتماده.',
               ].join('\n'),
-              style: const TextStyle(
+              style: TextStyle(
                 height: 1.55,
                 fontSize: 12.5,
                 color: AppColors.slate,
@@ -581,7 +581,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const FaIcon(
+            FaIcon(
               FontAwesomeIcons.circleExclamation,
               color: AppColors.danger,
               size: 22,
@@ -596,13 +596,13 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
           children: [
             Text(
               info.message,
-              style: const TextStyle(height: 1.55, color: AppColors.charcoal),
+              style: TextStyle(height: 1.55, color: AppColors.charcoal),
             ),
             if (info.cause != null) ...[
               const SizedBox(height: 8),
               SelectableText(
                 info.cause!,
-                style: const TextStyle(fontSize: 11, color: AppColors.slate),
+                style: TextStyle(fontSize: 11, color: AppColors.slate),
               ),
             ],
           ],
@@ -649,7 +649,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
             tooltip: 'اللوائح والمخالفات',
             onPressed: () =>
                 showAllRegulationsSheet(context, initialTabId: 'leaves'),
-            icon: const FaIcon(
+            icon: FaIcon(
               FontAwesomeIcons.bookOpen,
               size: 18,
               color: AppColors.goldDeep,
@@ -666,7 +666,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
             employee == null
                 ? 'اختر النوع، راجع الضوابط، ثم حدّد الفترة.'
                 : '${employee.fullName} — اختر النوع، راجع الضوابط، ثم حدّد الفترة.',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.slate,
               height: 1.45,
               fontWeight: FontWeight.w500,
@@ -822,19 +822,16 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                       required isFocused,
                       maxLength,
                     }) {
-                  final showAlways = kind.isGateExemption;
-                  final threshold = kind.isGateExemption ? 180 : 1200;
-                  if (!showAlways && currentLength <= threshold) {
-                    return null;
-                  }
-                  return Text(
-                    '$currentLength / $maxLength',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.slate,
-                    ),
-                  );
-                },
+                      final showAlways = kind.isGateExemption;
+                      final threshold = kind.isGateExemption ? 180 : 1200;
+                      if (!showAlways && currentLength <= threshold) {
+                        return null;
+                      }
+                      return Text(
+                        '$currentLength / $maxLength',
+                        style: TextStyle(fontSize: 11, color: AppColors.slate),
+                      );
+                    },
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: kind.isGateExemption
@@ -842,7 +839,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
                       : kind.fields.reasonRequired
                       ? 'سبب الإجازة الطارئة (مطلوب)…'
                       : 'سبب الإجازة (اختياري)…',
-                  hintStyle: const TextStyle(color: AppColors.slate),
+                  hintStyle: TextStyle(color: AppColors.slate),
                 ),
               ),
             ),
@@ -900,7 +897,7 @@ class _MakeLeaveScreenState extends State<MakeLeaveScreen> {
               onPressed: () {
                 showAllRegulationsSheet(context, initialTabId: 'penalties');
               },
-              child: const Text(
+              child: Text(
                 'استعراض اللوائح والمخالفات',
                 style: TextStyle(
                   color: AppColors.goldDeep,
@@ -949,7 +946,7 @@ LeaveKind leaveRegulationsFor(LeaveKindSummary kind) {
     icon: kind.category == LeaveKindCategory.exemption
         ? FontAwesomeIcons.doorOpen
         : FontAwesomeIcons.umbrellaBeach,
-    points: const [],
+    points: [],
     fullText: '',
     fixedDays: kind.fixedDays,
   );
@@ -969,9 +966,9 @@ class _LeaveTypePickerSheet extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.78,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -989,7 +986,7 @@ class _LeaveTypePickerSheet extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 14, 8, 8),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
                     'اختر نوع الإجازة',
                     style: TextStyle(
@@ -1002,7 +999,7 @@ class _LeaveTypePickerSheet extends StatelessWidget {
                 IconButton(
                   tooltip: 'إغلاق',
                   onPressed: () => Navigator.pop(context),
-                  icon: const FaIcon(
+                  icon: FaIcon(
                     FontAwesomeIcons.xmark,
                     size: 16,
                     color: AppColors.slate,
@@ -1095,13 +1092,13 @@ class _LeaveTypePickerSheet extends StatelessWidget {
                               ),
                             ),
                             if (selected)
-                              const FaIcon(
+                              FaIcon(
                                 FontAwesomeIcons.circleCheck,
                                 size: 16,
                                 color: AppColors.goldDeep,
                               )
                             else
-                              const FaIcon(
+                              FaIcon(
                                 FontAwesomeIcons.chevronLeft,
                                 size: 12,
                                 color: AppColors.slate,
@@ -1230,7 +1227,7 @@ class _BalanceTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.slate,
@@ -1238,7 +1235,7 @@ class _BalanceTile extends StatelessWidget {
                 ),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
                     color: AppColors.goldDeep,
@@ -1248,10 +1245,7 @@ class _BalanceTile extends StatelessWidget {
                   hint,
                   maxLines: isLargeText(context) ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    color: AppColors.slate,
-                  ),
+                  style: TextStyle(fontSize: 10.5, color: AppColors.slate),
                 ),
               ],
             ),
@@ -1282,8 +1276,8 @@ class _ShiftHint extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 2),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
           child: FaIcon(
             FontAwesomeIcons.businessTime,
             size: 12,
@@ -1294,7 +1288,7 @@ class _ShiftHint extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               height: 1.4,
               fontWeight: FontWeight.w600,
@@ -1344,13 +1338,13 @@ class _ExceptionCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           alignment: Alignment.center,
-          child: const FaIcon(
+          child: FaIcon(
             FontAwesomeIcons.calendarDay,
             size: 15,
             color: AppColors.goldDeep,
           ),
         ),
-        title: const Text(
+        title: Text(
           'طلب إجازة استثناء',
           style: TextStyle(
             fontWeight: FontWeight.w800,
@@ -1358,8 +1352,8 @@ class _ExceptionCard extends StatelessWidget {
             color: AppColors.charcoal,
           ),
         ),
-        subtitle: const Padding(
-          padding: EdgeInsets.only(top: 3),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 3),
           child: Text(
             'تُعرض مدة الإجازة وتاريخ نهايتها وفق نتيجة المعاينة عند اختيار الاستثناء.',
             style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.slate),
@@ -1411,7 +1405,7 @@ class _PlanCard extends StatelessWidget {
     }
     final p = plan;
     if (p == null) {
-      return const Text(
+      return Text(
         'تواريخ البداية ضمن شهر قبل وشهر بعد اليوم · تُحسب الأيام والرصيد تلقائياً بعد تحديد الفترة',
         style: TextStyle(
           fontSize: 12,
@@ -1439,7 +1433,7 @@ class _PlanCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.calculator,
                 size: 14,
                 color: AppColors.goldDeep,
@@ -1450,7 +1444,7 @@ class _PlanCard extends StatelessWidget {
                   p.kind.category == LeaveKindCategory.exemption
                       ? 'إعفاء من ${d(p.from)} إلى ${d(p.to)} — بدون خصم أيام'
                       : 'المدة المحسوبة: ${_n(p.days)} ${p.days == 1 ? 'يوم' : 'أيام'}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                     color: AppColors.charcoal,
@@ -1474,7 +1468,7 @@ class _PlanCard extends StatelessWidget {
                 if (p.blocks.length > 1)
                   'سيُسجّل الطلب في ${p.blocks.length} سجلات',
               ].join('\n'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 height: 1.5,
                 color: AppColors.slate,
@@ -1486,7 +1480,7 @@ class _PlanCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                const FaIcon(
+                FaIcon(
                   FontAwesomeIcons.circleInfo,
                   size: 12,
                   color: AppColors.goldDeep,
@@ -1495,7 +1489,7 @@ class _PlanCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'طلبت حتى ${d(p.requestedTo)} لكن نوع دوامك يمدّد النهاية إلى ${d(p.to)}.',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       height: 1.4,
                       fontWeight: FontWeight.w700,
@@ -1511,8 +1505,8 @@ class _PlanCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(top: 2),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
                   child: FaIcon(
                     FontAwesomeIcons.triangleExclamation,
                     size: 12,
@@ -1524,7 +1518,7 @@ class _PlanCard extends StatelessWidget {
                   child: Text(
                     'الرصيد يغطّي ${_n(p.covered)} من ${_n(p.required)} يوم فقط — '
                     'سيُرسل الجزء المغطّى (حتى ${d(p.to)}) ويُعتذر عن البقية.',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       height: 1.4,
                       fontWeight: FontWeight.w700,
@@ -1584,13 +1578,13 @@ class _LocationPicker extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: Row(
         children: [
-          const FaIcon(
+          FaIcon(
             FontAwesomeIcons.locationDot,
             size: 15,
             color: AppColors.goldDeep,
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
               'مكان الإجازة',
               style: TextStyle(
@@ -1699,7 +1693,7 @@ class _StatusCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   message,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
                     height: 1.45,
                     color: AppColors.charcoal,
@@ -1767,7 +1761,7 @@ class _TypeSelector extends StatelessWidget {
               children: [
                 Text(
                   has ? 'نوع الإجازة' : 'اختر نوع الإجازة',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppColors.slate,
@@ -1789,7 +1783,7 @@ class _TypeSelector extends StatelessWidget {
               ],
             ),
           ),
-          const FaIcon(
+          FaIcon(
             FontAwesomeIcons.chevronDown,
             size: 13,
             color: AppColors.slate,
@@ -1826,7 +1820,7 @@ class _DateTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
               color: AppColors.slate,
@@ -1867,7 +1861,7 @@ class _AttachmentHint extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const FaIcon(
+          FaIcon(
             FontAwesomeIcons.circleInfo,
             size: 14,
             color: AppColors.goldDeep,
@@ -1956,14 +1950,14 @@ class _AttachmentTile extends StatelessWidget {
                 if (has)
                   Text(
                     'اضغط للمعاينة$_sizeLabel',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11.5,
                       color: AppColors.goldDeep,
                       fontWeight: FontWeight.w700,
                     ),
                   )
                 else if (!picking)
-                  const Text(
+                  Text(
                     'الأنواع: PDF, DOC, DOCX, JPG, PNG',
                     style: TextStyle(fontSize: 11.5, color: AppColors.slate),
                   ),
@@ -1974,23 +1968,17 @@ class _AttachmentTile extends StatelessWidget {
             IconButton(
               onPressed: onOpen,
               tooltip: 'فتح المرفق',
-              icon: const Icon(
-                Icons.visibility_rounded,
-                color: AppColors.goldDeep,
-              ),
+              icon: Icon(Icons.visibility_rounded, color: AppColors.goldDeep),
             ),
             IconButton(
               onPressed: onPick,
               tooltip: 'تغيير الملف',
-              icon: const Icon(
-                Icons.swap_horiz_rounded,
-                color: AppColors.slate,
-              ),
+              icon: Icon(Icons.swap_horiz_rounded, color: AppColors.slate),
             ),
             IconButton(
               onPressed: onClear,
               tooltip: 'إزالة المرفق',
-              icon: const FaIcon(
+              icon: FaIcon(
                 FontAwesomeIcons.trashCan,
                 size: 14,
                 color: AppColors.danger,
@@ -2044,7 +2032,7 @@ class _CompactRulesCard extends StatelessWidget {
                     color: AppColors.goldSoft,
                     borderRadius: BorderRadius.circular(99),
                   ),
-                  child: const Text(
+                  child: Text(
                     'ضوابط',
                     style: TextStyle(
                       color: AppColors.goldDeep,
@@ -2059,7 +2047,7 @@ class _CompactRulesCard extends StatelessWidget {
                     expanded
                         ? 'إخفاء الملخص'
                         : 'عرض ملخص سريع (${kind.points.length} مواد)',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13.5,
                       color: AppColors.charcoal,
@@ -2069,7 +2057,7 @@ class _CompactRulesCard extends StatelessWidget {
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0,
                   duration: const Duration(milliseconds: 200),
-                  child: const Icon(
+                  child: Icon(
                     Icons.keyboard_arrow_down_rounded,
                     color: AppColors.slate,
                   ),
@@ -2107,7 +2095,7 @@ class _CompactRulesCard extends StatelessWidget {
                             ),
                             child: Text(
                               point.article,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.goldDeep,
@@ -2118,7 +2106,7 @@ class _CompactRulesCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               point.text,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12.5,
                                 height: 1.45,
                                 color: AppColors.slate,

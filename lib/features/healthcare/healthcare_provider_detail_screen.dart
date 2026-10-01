@@ -21,18 +21,16 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
     if (uri == null) return;
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذر فتح رابط الخريطة')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('تعذر فتح رابط الخريطة')));
     }
   }
 
   Future<void> _copy(BuildContext context) async {
     await Clipboard.setData(ClipboardData(text: provider.details));
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم نسخ التفاصيل')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('تم نسخ التفاصيل')));
     }
   }
 
@@ -126,7 +124,7 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 22),
-                  const Text(
+                  Text(
                     'التفاصيل والعنوان',
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
@@ -155,7 +153,10 @@ class HealthcareProviderDetailScreen extends StatelessWidget {
                     const SizedBox(height: 28),
                     FilledButton.icon(
                       onPressed: () => _openMap(context),
-                      icon: const FaIcon(FontAwesomeIcons.mapLocationDot, size: 16),
+                      icon: const FaIcon(
+                        FontAwesomeIcons.mapLocationDot,
+                        size: 16,
+                      ),
                       label: const Text('عرض على الخريطة'),
                       style: FilledButton.styleFrom(
                         minimumSize: const Size.fromHeight(52),
@@ -217,15 +218,12 @@ class _InfoTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: AppColors.slate,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppColors.slate, fontSize: 12),
                 ),
                 const SizedBox(height: 2),
                 SelectableText(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.charcoal,
                     fontWeight: FontWeight.w700,
                     height: 1.45,
@@ -238,7 +236,11 @@ class _InfoTile extends StatelessWidget {
             IconButton(
               tooltip: 'نسخ',
               onPressed: onCopy,
-              icon: const FaIcon(FontAwesomeIcons.copy, size: 15, color: AppColors.slate),
+              icon: FaIcon(
+                FontAwesomeIcons.copy,
+                size: 15,
+                color: AppColors.slate,
+              ),
             ),
         ],
       ),

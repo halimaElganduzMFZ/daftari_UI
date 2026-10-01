@@ -4,10 +4,13 @@ import 'package:flutter/foundation.dart';
 ///
 /// يمكن تجاوز القيم وقت التشغيل دون تعديل الكود:
 /// ```
-/// flutter run -d chrome --web-port=43123 \
+/// dart run tool/web_api_proxy.dart
+/// flutter run -d web-server --web-hostname 0.0.0.0 --web-port=43123
 ///   --dart-define=USE_REMOTE_API=false          # وضع التصميم (بيانات ثابتة)
 ///   --dart-define=API_BASE_URL=http://127.0.0.1:3000/api/v1   # API على جهازك
 /// ```
+/// على الويب بلا `API_BASE_URL` تُرسل الطلبات إلى نفس عنوان الصفحة على
+/// المنفذ [webProxyPort]، حتى يفتح التطبيق من أي جهاز عبر IP هذا الحاسوب.
 ///
 /// نسخة الإصدار لا تتصل إلا عبر HTTPS، ويُمرَّر عنوان الخادم وقت البناء:
 /// ```
@@ -32,12 +35,31 @@ abstract final class ApiConfig {
     defaultValue: kReleaseMode ? '' : 'http://10.10.10.97:3000/api/v1',
   );
 
+  static const _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+  /// عنوان الـ API الأساسي.
+  ///
+  /// * الويب في التطوير: نفس مضيف الصفحة + [webProxyPort]، فيعمل الرابط
+  ///   `http://<IP الجهاز>:43123` من أي جهاز على الشبكة دون حظر CORS.
+  /// * الجوال وسطح المكتب: [officeApiBaseUrl].
+  /// * `--dart-define=API_BASE_URL=...` يتجاوز الاثنين.
+  /// * نسخة الإصدار بلا عنوان: شاشة خطأ ولا يُرسل أي طلب
+  ///   ([hasInsecureReleaseConfig]).
+  static String get baseUrl {
+    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
+    if (kReleaseMode) return '';
+    if (kIsWeb) {
+      return lanWebApiBase(host: Uri.base.host, port: webProxyPort);
+    }
+    return officeApiBaseUrl;
+  }
+
   /// `true` في نسخة إصدار تتصل بالخادم بعنوان غير https.
   static bool get hasInsecureReleaseConfig => isInsecureReleaseConfig(
-        releaseMode: kReleaseMode,
-        remoteApi: useRemoteApi,
-        baseUrl: baseUrl,
-      );
+    releaseMode: kReleaseMode,
+    remoteApi: useRemoteApi,
+    baseUrl: baseUrl,
+  );
 
   @visibleForTesting
   static bool isInsecureReleaseConfig({
@@ -52,6 +74,13 @@ abstract final class ApiConfig {
 
   static const connectTimeout = Duration(seconds: 15);
   static const receiveTimeout = Duration(seconds: 20);
+
+  /// عنوان الـ API الذي يستدعيه متصفح الويب عبر وسيط هذا الجهاز.
+  @visibleForTesting
+  static String lanWebApiBase({required String host, required int port}) {
+    final safeHost = host.isEmpty ? '127.0.0.1' : host;
+    return 'http://$safeHost:$port/api/v1';
+  }
 
   /// عنوان مختصر للعرض في شاشة الدخول (بدون البروتوكول والمسار).
   static String get displayHost {

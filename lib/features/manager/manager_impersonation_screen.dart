@@ -88,12 +88,12 @@ class _ManagerImpersonationScreenState
             padding: EdgeInsets.zero,
             child: Container(
               padding: const EdgeInsets.all(18),
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(18)),
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(18)),
                 gradient: LinearGradient(
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
-                  colors: [Color(0xFFEFE8DC), AppColors.surface],
+                  colors: [const Color(0xFFEFE8DC), AppColors.surface],
                 ),
               ),
               child: Column(
@@ -108,13 +108,13 @@ class _ManagerImpersonationScreenState
                           color: AppColors.goldSoft,
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.switch_account_rounded,
                           color: AppColors.goldDeep,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'ابحث عن موظف تحت إشرافك',
                           style: TextStyle(
@@ -129,14 +129,14 @@ class _ManagerImpersonationScreenState
                   const SizedBox(height: 10),
                   Text(
                     'الهيكل الحالي: $structure',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.goldDeep,
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'بعد الدخول تظهر لك واجهة الموظف كاملة. من الحساب يمكنك إنهاء النيابة والعودة كمسؤول.',
                     style: TextStyle(
                       color: AppColors.slate,
@@ -174,7 +174,7 @@ class _ManagerImpersonationScreenState
             results.isEmpty
                 ? 'لا نتائج'
                 : '${results.length} موظف ضمن نطاق البحث',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.slate,
               fontWeight: FontWeight.w600,
               fontSize: 12.5,
@@ -182,7 +182,7 @@ class _ManagerImpersonationScreenState
           ),
           const SizedBox(height: 10),
           if (results.isEmpty)
-            const AppSurface(
+            AppSurface(
               child: Column(
                 children: [
                   Icon(
@@ -190,7 +190,7 @@ class _ManagerImpersonationScreenState
                     size: 36,
                     color: AppColors.gold,
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
                     'جرّب اسماً أو رقماً وظيفياً آخر',
                     textAlign: TextAlign.center,
@@ -215,7 +215,7 @@ class _ManagerImpersonationScreenState
                         backgroundColor: AppColors.goldSoft,
                         child: Text(
                           employee.fullName.characters.first,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.goldDeep,
                             fontWeight: FontWeight.w800,
                             fontSize: 18,
@@ -229,7 +229,7 @@ class _ManagerImpersonationScreenState
                           children: [
                             Text(
                               employee.fullName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.charcoal,
                               ),
@@ -237,7 +237,7 @@ class _ManagerImpersonationScreenState
                             const SizedBox(height: 2),
                             Text(
                               employee.employeeNumber,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.goldDeep,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 13,
@@ -246,7 +246,7 @@ class _ManagerImpersonationScreenState
                             const SizedBox(height: 2),
                             Text(
                               '${employee.jobTitle} · ${employee.department}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.slate,
                                 fontSize: 12.5,
                               ),
@@ -254,10 +254,7 @@ class _ManagerImpersonationScreenState
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.login_rounded,
-                        color: AppColors.goldDeep,
-                      ),
+                      Icon(Icons.login_rounded, color: AppColors.goldDeep),
                     ],
                   ),
                 ),

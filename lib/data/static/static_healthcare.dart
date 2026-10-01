@@ -8,7 +8,8 @@ import '../models/healthcare_provider.dart';
 /// `Contracted_Healthcare_Providers.php` القديمة (1، 3، 4، 2، 5، 6، 8، 7)،
 /// وبيانات تجريبية للوضع الثابت.
 abstract final class StaticHealthcare {
-  static const specialties = <HealthcareSpecialty>[
+  /// الألوان الذهبية/الرمادية تُقرأ من اللوحة الحالية؛ لذا القائمة `final` لا `const`.
+  static final specialties = <HealthcareSpecialty>[
     HealthcareSpecialty(
       id: 1,
       title: 'مستشفى متكامل',
@@ -16,49 +17,49 @@ abstract final class StaticHealthcare {
       icon: FontAwesomeIcons.building,
       accent: AppColors.goldDeep,
     ),
-    HealthcareSpecialty(
+    const HealthcareSpecialty(
       id: 3,
       title: 'تأهيل وعلاج طبيعي',
       subtitle: 'مراكز إعادة تأهيل',
       icon: FontAwesomeIcons.personWalking,
       accent: Color(0xFF5C738A),
     ),
-    HealthcareSpecialty(
+    const HealthcareSpecialty(
       id: 4,
       title: 'طب الأسنان',
       subtitle: 'مستشفيات وعيادات',
       icon: FontAwesomeIcons.tooth,
       accent: Color(0xFF6B8F71),
     ),
-    HealthcareSpecialty(
+    const HealthcareSpecialty(
       id: 2,
       title: 'مختبرات تحاليل',
       subtitle: 'فحوصات مخبرية',
       icon: FontAwesomeIcons.flaskVial,
       accent: Color(0xFF8B6B4F),
     ),
-    HealthcareSpecialty(
+    const HealthcareSpecialty(
       id: 5,
       title: 'بصريات ونظارات',
       subtitle: 'فحص وتركيب',
       icon: FontAwesomeIcons.glasses,
       accent: Color(0xFF6A7A8C),
     ),
-    HealthcareSpecialty(
+    const HealthcareSpecialty(
       id: 6,
       title: 'جلدية وتجميل',
       subtitle: 'مراكز ومصحات',
       icon: FontAwesomeIcons.spa,
       accent: Color(0xFF9A6B5C),
     ),
-    HealthcareSpecialty(
+    const HealthcareSpecialty(
       id: 8,
       title: 'عظام وكسور',
       subtitle: 'مستشفيات متخصصة',
       icon: FontAwesomeIcons.bone,
       accent: Color(0xFF7A6B5A),
     ),
-    HealthcareSpecialty(
+    const HealthcareSpecialty(
       id: 7,
       title: 'ذوي الاحتياجات',
       subtitle: 'تأهيل وتدريب',
@@ -67,7 +68,7 @@ abstract final class StaticHealthcare {
     ),
   ];
 
-  static const _fallback = HealthcareSpecialty(
+  static HealthcareSpecialty get _fallback => HealthcareSpecialty(
     id: 0,
     title: 'تصنيف آخر',
     subtitle: 'مؤسسات متعاقدة',

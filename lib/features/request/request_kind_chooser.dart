@@ -12,9 +12,9 @@ Future<RequestKind?> showRequestKindChooser(BuildContext context) {
     backgroundColor: Colors.transparent,
     builder: (context) {
       return Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         child: SafeArea(
@@ -34,7 +34,7 @@ Future<RequestKind?> showRequestKindChooser(BuildContext context) {
                 ),
               ),
               const SizedBox(height: 18),
-              const Text(
+              Text(
                 'ماذا تريد تقديمه؟',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -44,7 +44,7 @@ Future<RequestKind?> showRequestKindChooser(BuildContext context) {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'اختر نوع الطلب لننقلك مباشرة للنموذج المناسب',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -121,7 +121,7 @@ class _ChooserTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: AppColors.charcoal,
@@ -130,7 +130,7 @@ class _ChooserTile extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         color: AppColors.slate,
                         fontWeight: FontWeight.w500,
@@ -139,7 +139,7 @@ class _ChooserTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.chevronLeft,
                 size: 13,
                 color: AppColors.slate,

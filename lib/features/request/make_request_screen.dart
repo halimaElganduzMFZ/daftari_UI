@@ -190,15 +190,15 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
             FaIcon(
               FontAwesomeIcons.circleCheck,
               color: AppColors.success,
               size: 22,
             ),
-            SizedBox(width: 10),
-            Expanded(child: Text('تم استلام طلبك')),
+            const SizedBox(width: 10),
+            const Expanded(child: Text('تم استلام طلبك')),
           ],
         ),
         content: Column(
@@ -207,13 +207,13 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
           children: [
             Text(
               result.message,
-              style: const TextStyle(height: 1.5, color: AppColors.charcoal),
+              style: TextStyle(height: 1.5, color: AppColors.charcoal),
             ),
             const SizedBox(height: 10),
             Text(
               '«${result.type.name}» بتاريخ $date\n'
               'الحالة: ${result.state} — سيظهر ضمن الطلبات المعلّقة حتى اعتماده.',
-              style: const TextStyle(
+              style: TextStyle(
                 height: 1.5,
                 fontSize: 12.5,
                 color: AppColors.slate,
@@ -239,7 +239,7 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            const FaIcon(
+            FaIcon(
               FontAwesomeIcons.circleExclamation,
               color: AppColors.danger,
               size: 22,
@@ -254,13 +254,13 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
           children: [
             Text(
               info.message,
-              style: const TextStyle(height: 1.55, color: AppColors.charcoal),
+              style: TextStyle(height: 1.55, color: AppColors.charcoal),
             ),
             if (info.cause != null) ...[
               const SizedBox(height: 8),
               SelectableText(
                 info.cause!,
-                style: const TextStyle(fontSize: 11, color: AppColors.slate),
+                style: TextStyle(fontSize: 11, color: AppColors.slate),
               ),
             ],
           ],
@@ -297,7 +297,7 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
             tooltip: 'اللوائح والمخالفات',
             onPressed: () =>
                 showAllRegulationsSheet(context, initialTabId: 'permissions'),
-            icon: const FaIcon(
+            icon: FaIcon(
               FontAwesomeIcons.bookOpen,
               size: 18,
               color: AppColors.goldDeep,
@@ -310,7 +310,7 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         physics: const BouncingScrollPhysics(),
         children: [
-          const Text(
+          Text(
             'حدّد التاريخ أولاً، فالأنواع المتاحة تعتمد على دوامك في ذلك اليوم.',
             style: TextStyle(
               color: AppColors.slate,
@@ -343,14 +343,14 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
-                  child: const FaIcon(
+                  child: FaIcon(
                     FontAwesomeIcons.calendarDay,
                     size: 16,
                     color: AppColors.goldDeep,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'تاريخ الطلب',
                     style: TextStyle(
@@ -362,14 +362,14 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
                 ),
                 Text(
                   dateLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 16,
                     color: AppColors.charcoal,
                   ),
                 ),
                 const SizedBox(width: 6),
-                const FaIcon(
+                FaIcon(
                   FontAwesomeIcons.chevronLeft,
                   size: 12,
                   color: AppColors.slate,
@@ -483,7 +483,7 @@ class _MakeRequestScreenState extends State<MakeRequestScreen> {
               onPressed: () {
                 showAllRegulationsSheet(context, initialTabId: 'penalties');
               },
-              child: const Text(
+              child: Text(
                 'استعراض اللوائح والمخالفات',
                 style: TextStyle(
                   color: AppColors.goldDeep,
@@ -522,7 +522,7 @@ PermissionType regulationsFor(ApiPermissionType type) {
       16 => FontAwesomeIcons.briefcase,
       _ => FontAwesomeIcons.idBadge,
     },
-    points: const [],
+    points: [],
     fullText: '',
   );
 }
@@ -545,10 +545,14 @@ class _EmployeeStrip extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [Color(0xFFF7F1E6), Color(0xFFEFEFEA), Color(0xFFE8E8E4)],
+          colors: [
+            AppColors.headerStart,
+            AppColors.headerMid,
+            AppColors.headerEnd,
+          ],
         ),
         border: Border.all(color: AppColors.line),
       ),
@@ -558,12 +562,12 @@ class _EmployeeStrip extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.75),
+              color: AppColors.surface.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: AppColors.line),
             ),
             alignment: Alignment.center,
-            child: const FaIcon(
+            child: FaIcon(
               FontAwesomeIcons.user,
               size: 16,
               color: AppColors.goldDeep,
@@ -576,7 +580,7 @@ class _EmployeeStrip extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 15,
                     color: AppColors.charcoal,
@@ -585,7 +589,7 @@ class _EmployeeStrip extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   '$number • $department',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.slate,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
@@ -619,7 +623,7 @@ class _DayInfoCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.businessTime,
                 size: 14,
                 color: AppColors.goldDeep,
@@ -633,7 +637,7 @@ class _DayInfoCard extends StatelessWidget {
                       : schedule.status == ScheduleStatus.unavailable
                       ? 'نظام البصمة غير متاح حالياً'
                       : 'لا يوجد سجل دوام لهذا التاريخ',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 13.5,
                     color: AppColors.charcoal,
@@ -652,7 +656,7 @@ class _DayInfoCard extends StatelessWidget {
                   if (schedule.fromToday)
                     'حسب جدول اليوم لعدم وجود سجل للتاريخ بعد',
                 ].join(' · '),
-                style: const TextStyle(fontSize: 12, color: AppColors.slate),
+                style: TextStyle(fontSize: 12, color: AppColors.slate),
               ),
             ),
           ],
@@ -760,9 +764,9 @@ class _DayInfoSkeleton extends StatelessWidget {
           const SizedBox(height: 10),
           Row(children: [bar(120), const SizedBox(width: 8), bar(140)]),
           const SizedBox(height: 10),
-          const Row(
+          Row(
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 14,
                 height: 14,
                 child: CircularProgressIndicator(strokeWidth: 2),
@@ -828,7 +832,7 @@ class _StatusCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   message,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
                     height: 1.45,
                     color: AppColors.charcoal,
@@ -893,7 +897,7 @@ class _TypeSelector extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: AppColors.surface.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: AppColors.line),
                   ),
@@ -930,7 +934,7 @@ class _TypeSelector extends StatelessWidget {
                             : count == null
                             ? 'الأنواع تعتمد على دوامك في التاريخ المحدد'
                             : '$count ${count == 1 ? 'نوع متاح' : 'أنواع متاحة'} لهذا اليوم',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.slate,
                           fontSize: 12.5,
                           fontWeight: FontWeight.w500,
@@ -1008,7 +1012,7 @@ class _CompactRulesCard extends StatelessWidget {
                     color: AppColors.goldSoft,
                     borderRadius: BorderRadius.circular(99),
                   ),
-                  child: const Text(
+                  child: Text(
                     'ضوابط',
                     style: TextStyle(
                       color: AppColors.goldDeep,
@@ -1023,7 +1027,7 @@ class _CompactRulesCard extends StatelessWidget {
                     expanded
                         ? 'إخفاء الملخص'
                         : 'عرض ملخص سريع (${type.points.length} مواد)',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13.5,
                       color: AppColors.charcoal,
@@ -1033,7 +1037,7 @@ class _CompactRulesCard extends StatelessWidget {
                 AnimatedRotation(
                   turns: expanded ? 0.5 : 0,
                   duration: const Duration(milliseconds: 200),
-                  child: const Icon(
+                  child: Icon(
                     Icons.keyboard_arrow_down_rounded,
                     color: AppColors.slate,
                   ),
@@ -1071,7 +1075,7 @@ class _CompactRulesCard extends StatelessWidget {
                             ),
                             child: Text(
                               point.article,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.goldDeep,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 11,
@@ -1084,7 +1088,7 @@ class _CompactRulesCard extends StatelessWidget {
                               point.text,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.charcoal,
                                 fontSize: 12.5,
                                 height: 1.4,
@@ -1164,7 +1168,7 @@ class _CompactRulesCard extends StatelessWidget {
                         : null,
                   ),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'اطّلعت على الضوابط وأتعهّد بالالتزام بها',
                       style: TextStyle(
@@ -1218,7 +1222,7 @@ class _TypePickerSheet extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                 child: Row(
                   children: [
-                    const FaIcon(
+                    FaIcon(
                       FontAwesomeIcons.listCheck,
                       size: 16,
                       color: AppColors.goldDeep,
@@ -1228,7 +1232,7 @@ class _TypePickerSheet extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'اختر نوع الإذن',
                             style: TextStyle(
                               fontSize: 17,
@@ -1238,7 +1242,7 @@ class _TypePickerSheet extends StatelessWidget {
                           ),
                           Text(
                             '${options.schedule.profileLabel} · ${types.length} أنواع متاحة',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: AppColors.slate,
                             ),

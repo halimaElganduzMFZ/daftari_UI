@@ -4,6 +4,7 @@ import '../../core/config/api_config.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/theme_controller.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../data/models/auth_models.dart';
 import '../../data/session/app_session.dart';
@@ -106,7 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
-          const Text(
+          Text(
             AppStrings.profile,
             style: TextStyle(
               fontSize: 24,
@@ -129,12 +130,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 6),
                 Text(
                   employee?.jobTitle ?? user?.displayRole ?? '—',
-                  style: const TextStyle(color: AppColors.slate),
+                  style: TextStyle(color: AppColors.slate),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   employee?.employeeNumber ?? user?.employeeNumber ?? '—',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.goldDeep,
                     fontWeight: FontWeight.w700,
                   ),
@@ -144,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(employee?.email ?? user?.email ?? '—'),
                 if (AppSession.isImpersonating) ...[
                   const SizedBox(height: 10),
-                  const _FlagChip(
+                  _FlagChip(
                     label: 'نيابة عن موظف — أنهِ من الزر بالأسفل',
                     color: AppColors.warning,
                   ),
@@ -156,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ] else if (AppSession.activeRole != null) ...[
                   const SizedBox(height: 10),
-                  const _FlagChip(label: 'دخول كموظف', color: AppColors.info),
+                  _FlagChip(label: 'دخول كموظف', color: AppColors.info),
                 ],
                 if (user != null) ...[
                   const SizedBox(height: 10),
@@ -165,27 +166,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     runSpacing: 8,
                     children: [
                       if (user.isAdmin)
-                        const _FlagChip(
-                          label: 'مسؤول',
-                          color: AppColors.goldDeep,
-                        ),
+                        _FlagChip(label: 'مسؤول', color: AppColors.goldDeep),
                       if (user.isAssigner)
-                        const _FlagChip(
-                          label: 'مسؤول هيكل',
-                          color: AppColors.slate,
-                        ),
+                        _FlagChip(label: 'مسؤول هيكل', color: AppColors.slate),
                       if (user.canActOnBehalf)
-                        const _FlagChip(
+                        _FlagChip(
                           label: 'دخول نيابة عن',
                           color: AppColors.info,
                         ),
                       if (user.isRequestReviewer)
-                        const _FlagChip(
+                        _FlagChip(
                           label: 'مراجعة طلبات الموظفين',
                           color: AppColors.warning,
                         ),
                       if (user.canChangePassword)
-                        const _FlagChip(
+                        _FlagChip(
                           label: 'يمكن تغيير كلمة المرور',
                           color: AppColors.success,
                         ),
@@ -195,6 +190,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          const _AppearanceCard(),
           if (AppSession.isImpersonating) ...[
             const SizedBox(height: 12),
             FilledButton.icon(
@@ -256,6 +253,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// بطاقة المظهر — تبديل الوضع الداكن مع حفظ الاختيار محلياً.
+class _AppearanceCard extends StatelessWidget {
+  const _AppearanceCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = ThemeController.instance;
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final dark = controller.isDark;
+        return AppSurface(
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 320),
+                curve: Curves.easeOutCubic,
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.goldSoft,
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 320),
+                  transitionBuilder: (child, anim) => RotationTransition(
+                    turns: Tween<double>(begin: .75, end: 1).animate(anim),
+                    child: FadeTransition(opacity: anim, child: child),
+                  ),
+                  child: Icon(
+                    dark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                    key: ValueKey(dark),
+                    color: AppColors.goldDeep,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'الوضع الداكن',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                        color: AppColors.charcoal,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      dark
+                          ? 'مفعّل — ألوان مريحة للإضاءة المنخفضة'
+                          : 'متوقف — يُحفظ اختيارك ويُستعاد تلقائياً',
+                      style: TextStyle(fontSize: 12, color: AppColors.slate),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: dark,
+                onChanged: (v) => controller.setDark(v),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

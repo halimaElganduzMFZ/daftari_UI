@@ -39,7 +39,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   AppStrings.employees,
                   style: TextStyle(
                     fontSize: 24,
@@ -130,14 +130,14 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   }
 
   static String _statusLabel(EmploymentStatus status) => switch (status) {
-        EmploymentStatus.active => 'نشط',
-        EmploymentStatus.onLeave => 'إجازة',
-        EmploymentStatus.suspended => 'موقوف',
-      };
+    EmploymentStatus.active => 'نشط',
+    EmploymentStatus.onLeave => 'إجازة',
+    EmploymentStatus.suspended => 'موقوف',
+  };
 
   static StatusTone _statusTone(EmploymentStatus status) => switch (status) {
-        EmploymentStatus.active => StatusTone.success,
-        EmploymentStatus.onLeave => StatusTone.warning,
-        EmploymentStatus.suspended => StatusTone.danger,
-      };
+    EmploymentStatus.active => StatusTone.success,
+    EmploymentStatus.onLeave => StatusTone.warning,
+    EmploymentStatus.suspended => StatusTone.danger,
+  };
 }
