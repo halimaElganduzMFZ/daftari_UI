@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/static/static_awol.dart';
 
 /// اتخاذ إجراء على موظف منقطع — مقابل updateState.php.
@@ -58,6 +59,7 @@ class _ManagerAwolActionScreenState extends State<ManagerAwolActionScreen> {
         title: const Text('إجراء على منقطع'),
         backgroundColor: AppColors.background,
       ),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         children: [

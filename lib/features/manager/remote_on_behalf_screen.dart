@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/employee.dart';
 import '../../data/repositories/manager_repository.dart';
 import '../../data/repositories/permission_requests_repository.dart';
@@ -69,6 +70,7 @@ class _RemoteOnBehalfEmployeesScreenState
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.background,
     appBar: AppBar(title: const Text('نيابة عن موظف')),
+    bottomNavigationBar: const BottomInsetSpacer(),
     body: ManagerPagedList(
       key: _list,
       load: (page) => _repo.page(
@@ -89,6 +91,7 @@ class _RemoteOnBehalfEmployeesScreenState
           decoration: InputDecoration(
             labelText: 'الاسم أو الرقم الوظيفي',
             suffixIcon: IconButton(
+              tooltip: 'بحث',
               onPressed: _find,
               icon: const Icon(Icons.search),
             ),

@@ -415,6 +415,8 @@ class _Badge extends StatelessWidget {
       alignment: Alignment.center,
       child: Text(
         label,
+        // بدونه يُقرأ الرقم وحده في أول وصف البطاقة.
+        semanticsLabel: 'إشعارات غير مقروءة: $count',
         style: const TextStyle(
           color: Colors.white,
           fontSize: 10,

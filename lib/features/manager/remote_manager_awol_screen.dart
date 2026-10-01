@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/repositories/manager_repository.dart';
 import 'remote_manager_widgets.dart';
 
@@ -45,6 +46,7 @@ class _RemoteManagerAwolScreenState extends State<RemoteManagerAwolScreen> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.background,
     appBar: AppBar(title: const Text('المنقطعون عن العمل')),
+    bottomNavigationBar: const BottomInsetSpacer(),
     body: ManagerPagedList(
       key: _list,
       load: (page) => _repo.page('/manager/awol', page: page),
@@ -175,6 +177,7 @@ class _AwolDetailState extends State<_AwolDetail> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('تفاصيل الانقطاع')),
+        bottomNavigationBar: const BottomInsetSpacer(),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : _error != null

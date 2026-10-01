@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/large_text.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/date_range_filter_bar.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../data/models/timesheet.dart';
@@ -124,6 +126,7 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('التايم شيت')),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         color: AppColors.goldDeep,
         onRefresh: _load,
@@ -343,28 +346,21 @@ class _Header extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 14),
-          Row(
-            children: [
+          // ثلاث خانات في الصف؛ مع الخط الكبير خانتان كي تظهر التسميات كاملة.
+          ..._statRows(
+            [
               _MiniStat(label: 'أيام دوام', value: n(s?.workDays)),
-              const SizedBox(width: 10),
               _MiniStat(
                 label: 'حضور كامل',
                 value: n(s?.present),
                 accent: AppColors.success,
               ),
-              const SizedBox(width: 10),
               _MiniStat(label: 'إجازة', value: n(s?.leave)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
               _MiniStat(
                 label: 'غياب فعلي',
                 value: n(s?.absence),
                 accent: (s?.absence ?? 0) > 0 ? const Color(0xFFE0A0A0) : null,
               ),
-              const SizedBox(width: 10),
               _MiniStat(
                 label: 'مخالفات بوابة',
                 value: n(s?.gateViolations),
@@ -372,7 +368,6 @@ class _Header extends StatelessWidget {
                     ? const Color(0xFFE0A0A0)
                     : null,
               ),
-              const SizedBox(width: 10),
               _MiniStat(
                 label: 'انقطاع بلا إذن',
                 value: s?.leak ?? '—',
@@ -380,15 +375,10 @@ class _Header extends StatelessWidget {
                     ? const Color(0xFFE8C88A)
                     : null,
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
               _MiniStat(label: 'غياب بسبب البوابة', value: n(s?.gateAbsence)),
-              const SizedBox(width: 10),
               _MiniStat(label: 'إجمالي أيام الغياب', value: n(s?.totalAbsence)),
             ],
+            perRow: isLargeText(context) ? 2 : 3,
           ),
           if ((s?.unknown ?? 0) > 0) ...[
             const SizedBox(height: 8),
@@ -403,6 +393,22 @@ class _Header extends StatelessWidget {
   }
 }
 
+/// صفوف متساوية الارتفاع من [stats]، بـ[perRow] خانات في كل صف.
+List<Widget> _statRows(List<Widget> stats, {required int perRow}) => [
+  for (var i = 0; i < stats.length; i += perRow) ...[
+    if (i > 0) const SizedBox(height: 10),
+    IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          for (final stat in stats.skip(i).take(perRow)) Expanded(child: stat),
+        ],
+      ),
+    ),
+  ],
+];
+
 class _MiniStat extends StatelessWidget {
   const _MiniStat({required this.label, required this.value, this.accent});
 
@@ -412,37 +418,36 @@ class _MiniStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: accent ?? Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: accent ?? Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
-                fontSize: 11,
-              ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: isLargeText(context) ? 3 : 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.72),
+              fontSize: 11,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -632,22 +637,18 @@ class _DayCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  dateFmt.format(day.date),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.charcoal,
-                  ),
-                ),
+          StatusPillRow(
+            pill: StatusPill(
+              label: att.badge.text,
+              tone: _statusToneOf(att.badge.tone),
+            ),
+            content: Text(
+              dateFmt.format(day.date),
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: AppColors.charcoal,
               ),
-              StatusPill(
-                label: att.badge.text,
-                tone: _statusToneOf(att.badge.tone),
-              ),
-            ],
+            ),
           ),
           if (subtitle.isNotEmpty) ...[
             const SizedBox(height: 4),
@@ -742,16 +743,18 @@ class _GateStrip extends StatelessWidget {
               FaIcon(FontAwesomeIcons.carSide, size: 14, color: iconColor),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(
-                  'البوابة',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.charcoal,
-                    fontSize: 12.5,
+                child: StatusPillRow(
+                  pill: StatusPill(label: judgment.badge.text, tone: tone),
+                  content: const Text(
+                    'البوابة',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.charcoal,
+                      fontSize: 12.5,
+                    ),
                   ),
                 ),
               ),
-              StatusPill(label: judgment.badge.text, tone: tone),
             ],
           ),
           const SizedBox(height: 8),

@@ -8,12 +8,21 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
 import '../../data/models/employee.dart';
+import '../../data/repositories/manager_repository.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_manager_attendance.dart';
 
 /// عرض بصمات الموظفين — بحث بالاسم أو الرقم الوظيفي + فترة زمنية.
 class ManagerAttendanceScreen extends StatefulWidget {
-  const ManagerAttendanceScreen({super.key});
+  const ManagerAttendanceScreen({
+    super.key,
+    this.repository,
+    this.quietRefresh,
+  });
+
+  /// للشاشة الحية فقط: [RemoteManagerAttendanceScreen].
+  final ManagerRepository? repository;
+  final Listenable? quietRefresh;
 
   @override
   State<ManagerAttendanceScreen> createState() =>
@@ -156,7 +165,12 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (ApiConfig.useRemoteApi) return const RemoteManagerAttendanceScreen();
+    if (ApiConfig.useRemoteApi) {
+      return RemoteManagerAttendanceScreen(
+        repository: widget.repository,
+        quietRefresh: widget.quietRefresh,
+      );
+    }
     final structure = AppSession.activeStructure?.name ?? 'الهيكل';
     final results = _results;
     final present = results?.where((r) => r.isPresent).length ?? 0;
@@ -391,8 +405,8 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 50,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 50),
                   child: FilledButton.icon(
                     onPressed: _loading ? null : _fetch,
                     icon: _loading

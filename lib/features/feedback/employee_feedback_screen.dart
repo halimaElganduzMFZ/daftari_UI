@@ -5,6 +5,7 @@ import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/section_header.dart';
 import '../../core/widgets/status_pill.dart';
 import '../../data/models/employee_message.dart';
@@ -224,6 +225,7 @@ class _EmployeeFeedbackScreenState extends State<EmployeeFeedbackScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('شكوى أو مقترح')),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         color: AppColors.goldDeep,
         onRefresh: _reload,
@@ -603,28 +605,24 @@ class _MessageCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          StatusPillRow(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  message.body,
-                  style: TextStyle(
-                    color: AppColors.charcoal,
-                    height: 1.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+            gap: 10,
+            pill: Tooltip(
+              message: message.statusLabel,
+              child: StatusPill(
+                label: EmployeeMessage.shortLabel(message.status),
+                tone: _tone,
               ),
-              const SizedBox(width: 10),
-              Tooltip(
-                message: message.statusLabel,
-                child: StatusPill(
-                  label: EmployeeMessage.shortLabel(message.status),
-                  tone: _tone,
-                ),
+            ),
+            content: Text(
+              message.body,
+              style: const TextStyle(
+                color: AppColors.charcoal,
+                height: 1.5,
+                fontWeight: FontWeight.w600,
               ),
-            ],
+            ),
           ),
           if (message.hasReply) ...[
             const SizedBox(height: 12),

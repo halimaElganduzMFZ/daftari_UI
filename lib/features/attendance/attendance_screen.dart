@@ -38,34 +38,30 @@ class AttendanceScreen extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: AppSurface(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            record.employeeName,
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            record.checkIn == null
-                                ? 'بدون بصمة'
-                                : 'دخول: ${record.checkIn}',
-                            style: TextStyle(
-                              color: AppColors.slate,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
+                child: StatusPillRow(
+                  pill: StatusPill(
+                    label: _label(record.state),
+                    tone: _tone(record.state),
+                  ),
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        record.employeeName,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
-                    ),
-                    StatusPill(
-                      label: _label(record.state),
-                      tone: _tone(record.state),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        record.checkIn == null
+                            ? 'بدون بصمة'
+                            : 'دخول: ${record.checkIn}',
+                        style: const TextStyle(
+                          color: AppColors.slate,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

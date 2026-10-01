@@ -85,6 +85,7 @@ Future<void> showRegulationDetailSheet(
                         ),
                       ),
                       IconButton(
+                        tooltip: 'إغلاق',
                         onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(Icons.close_rounded),
                       ),

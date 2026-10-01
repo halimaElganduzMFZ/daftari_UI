@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/di/app_services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/date_range_filter_bar.dart';
 import '../../data/repositories/manager_repository.dart';
 import '../../data/session/app_session.dart';
@@ -10,8 +11,15 @@ import 'remote_manager_widgets.dart';
 import 'manager_statistics_screen.dart';
 
 class RemoteManagerAttendanceScreen extends StatefulWidget {
-  const RemoteManagerAttendanceScreen({super.key, this.repository});
+  const RemoteManagerAttendanceScreen({
+    super.key,
+    this.repository,
+    this.quietRefresh,
+  });
   final ManagerRepository? repository;
+
+  /// See [ManagerPagedList.quietRefresh].
+  final Listenable? quietRefresh;
   @override
   State<RemoteManagerAttendanceScreen> createState() =>
       _RemoteManagerAttendanceScreenState();
@@ -38,6 +46,7 @@ class _RemoteManagerAttendanceScreenState
   Widget build(BuildContext context) => SafeArea(
     child: ManagerPagedList(
       key: _list,
+      quietRefresh: widget.quietRefresh,
       load: (page) => _repo.page(
         '/manager/attendance/employees',
         page: page,
@@ -60,6 +69,7 @@ class _RemoteManagerAttendanceScreenState
           decoration: InputDecoration(
             labelText: 'اسم الموظف أو الرقم الوظيفي',
             suffixIcon: IconButton(
+              tooltip: 'بحث',
               onPressed: _find,
               icon: const Icon(Icons.search),
             ),
@@ -182,6 +192,7 @@ class _ManagerEmployeeAttendanceScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('جدول الحضور والانصراف')),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
@@ -299,7 +310,8 @@ class _ManagerEmployeeAttendanceScreenState
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     dataRowMinHeight: 66,
-                    dataRowMaxHeight: 120,
+                    // الحالة والملاحظة تلتفان في عمود ضيق؛ الصف يطول معهما بدل أن يقصّهما.
+                    dataRowMaxHeight: double.infinity,
                     columns: [
                       for (final title in [
                         'التاريخ / اليوم',

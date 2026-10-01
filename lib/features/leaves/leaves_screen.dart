@@ -529,27 +529,32 @@ class _RequestCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      request.displayTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.charcoal,
+                child: StatusPillRow(
+                  pill: StatusPill(
+                    label: _statusLabel(request.status),
+                    tone: _statusTone(request.status),
+                  ),
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        request.displayTitle,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.charcoal,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'قُدّم ${fmt.format(request.requestedAt)}',
-                      style: TextStyle(fontSize: 12, color: AppColors.slate),
-                    ),
-                  ],
+                      const SizedBox(height: 2),
+                      Text(
+                        'قُدّم ${fmt.format(request.requestedAt)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.slate,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              StatusPill(
-                label: _statusLabel(request.status),
-                tone: _statusTone(request.status),
               ),
             ],
           ),

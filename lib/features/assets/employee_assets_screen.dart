@@ -7,6 +7,8 @@ import 'package:printing/printing.dart';
 import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/large_text.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/employee_asset.dart';
 import '../../data/repositories/assets_repository.dart';
 import '../../data/session/app_session.dart';
@@ -124,6 +126,7 @@ class _EmployeeAssetsScreenState extends State<EmployeeAssetsScreen> {
             ),
         ],
       ),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         color: AppColors.goldDeep,
         onRefresh: _load,
@@ -399,10 +402,20 @@ class _TableHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(width: 40, child: Text('ر.م', style: style)),
-          SizedBox(width: 110, child: Text('الرقم المالي', style: style)),
-          Expanded(child: Text('الأصل', style: style)),
+          if (isLargeText(context))
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [number, name],
+              ),
+            )
+          else ...[
+            SizedBox(width: 110, child: number),
+            Expanded(child: name),
+          ],
         ],
       ),
     );
@@ -417,6 +430,17 @@ class _AssetRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final number = Text(
+      asset.financialNumber,
+      style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.slate),
+    );
+    final name = Text(
+      asset.name,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        height: 1.35,
+        color: AppColors.charcoal,
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
       child: Row(
@@ -432,24 +456,19 @@ class _AssetRow extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: 110,
-            child: Text(
-              asset.financialNumber,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.slate,
+          // مع الخط الكبير لا يتسع العمود للرقم المالي فينكسر وسط الرقم،
+          // فيُعرض فوق اسم الأصل بعرض الصف كله.
+          if (isLargeText(context))
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [number, const SizedBox(height: 2), name],
               ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              asset.name,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                height: 1.35,
-                color: AppColors.charcoal,
-              ),
-            ),
-          ),
+            )
+          else ...[
+            SizedBox(width: 110, child: number),
+            Expanded(child: name),
+          ],
         ],
       ),
     );

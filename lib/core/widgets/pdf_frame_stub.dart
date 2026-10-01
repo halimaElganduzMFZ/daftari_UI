@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 
 import '../theme/app_colors.dart';
 
@@ -37,8 +38,6 @@ Widget buildPdfFrameImpl({required Uint8List bytes, required String viewType}) {
           ),
         ],
       ),
-    ),
-  );
+    );
+  }
 }
-
-const bool pdfFrameSupportsNativePreviewImpl = false;

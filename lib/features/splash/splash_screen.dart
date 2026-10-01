@@ -19,7 +19,11 @@ import '../shell/main_shell.dart';
 /// أثناء الحركة تُستعاد الجلسة المحفوظة (`/auth/me`)؛ فإن صلحت ندخل مباشرة
 /// (موظف أو صفحة تحديد نوع الدخول)، وإلا نذهب لتسجيل الدخول.
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({super.key, this.restoreSession});
+
+  /// بديل استعادة الجلسة في الاختبارات؛ يعيد `true` إن استُعيدت الجلسة.
+  @visibleForTesting
+  final Future<bool> Function()? restoreSession;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -39,11 +43,12 @@ class _SplashScreenState extends State<SplashScreen>
   late final Animation<double> _subFade;
   late final Animation<double> _bar;
 
-  /// أقل مدة تبقى فيها الشاشة حتى لا تقفز الحركة.
-  static const _minimumDisplay = Duration(milliseconds: 2800);
+  /// أقل مدة تبقى فيها الشاشة حتى تكتمل حركة الدخول؛ تطول فقط ما دامت الجلسة تُستعاد.
+  static const _minimumDisplay = Duration(milliseconds: 800);
 
-  /// حد قراءة التخزين المحلي (فوري على الأجهزة؛ يحمي من تعليق المنصة).
-  static const _storageTimeout = Duration(milliseconds: 500);
+  /// حد قراءة التخزين المحلي (يحمي من تعليق المنصة). أول وصول إلى
+  /// Keystore / Keychain قد يتجاوز ثانية على الأجهزة البطيئة.
+  static const _storageTimeout = Duration(seconds: 2);
 
   /// حد أعلى لانتظار الخادم قبل الاكتفاء بشاشة الدخول.
   static const _restoreTimeout = Duration(seconds: 6);
@@ -60,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     _enter = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 700),
     );
     _breathe = AnimationController(
       vsync: this,
@@ -68,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _progress = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2800),
+      duration: _minimumDisplay,
     );
     _orb = AnimationController(
       vsync: this,
@@ -108,10 +113,7 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _bar = CurvedAnimation(parent: _progress, curve: Curves.easeInOutCubic);
 
-    _enter.forward();
-    _breathe.repeat(reverse: true);
     _progress.forward();
-    _orb.repeat();
 
     // Start the dwell clock only after the first frame so slow web/native
     // bootstrap cannot skip past the splash before it is visible.
@@ -121,14 +123,31 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // «إزالة الحركة» في إعدادات الجهاز: شعار وخلفية ثابتان.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _enter.value = 1;
+      _breathe
+        ..stop()
+        ..value = 0;
+      _orb.stop();
+    } else {
+      if (!_enter.isCompleted) _enter.forward();
+      if (!_breathe.isAnimating) _breathe.repeat(reverse: true);
+      if (!_orb.isAnimating) _orb.repeat();
+    }
+  }
+
   /// يشغّل استعادة الجلسة والحد الأدنى للعرض معاً، ثم يوجّه حسب النتيجة.
   /// المؤقّت قابل للإلغاء في [dispose] حتى لا يبقى معلّقاً بعد إزالة الشاشة.
   void _bootstrap() {
     _dwellTimer = Timer(_minimumDisplay, () {
-      _dwellDone = true;
+      setState(() => _dwellDone = true);
       _maybeNavigate();
     });
-    _restoreSession().then((restored) {
+    (widget.restoreSession ?? _restoreSession)().then((restored) {
       if (!mounted) return;
       _restoreDone = true;
       _restored = restored;
@@ -317,7 +336,9 @@ class _SplashScreenState extends State<SplashScreen>
                             return ClipRRect(
                               borderRadius: BorderRadius.circular(999),
                               child: LinearProgressIndicator(
-                                value: _bar.value,
+                                value: _dwellDone && !_restoreDone
+                                    ? null
+                                    : _bar.value,
                                 minHeight: 3.5,
                                 backgroundColor: AppColors.gold.withValues(
                                   alpha: 0.16,

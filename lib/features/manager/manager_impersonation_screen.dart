@@ -5,6 +5,7 @@ import 'remote_on_behalf_screen.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_surface.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/employee.dart';
 import '../../data/session/app_session.dart';
 import '../../data/static/static_employees.dart';
@@ -79,6 +80,7 @@ class _ManagerImpersonationScreenState
         title: const Text('الدخول نيابة عن'),
         backgroundColor: AppColors.background,
       ),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
@@ -158,6 +160,7 @@ class _ManagerImpersonationScreenState
               suffixIcon: _query.isEmpty
                   ? null
                   : IconButton(
+                      tooltip: 'مسح البحث',
                       onPressed: () {
                         _searchController.clear();
                         setState(() => _query = '');

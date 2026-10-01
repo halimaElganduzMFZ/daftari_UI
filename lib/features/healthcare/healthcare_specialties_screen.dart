@@ -4,6 +4,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/large_text.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/healthcare_provider.dart';
 import '../../data/repositories/healthcare_repository.dart';
 import '../../data/static/static_healthcare.dart';
@@ -69,6 +71,26 @@ class _HealthcareSpecialtiesScreenState
     );
   }
 
+  int _tileCount(List<HealthcareCategory>? categories) =>
+      _loading && categories == null ? 6 : categories!.length;
+
+  Widget _tile(List<HealthcareCategory>? categories, int index) {
+    if (_loading && categories == null) return const _CategorySkeleton();
+    final c = categories![index];
+    final look = StaticHealthcare.specialtyById(c.id);
+    final known = look.id == c.id;
+    final title = known ? look.title : (c.name ?? 'تصنيف رقم ${c.id}');
+    final subtitle = known ? (c.name ?? look.subtitle) : look.subtitle;
+    return _SpecialtyCard(
+      title: title,
+      subtitle: subtitle,
+      icon: look.icon,
+      accent: look.accent,
+      count: c.count,
+      onTap: () => _open(c.id, c.name ?? title),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final categories = _categories;
@@ -77,6 +99,7 @@ class _HealthcareSpecialtiesScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('المؤسسات الطبية')),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         color: AppColors.goldDeep,
         onRefresh: _load,
@@ -167,41 +190,27 @@ class _HealthcareSpecialtiesScreenState
             else
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 0.92,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      if (_loading && categories == null) {
-                        return const _CategorySkeleton();
-                      }
-                      final c = categories![index];
-                      final look = StaticHealthcare.specialtyById(c.id);
-                      final known = look.id == c.id;
-                      final title = known
-                          ? look.title
-                          : (c.name ?? 'تصنيف رقم ${c.id}');
-                      final subtitle = known
-                          ? (c.name ?? look.subtitle)
-                          : look.subtitle;
-                      return _SpecialtyCard(
-                        title: title,
-                        subtitle: subtitle,
-                        icon: look.icon,
-                        accent: look.accent,
-                        count: c.count,
-                        onTap: () => _open(c.id, c.name ?? title),
-                      );
-                    },
-                    childCount: _loading && categories == null
-                        ? 6
-                        : categories!.length,
-                  ),
-                ),
+                sliver: isLargeText(context)
+                    // عمود واحد يأخذ فيه كل تصنيف ارتفاع محتواه؛ المربع الثابت يقص العنوان.
+                    ? SliverList.separated(
+                        itemCount: _tileCount(categories),
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) =>
+                            IntrinsicHeight(child: _tile(categories, index)),
+                      )
+                    : SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: 0.92,
+                            ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _tile(categories, index),
+                          childCount: _tileCount(categories),
+                        ),
+                      ),
               ),
             if (!_loading && categories != null && categories.isEmpty)
               SliverToBoxAdapter(

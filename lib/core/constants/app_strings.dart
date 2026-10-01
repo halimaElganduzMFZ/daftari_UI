@@ -8,6 +8,8 @@ abstract final class AppStrings {
   static const username = 'اسم المستخدم';
   static const usernameHint = 'رقم الموظف';
   static const password = 'كلمة المرور';
+  static const showPassword = 'إظهار كلمة المرور';
+  static const hidePassword = 'إخفاء كلمة المرور';
   static const login = 'تسجيل الدخول';
   static const rememberMe = 'تذكرني';
   static const loginFailedTitle = 'مع الأسف';

@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../data/models/healthcare_provider.dart';
 import '../../data/repositories/healthcare_repository.dart';
 import '../../data/static/static_healthcare.dart';
@@ -126,6 +127,7 @@ class _HealthcareBySpecialtyScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: Text(widget.title)),
+      bottomNavigationBar: const BottomInsetSpacer(),
       body: RefreshIndicator(
         color: AppColors.goldDeep,
         onRefresh: _reload,
@@ -334,7 +336,8 @@ class _ProviderCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Container(
-                height: 110,
+                // ارتفاع أدنى لا ثابت: يطول الرأس مع حجم الخط بدل أن يفيض العنوان.
+                constraints: const BoxConstraints(minHeight: 110),
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(19),
@@ -355,7 +358,7 @@ class _ProviderCard extends StatelessWidget {
                     top: Radius.circular(19),
                   ),
                   child: Stack(
-                    fit: StackFit.expand,
+                    alignment: Alignment.center,
                     children: [
                       Positioned(
                         left: 8,
@@ -375,27 +378,28 @@ class _ProviderCard extends StatelessWidget {
                             size: 44,
                           ),
                         ),
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              FaIcon(icon, color: Colors.white, size: 26),
-                              const SizedBox(height: 8),
-                              Text(
-                                provider.title,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15,
-                                ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FaIcon(icon, color: Colors.white, size: 26),
+                            const SizedBox(height: 8),
+                            Text(
+                              provider.title,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
