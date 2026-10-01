@@ -5,6 +5,7 @@ import 'core/config/api_config.dart';
 import 'core/constants/app_strings.dart';
 import 'core/di/app_services.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 import 'features/auth/login_screen.dart';
 import 'features/splash/insecure_build_screen.dart';
 import 'features/splash/splash_screen.dart';
@@ -12,8 +13,11 @@ import 'features/splash/splash_screen.dart';
 /// مفتاح الملاحة العام — للعودة إلى شاشة الدخول عند انتهاء الجلسة من أي مكان.
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // استعادة وضع المظهر المحفوظ قبل رسم أول إطار.
+  await ThemeController.instance.load();
 
   // عند فشل تجديد التوكن نهائياً (انتهت الجلسة أو أُلغيت من الخادم).
   AppServices.onSessionExpired = () {

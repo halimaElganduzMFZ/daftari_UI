@@ -62,24 +62,21 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
             .where((r) => r.kind == ManagerRequestKind.permission)
             .toList();
       case _InboxTab.leaves:
-        list =
-            list.where((r) => r.kind == ManagerRequestKind.leave).toList();
+        list = list.where((r) => r.kind == ManagerRequestKind.leave).toList();
       case _InboxTab.all:
         break;
     }
     final q = _query.trim().toLowerCase();
     if (q.isNotEmpty) {
       final qDigits = q.replaceAll(RegExp(r'[\s\-]'), '');
-      list = list
-          .where((r) {
-            final name = r.employeeName.toLowerCase();
-            final number = r.employeeNumber.toLowerCase();
-            final numberDigits = number.replaceAll(RegExp(r'[\s\-]'), '');
-            return name.contains(q) ||
-                number.contains(q) ||
-                numberDigits.contains(qDigits);
-          })
-          .toList();
+      list = list.where((r) {
+        final name = r.employeeName.toLowerCase();
+        final number = r.employeeNumber.toLowerCase();
+        final numberDigits = number.replaceAll(RegExp(r'[\s\-]'), '');
+        return name.contains(q) ||
+            number.contains(q) ||
+            numberDigits.contains(qDigits);
+      }).toList();
     }
     return list;
   }
@@ -187,9 +184,7 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
 
   void _openAbsentees() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const ManagerAbsenteesScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const ManagerAbsenteesScreen()),
     );
   }
 
@@ -212,14 +207,14 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                     children: [
                       Text(
                         widget.structureName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppColors.goldDeep,
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'صندوق الطلبات',
                         style: TextStyle(
                           fontSize: 22,
@@ -231,7 +226,6 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                   ),
                 ),
                 IconButton(
-
                   tooltip: 'الدخول نيابة عن موظف',
 
                   onPressed: _openImpersonation,
@@ -239,7 +233,6 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
                   icon: const Icon(Icons.switch_account_outlined),
 
                   color: AppColors.goldDeep,
-
                 ),
 
                 _NotificationBell(
@@ -386,94 +379,90 @@ class _ManagerApprovalsScreenState extends State<ManagerApprovalsScreen> {
           const SizedBox(height: 8),
           Expanded(
             child: pending.isEmpty
-                ? const Center(
+                ? Center(
                     child: Text(
                       'لا توجد طلبات في هذا التبويب',
                       style: TextStyle(color: AppColors.slate),
                     ),
                   )
                 : _mode == _ViewMode.focus
-                    ? _FocusInbox(
-                        request: focusItem!,
-                        index: _focusIndex,
-                        total: pending.length,
-                        dateLabel: _dateFormat.format(focusItem.submittedAt),
-                        onPrev: _focusIndex > 0
-                            ? () => setState(() => _focusIndex--)
-                            : null,
-                        onNext: _focusIndex < pending.length - 1
-                            ? () => setState(() => _focusIndex++)
-                            : null,
-                        onApprove: () => _approve(focusItem),
-                        onReject: () => _reject(focusItem),
-                      )
-                    : Builder(
-                        builder: (context) {
-                          final visible = pending.take(_listVisibleCount).toList();
-                          final hasMore = _listVisibleCount < pending.length;
-                          return ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                            itemCount: visible.length + (hasMore ? 1 : 0),
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              if (hasMore && index == visible.length) {
-                                return OutlinedButton.icon(
-                                  onPressed: () => setState(() {
-                                    _listVisibleCount = (_listVisibleCount +
-                                            _listPageSize)
-                                        .clamp(0, pending.length);
-                                  }),
-                                  icon: const Icon(Icons.expand_more_rounded),
-                                  label: Text(
-                                    'عرض المزيد (${pending.length - visible.length})',
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    minimumSize: const Size.fromHeight(48),
-                                    foregroundColor: AppColors.goldDeep,
-                                    side: const BorderSide(
-                                      color: AppColors.gold,
-                                    ),
-                                  ),
-                                );
-                              }
+                ? _FocusInbox(
+                    request: focusItem!,
+                    index: _focusIndex,
+                    total: pending.length,
+                    dateLabel: _dateFormat.format(focusItem.submittedAt),
+                    onPrev: _focusIndex > 0
+                        ? () => setState(() => _focusIndex--)
+                        : null,
+                    onNext: _focusIndex < pending.length - 1
+                        ? () => setState(() => _focusIndex++)
+                        : null,
+                    onApprove: () => _approve(focusItem),
+                    onReject: () => _reject(focusItem),
+                  )
+                : Builder(
+                    builder: (context) {
+                      final visible = pending.take(_listVisibleCount).toList();
+                      final hasMore = _listVisibleCount < pending.length;
+                      return ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                        itemCount: visible.length + (hasMore ? 1 : 0),
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          if (hasMore && index == visible.length) {
+                            return OutlinedButton.icon(
+                              onPressed: () => setState(() {
+                                _listVisibleCount =
+                                    (_listVisibleCount + _listPageSize).clamp(
+                                      0,
+                                      pending.length,
+                                    );
+                              }),
+                              icon: const Icon(Icons.expand_more_rounded),
+                              label: Text(
+                                'عرض المزيد (${pending.length - visible.length})',
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(48),
+                                foregroundColor: AppColors.goldDeep,
+                                side: BorderSide(color: AppColors.gold),
+                              ),
+                            );
+                          }
 
-                              final request = visible[index];
-                              final selected =
-                                  _selectedIds.contains(request.id);
-                              return _CompactRequestTile(
-                                request: request,
-                                dateLabel: _dateFormat
-                                    .format(request.submittedAt),
-                                selected: selected,
-                                onToggleSelect: () {
-                                  setState(() {
-                                    if (selected) {
-                                      _selectedIds.remove(request.id);
-                                    } else {
-                                      _selectedIds.add(request.id);
-                                    }
-                                  });
-                                },
-                                onApprove: () => _approve(request),
-                                onReject: () => _reject(request),
-                                onOpenFocus: () => setState(() {
-                                  _mode = _ViewMode.focus;
-                                  _focusIndex = pending.indexOf(request);
-                                }),
-                              );
+                          final request = visible[index];
+                          final selected = _selectedIds.contains(request.id);
+                          return _CompactRequestTile(
+                            request: request,
+                            dateLabel: _dateFormat.format(request.submittedAt),
+                            selected: selected,
+                            onToggleSelect: () {
+                              setState(() {
+                                if (selected) {
+                                  _selectedIds.remove(request.id);
+                                } else {
+                                  _selectedIds.add(request.id);
+                                }
+                              });
                             },
+                            onApprove: () => _approve(request),
+                            onReject: () => _reject(request),
+                            onOpenFocus: () => setState(() {
+                              _mode = _ViewMode.focus;
+                              _focusIndex = pending.indexOf(request);
+                            }),
                           );
                         },
-                      ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _vline() =>
-      Container(width: 1, height: 36, color: AppColors.line);
+  Widget _vline() => Container(width: 1, height: 36, color: AppColors.line);
 }
 
 class _NotificationBell extends StatelessWidget {
@@ -497,7 +486,7 @@ class _NotificationBell extends StatelessWidget {
           textScaler: TextScaler.noScaling,
         ),
         backgroundColor: AppColors.danger,
-        child: const Icon(
+        child: Icon(
           Icons.notifications_none_rounded,
           color: AppColors.warning,
           size: 28,
@@ -534,7 +523,7 @@ class _MiniStat extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               color: AppColors.slate,
               fontWeight: FontWeight.w600,
@@ -624,8 +613,9 @@ class _FocusInbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final kindLabel =
-        request.kind == ManagerRequestKind.leave ? 'إجازة' : 'إذن';
+    final kindLabel = request.kind == ManagerRequestKind.leave
+        ? 'إجازة'
+        : 'إذن';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
@@ -642,7 +632,7 @@ class _FocusInbox extends StatelessWidget {
                 child: Text(
                   '${index + 1} من $total',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.slate,
                   ),
@@ -675,7 +665,7 @@ class _FocusInbox extends StatelessWidget {
                         ),
                         child: Text(
                           kindLabel,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
                             color: AppColors.goldDeep,
                           ),
@@ -684,17 +674,14 @@ class _FocusInbox extends StatelessWidget {
                       const Spacer(),
                       Text(
                         dateLabel,
-                        style: const TextStyle(
-                          color: AppColors.slate,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: AppColors.slate, fontSize: 12),
                       ),
                     ],
                   ),
                   const SizedBox(height: 18),
                   Text(
                     request.employeeName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
                       color: AppColors.charcoal,
@@ -704,7 +691,7 @@ class _FocusInbox extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     request.employeeNumber,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.slate,
                       fontWeight: FontWeight.w600,
                     ),
@@ -712,7 +699,7 @@ class _FocusInbox extends StatelessWidget {
                   const SizedBox(height: 18),
                   Text(
                     request.typeLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: AppColors.charcoal,
@@ -721,7 +708,7 @@ class _FocusInbox extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     request.statusLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.slate,
                       fontWeight: FontWeight.w600,
                     ),
@@ -737,10 +724,7 @@ class _FocusInbox extends StatelessWidget {
                       ),
                       child: Text(
                         request.notes!,
-                        style: const TextStyle(
-                          color: AppColors.slate,
-                          height: 1.45,
-                        ),
+                        style: TextStyle(color: AppColors.slate, height: 1.45),
                       ),
                     ),
                   ],
@@ -773,7 +757,7 @@ class _FocusInbox extends StatelessWidget {
                             onPressed: onReject,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.danger,
-                              side: const BorderSide(color: AppColors.danger),
+                              side: BorderSide(color: AppColors.danger),
                             ),
                             icon: const Icon(Icons.close_rounded),
                             label: const Text(AppStrings.reject),
@@ -813,17 +797,15 @@ class _CompactRequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final kindLabel =
-        request.kind == ManagerRequestKind.leave ? 'إجازة' : 'إذن';
+    final kindLabel = request.kind == ManagerRequestKind.leave
+        ? 'إجازة'
+        : 'إذن';
 
     return AppSurface(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       child: Row(
         children: [
-          Checkbox(
-            value: selected,
-            onChanged: (_) => onToggleSelect(),
-          ),
+          Checkbox(value: selected, onChanged: (_) => onToggleSelect()),
           Expanded(
             child: InkWell(
               onTap: onOpenFocus,
@@ -832,7 +814,7 @@ class _CompactRequestTile extends StatelessWidget {
                 children: [
                   Text(
                     request.employeeName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w800,
                       color: AppColors.charcoal,
                     ),
@@ -840,17 +822,11 @@ class _CompactRequestTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '${request.typeLabel} · $kindLabel',
-                    style: const TextStyle(
-                      color: AppColors.slate,
-                      fontSize: 12.5,
-                    ),
+                    style: TextStyle(color: AppColors.slate, fontSize: 12.5),
                   ),
                   Text(
                     dateLabel,
-                    style: const TextStyle(
-                      color: AppColors.slate,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: AppColors.slate, fontSize: 11),
                   ),
                   if (request.attachment != null) ...[
                     const SizedBox(height: 8),
@@ -868,18 +844,12 @@ class _CompactRequestTile extends StatelessWidget {
           IconButton(
             tooltip: AppStrings.approve,
             onPressed: onApprove,
-            icon: const Icon(
-              Icons.check_circle_outline,
-              color: AppColors.success,
-            ),
+            icon: Icon(Icons.check_circle_outline, color: AppColors.success),
           ),
           IconButton(
             tooltip: AppStrings.reject,
             onPressed: onReject,
-            icon: const Icon(
-              Icons.cancel_outlined,
-              color: AppColors.danger,
-            ),
+            icon: Icon(Icons.cancel_outlined, color: AppColors.danger),
           ),
         ],
       ),

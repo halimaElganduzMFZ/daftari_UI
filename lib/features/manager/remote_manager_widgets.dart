@@ -198,7 +198,7 @@ class ManagerPagedListState extends State<ManagerPagedList> {
             Expanded(
               child: Text(
                 _total == null ? '' : 'عدد النتائج: $_total',
-                style: const TextStyle(color: AppColors.slate),
+                style: TextStyle(color: AppColors.slate),
               ),
             ),
             IconButton(

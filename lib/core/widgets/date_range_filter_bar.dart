@@ -34,10 +34,7 @@ class DateRangeFilterBar extends StatelessWidget {
     return true;
   }
 
-  Future<void> _pick(
-    BuildContext context, {
-    required bool isFrom,
-  }) async {
+  Future<void> _pick(BuildContext context, {required bool isFrom}) async {
     final initial = isFrom
         ? (from ?? to ?? DateTime.now())
         : (to ?? from ?? DateTime.now());
@@ -77,7 +74,7 @@ class DateRangeFilterBar extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Text(
+            Text(
               'الفترة',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -86,17 +83,11 @@ class DateRangeFilterBar extends StatelessWidget {
             ),
             const Spacer(),
             if (onCleared != null && (from != null || to != null))
-              TextButton(
-                onPressed: onCleared,
-                child: const Text('مسح'),
-              ),
+              TextButton(onPressed: onCleared, child: const Text('مسح')),
           ],
         ),
         const SizedBox(height: 4),
-        Text(
-          hint,
-          style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
-        ),
+        Text(hint, style: TextStyle(color: AppColors.slate, fontSize: 12.5)),
         const SizedBox(height: 10),
         // مع الخط الكبير لا يتسع نصف العرض للتاريخ فينكسر وسطه،
         // فيأخذ كل حقل سطراً كاملاً.
@@ -136,7 +127,7 @@ class _DateField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 12.5,
             color: AppColors.slate,
@@ -168,7 +159,7 @@ class _DateField extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.calendar_month_rounded,
                     size: 18,
                     color: AppColors.goldDeep,

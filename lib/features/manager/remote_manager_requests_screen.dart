@@ -56,8 +56,7 @@ class _RemoteManagerRequestsScreenState
   Object? _awolError;
   int _unreadNotifications = 0;
   bool get _onBehalf => widget.employeeId != null;
-  bool get _showInboxChrome =>
-      !widget.history && !widget.review && !_onBehalf;
+  bool get _showInboxChrome => !widget.history && !widget.review && !_onBehalf;
   String get _path => _onBehalf
       ? '/manager/on-behalf/employees/${widget.employeeId}/requests'
       : widget.review
@@ -227,7 +226,7 @@ class _RemoteManagerRequestsScreenState
                     : widget.history
                     ? 'سجل الطلبات'
                     : 'موافقات المدراء',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: AppColors.charcoal,
@@ -252,7 +251,7 @@ class _RemoteManagerRequestsScreenState
                     textScaler: TextScaler.noScaling,
                     style: const TextStyle(fontSize: 10),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.notifications_none_rounded,
                     color: AppColors.goldDeep,
                   ),
@@ -267,7 +266,7 @@ class _RemoteManagerRequestsScreenState
               widget.review
                   ? 'طلبات جميع الموظفين — للعرض فقط'
                   : 'الطلبات ضمن جميع الهياكل المخوّلة لك',
-              style: const TextStyle(color: AppColors.slate),
+              style: TextStyle(color: AppColors.slate),
             ),
           ),
         if (_showInboxChrome)
@@ -313,10 +312,7 @@ class _RemoteManagerRequestsScreenState
             !widget.review &&
             !_onBehalf &&
             AppSession.currentUser?.isAssigner == true)
-          ManagerStatisticsEntry(
-            repository: _repo,
-            requestTypes: _types,
-          ),
+          ManagerStatisticsEntry(repository: _repo, requestTypes: _types),
         if (_counts != null)
           AppSurface(
             child: Wrap(
@@ -373,7 +369,7 @@ class _RemoteManagerRequestsScreenState
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final entry in const {
+            for (final entry in {
               'all': 'الكل',
               'pending': 'معلّق',
               'approved': 'معتمد',
@@ -418,8 +414,8 @@ class _RemoteManagerRequestsScreenState
           ],
         ),
         if (!widget.history && !widget.review && !_onBehalf)
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
             child: Text(
               'اسحب البطاقة لإظهار: تفاصيل · موافقة · رفض',
               style: TextStyle(color: AppColors.slate, fontSize: 12),
@@ -441,7 +437,7 @@ class _RemoteManagerRequestsScreenState
               if (employee != null)
                 Text(
                   managerText(employee['number']),
-                  style: const TextStyle(color: AppColors.goldDeep),
+                  style: TextStyle(color: AppColors.goldDeep),
                 ),
               ManagerInfo('نوع الطلب', item['type']),
               ManagerInfo('الحالة', item['state'] ?? item['status']),
@@ -505,9 +501,9 @@ class _RemoteManagerRequestsScreenState
     try {
       final result = await _repo.withdraw(_path, item['id']);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(managerText(result['message']))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(managerText(result['message']))));
       await _list.currentState?.refresh();
     } catch (e) {
       if (!mounted) return;
@@ -516,7 +512,10 @@ class _RemoteManagerRequestsScreenState
     }
   }
 
-  Future<void> _decideFromList(ManagerJson item, {required bool approve}) async {
+  Future<void> _decideFromList(
+    ManagerJson item, {
+    required bool approve,
+  }) async {
     try {
       String? reason;
       if (!approve) {
@@ -548,9 +547,9 @@ class _RemoteManagerRequestsScreenState
       }
       final result = await _repo.decide(item['id'], reason: reason);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(managerText(result['message']))),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(managerText(result['message']))));
       await _list.currentState?.refresh();
     } catch (e) {
       if (!mounted) return;

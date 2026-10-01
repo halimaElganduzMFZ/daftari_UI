@@ -15,17 +15,14 @@ class SubmitHubScreen extends StatelessWidget {
   Future<void> _open(BuildContext context, RequestKind kind) async {
     if (kind == RequestKind.permission) {
       await Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => const MakeRequestScreen(),
-        ),
+        MaterialPageRoute<void>(builder: (_) => const MakeRequestScreen()),
       );
       return;
     }
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => MakeLeaveScreen(
-          onSubmitted: () => Navigator.of(context).pop(),
-        ),
+        builder: (_) =>
+            MakeLeaveScreen(onSubmitted: () => Navigator.of(context).pop()),
       ),
     );
   }
@@ -45,7 +42,7 @@ class SubmitHubScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
         physics: const BouncingScrollPhysics(),
         children: [
-          const Text(
+          Text(
             'تقديم طلب',
             style: TextStyle(
               fontSize: 26,
@@ -58,7 +55,7 @@ class SubmitHubScreen extends StatelessWidget {
             employee == null
                 ? 'اختر نوع الطلب للبدء'
                 : 'مرحباً ${employee.fullName} — اختر نوع الطلب للبدء',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.slate,
               height: 1.45,
               fontWeight: FontWeight.w500,
@@ -130,7 +127,7 @@ class _HubCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
                     color: AppColors.charcoal,
@@ -139,7 +136,7 @@ class _HubCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
                     height: 1.35,
                     color: AppColors.slate,
@@ -149,7 +146,7 @@ class _HubCard extends StatelessWidget {
               ],
             ),
           ),
-          const FaIcon(
+          FaIcon(
             FontAwesomeIcons.chevronLeft,
             size: 14,
             color: AppColors.slate,

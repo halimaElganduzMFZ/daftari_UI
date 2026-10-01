@@ -20,7 +20,7 @@ class AttendanceScreen extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
-          const Text(
+          Text(
             AppStrings.todayAttendance,
             style: TextStyle(
               fontSize: 24,
@@ -29,7 +29,7 @@ class AttendanceScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             AppStrings.staticModeHint,
             style: TextStyle(color: AppColors.slate),
           ),
@@ -72,16 +72,16 @@ class AttendanceScreen extends StatelessWidget {
   }
 
   static String _label(AttendanceState state) => switch (state) {
-        AttendanceState.present => 'حاضر',
-        AttendanceState.late => 'متأخر',
-        AttendanceState.absent => 'غائب',
-        AttendanceState.remote => 'عن بُعد',
-      };
+    AttendanceState.present => 'حاضر',
+    AttendanceState.late => 'متأخر',
+    AttendanceState.absent => 'غائب',
+    AttendanceState.remote => 'عن بُعد',
+  };
 
   static StatusTone _tone(AttendanceState state) => switch (state) {
-        AttendanceState.present => StatusTone.success,
-        AttendanceState.late => StatusTone.warning,
-        AttendanceState.absent => StatusTone.danger,
-        AttendanceState.remote => StatusTone.info,
-      };
+    AttendanceState.present => StatusTone.success,
+    AttendanceState.late => StatusTone.warning,
+    AttendanceState.absent => StatusTone.danger,
+    AttendanceState.remote => StatusTone.info,
+  };
 }

@@ -103,9 +103,8 @@ class _WhichAppScreenState extends State<WhichAppScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   IconData _iconForType(String typeLabel) {
@@ -139,14 +138,14 @@ class _WhichAppScreenState extends State<WhichAppScreen> {
           Container(
             width: double.infinity,
             height: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
                 colors: [
-                  Color(0xFFEAE8E3),
-                  AppColors.background,
-                  Color(0xFFE4E2DC),
+                  AppColors.backdropStart,
+                  AppColors.backdropMid,
+                  AppColors.backdropEnd,
                 ],
               ),
             ),
@@ -180,14 +179,14 @@ class _WhichAppScreenState extends State<WhichAppScreen> {
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(color: AppColors.line),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.account_balance_outlined,
                             color: AppColors.goldDeep,
                             size: 30,
                           ),
                         ),
                         const SizedBox(height: 18),
-                        const Text(
+                        Text(
                           'تحديد نوع الدخول',
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -201,7 +200,7 @@ class _WhichAppScreenState extends State<WhichAppScreen> {
                         Text(
                           'مرحباً $name — ادخل كموظف أو اختر الهيكل الذي تديره',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             height: 1.45,
                             color: AppColors.slate,
@@ -219,7 +218,7 @@ class _WhichAppScreenState extends State<WhichAppScreen> {
                         ),
                         const SizedBox(height: 12),
                         if (structures.isNotEmpty) ...[
-                          const Align(
+                          Align(
                             alignment: Alignment.centerRight,
                             child: Text(
                               'أو ادخل مسؤولاً عن',
@@ -304,11 +303,11 @@ class _StructureCardState extends State<_StructureCard> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: AppColors.line),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x10000000),
+                  color: AppColors.shadow,
                   blurRadius: 18,
-                  offset: Offset(0, 8),
+                  offset: const Offset(0, 8),
                 ),
               ],
             ),
@@ -353,7 +352,7 @@ class _StructureCardState extends State<_StructureCard> {
                           ),
                           child: Text(
                             widget.typeLabel,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               color: AppColors.goldDeep,
@@ -363,7 +362,7 @@ class _StructureCardState extends State<_StructureCard> {
                         const SizedBox(height: 6),
                         Text(
                           widget.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: AppColors.charcoal,
@@ -373,7 +372,7 @@ class _StructureCardState extends State<_StructureCard> {
                           const SizedBox(height: 4),
                           Text(
                             widget.subtitle!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12.5,
                               height: 1.35,
                               color: AppColors.slate,
@@ -383,7 +382,7 @@ class _StructureCardState extends State<_StructureCard> {
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.arrow_back_ios_new_rounded,
                     size: 16,
                     color: AppColors.slate,

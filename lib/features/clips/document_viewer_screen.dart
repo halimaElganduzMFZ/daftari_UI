@@ -20,11 +20,7 @@ import '../../data/repositories/documents_repository.dart';
 /// عارض مستند واحد: يحمّل الملف بالتوكن (`/me/documents/:id/file`) ويعرضه
 /// مع التكبير والتصغير، ويتيح حفظه على الجهاز ومشاركته.
 class DocumentViewerScreen extends StatefulWidget {
-  const DocumentViewerScreen({
-    super.key,
-    required this.clip,
-    this.repository,
-  });
+  const DocumentViewerScreen({super.key, required this.clip, this.repository});
 
   final EmployeeClip clip;
   final DocumentsRepository? repository;
@@ -36,7 +32,8 @@ class DocumentViewerScreen extends StatefulWidget {
   }) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => DocumentViewerScreen(clip: clip, repository: repository),
+        builder: (_) =>
+            DocumentViewerScreen(clip: clip, repository: repository),
       ),
     );
   }
@@ -209,7 +206,10 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
             SizedBox(height: 14),
             Text(
               'جاري تحميل المستند…',
-              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -347,12 +347,19 @@ class _UnsupportedFile extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const FaIcon(FontAwesomeIcons.fileLines, size: 40, color: Colors.white70),
+            const FaIcon(
+              FontAwesomeIcons.fileLines,
+              size: 40,
+              color: Colors.white70,
+            ),
             const SizedBox(height: 14),
             Text(
               fileName,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -375,35 +382,53 @@ class _UnsupportedFile extends StatelessWidget {
 
 /// أيقونة ولون لكل نوع مستند (مشتركة بين القائمة والعارض).
 class ClipStyle {
-  const ClipStyle(this.icon, this.color);
+  ClipStyle(this.icon, this.color);
 
   final FaIconData icon;
   final Color color;
 }
 
 ClipStyle clipStyle(EmployeeClipKind kind) => switch (kind) {
-      EmployeeClipKind.timesheetCard =>
-        const ClipStyle(FontAwesomeIcons.clock, AppColors.info),
-      EmployeeClipKind.paySlip =>
-        const ClipStyle(FontAwesomeIcons.moneyBillWave, AppColors.success),
-      EmployeeClipKind.productionVoucher =>
-        const ClipStyle(FontAwesomeIcons.receipt, Color(0xFF8F7043)),
-      EmployeeClipKind.message =>
-        const ClipStyle(FontAwesomeIcons.envelopeOpenText, AppColors.goldDeep),
-      EmployeeClipKind.other =>
-        const ClipStyle(FontAwesomeIcons.fileLines, AppColors.slate),
-    };
+  EmployeeClipKind.timesheetCard => ClipStyle(
+    FontAwesomeIcons.clock,
+    AppColors.info,
+  ),
+  EmployeeClipKind.paySlip => ClipStyle(
+    FontAwesomeIcons.moneyBillWave,
+    AppColors.success,
+  ),
+  EmployeeClipKind.productionVoucher => ClipStyle(
+    FontAwesomeIcons.receipt,
+    const Color(0xFF8F7043),
+  ),
+  EmployeeClipKind.message => ClipStyle(
+    FontAwesomeIcons.envelopeOpenText,
+    AppColors.goldDeep,
+  ),
+  EmployeeClipKind.other => ClipStyle(
+    FontAwesomeIcons.fileLines,
+    AppColors.slate,
+  ),
+};
 
 /// رسالة عربية لأخطاء المستندات (404 ملف مفقود، 503 فهرس غير متاح، شبكة…).
 String describeDocumentError(Object e) {
   if (e is ApiException) {
-    if (e.isNetwork) return 'لا يوجد اتصال بالخادم. تحقق من الشبكة وحاول مجدداً.';
+    if (e.isNetwork) {
+      return 'لا يوجد اتصال بالخادم. تحقق من الشبكة وحاول مجدداً.';
+    }
     if (e.statusCode == 404) {
       return 'الملف غير موجود على خادم الملفات حالياً. قد يكون مستنداً قديماً لم يُنقل بعد.';
     }
-    if (e.statusCode == 503) return 'فهرس المستندات غير متاح حالياً. حاول لاحقاً.';
-    if (e.statusCode == 401) return 'انتهت الجلسة، أعد تسجيل الدخول.';
-    if (e.statusCode == 403) return 'انتهت صلاحية الرابط أو غير مصرح بالوصول.';
+    if (e.statusCode == 503) {
+      return 'فهرس المستندات غير متاح حالياً. حاول لاحقاً.';
+    }
+    if (e.statusCode == 401) {
+      return 'انتهت الجلسة، أعد تسجيل الدخول.';
+    }
+    if (e.statusCode == 403) {
+      return 'انتهت صلاحية الرابط أو غير مصرح بالوصول.';
+    }
     return e.message;
   }
   return 'حدث خطأ غير متوقع. حاول مرة أخرى.';

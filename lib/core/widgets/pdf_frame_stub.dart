@@ -3,49 +3,38 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
-/// نسخة غير الويب (أندرويد / iOS / سطح المكتب) — معاينة أصلية عبر `PdfPreview`.
-Widget buildPdfFrameImpl({
-  required Uint8List bytes,
-  required String viewType,
-}) {
-  return PdfPreview(
-    build: (_) async => bytes,
-    useActions: false,
-    canChangeOrientation: false,
-    canChangePageFormat: false,
-    canDebug: false,
-    scrollViewDecoration: const BoxDecoration(color: Color(0xFF1C1C1A)),
-    loadingWidget: const Center(
-      child: CircularProgressIndicator(color: Colors.white70),
-    ),
-    onError: (context, error) => const _PdfPreviewError(),
-  );
-}
+import '../theme/app_colors.dart';
 
-const bool pdfFrameSupportsNativePreviewImpl = true;
-
-class _PdfPreviewError extends StatelessWidget {
-  const _PdfPreviewError();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF1C1C1A),
-      alignment: Alignment.center,
+/// نسخة غير الويب — بطاقة إرشادية إلى أن يتوفر عارض محلي.
+Widget buildPdfFrameImpl({required Uint8List bytes, required String viewType}) {
+  return Container(
+    color: const Color(0xFF1C1C1A),
+    alignment: Alignment.center,
+    child: Padding(
       padding: const EdgeInsets.all(24),
-      child: const Column(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.picture_as_pdf_rounded, size: 48, color: Colors.white70),
-          SizedBox(height: 12),
-          Text(
-            'تعذّر عرض ملف PDF على هذا الجهاز.',
+          const Icon(
+            Icons.picture_as_pdf_rounded,
+            size: 48,
+            color: Colors.white70,
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'معاينة PDF المباشرة متاحة على نسخة الويب حالياً',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w700,
               height: 1.4,
             ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'الـ bytes محمّلة وجاهزة — اربط عارض PDF أصلي لاحقاً للجوال',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.slate, height: 1.4),
           ),
         ],
       ),

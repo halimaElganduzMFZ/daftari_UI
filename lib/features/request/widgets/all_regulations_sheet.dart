@@ -53,11 +53,14 @@ class _AllRegulationsSheetState extends State<_AllRegulationsSheet> {
     final exists = StaticRegulationsCenter.tabs.any(
       (tab) => tab.id == widget.initialTabId,
     );
-    _tabId = exists ? widget.initialTabId : StaticRegulationsCenter.tabs.first.id;
+    _tabId = exists
+        ? widget.initialTabId
+        : StaticRegulationsCenter.tabs.first.id;
   }
 
   RegulationTab get _current =>
-      StaticRegulationsCenter.byId(_tabId) ?? StaticRegulationsCenter.tabs.first;
+      StaticRegulationsCenter.byId(_tabId) ??
+      StaticRegulationsCenter.tabs.first;
 
   Widget _tabChip(RegulationTab tab) {
     final selected = tab.id == _tabId;
@@ -106,8 +109,8 @@ class _AllRegulationsSheetState extends State<_AllRegulationsSheet> {
               borderRadius: BorderRadius.circular(99),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             child: Row(
               children: [
                 FaIcon(
@@ -115,7 +118,7 @@ class _AllRegulationsSheetState extends State<_AllRegulationsSheet> {
                   size: 18,
                   color: AppColors.goldDeep,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'مركز اللوائح — الإجازات والأذونات والبصمات',
@@ -203,7 +206,7 @@ class _TextSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   section.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.goldDeep,
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
@@ -221,15 +224,17 @@ class _TextSection extends StatelessWidget {
                 children: [
                   Container(
                     margin: const EdgeInsets.only(top: 2),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.goldSoft,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       item.article,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.goldDeep,
                         fontWeight: FontWeight.w800,
                         fontSize: 11,
@@ -240,7 +245,7 @@ class _TextSection extends StatelessWidget {
                   Expanded(
                     child: Text(
                       item.text,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.charcoal,
                         height: 1.5,
                         fontSize: 13,
@@ -283,7 +288,7 @@ class _PenaltySection extends StatelessWidget {
         children: [
           Text(
             section.title,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.goldDeep,
               fontWeight: FontWeight.w800,
               fontSize: 14,
@@ -315,7 +320,7 @@ class _PenaltySection extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             category.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 13,
               color: AppColors.charcoal,
@@ -339,7 +344,7 @@ class _PenaltySection extends StatelessWidget {
                 defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                 children: [
                   TableRow(
-                    decoration: const BoxDecoration(color: AppColors.goldSoft),
+                    decoration: BoxDecoration(color: AppColors.goldSoft),
                     children: [
                       for (final header in category.headers)
                         Padding(
@@ -347,7 +352,7 @@ class _PenaltySection extends StatelessWidget {
                           child: Text(
                             header,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 11,
                               color: AppColors.goldDeep,
@@ -372,7 +377,7 @@ class _PenaltySection extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         child: Text(
           row.violation,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11.5,
             height: 1.35,
             fontWeight: FontWeight.w600,
@@ -406,8 +411,8 @@ class _PenaltySection extends StatelessWidget {
       // للتبسيط البصري نكرر نفس النص في الخانات الممتدة بدل Table colspan المعقّد.
       for (var i = 1; i < span; i++) {
         cells.add(
-          const Padding(
-            padding: EdgeInsets.all(8),
+          Padding(
+            padding: const EdgeInsets.all(8),
             child: Text(
               '←',
               textAlign: TextAlign.center,

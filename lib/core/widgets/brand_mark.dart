@@ -4,11 +4,7 @@ import '../theme/app_colors.dart';
 
 /// شعار MFZ الدائري — نفس لغة شاشة الدخول والأيقونة.
 class BrandMark extends StatelessWidget {
-  const BrandMark({
-    super.key,
-    this.size = 88,
-    this.showSoftShadow = true,
-  });
+  const BrandMark({super.key, this.size = 88, this.showSoftShadow = true});
 
   final double size;
   final bool showSoftShadow;
@@ -20,13 +16,10 @@ class BrandMark extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFC9A66B),
-            AppColors.goldDeep,
-          ],
+          colors: [const Color(0xFFC9A66B), AppColors.goldDeep],
         ),
         boxShadow: showSoftShadow
             ? [

@@ -190,14 +190,14 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
         children: [
           Text(
             structure,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.goldDeep,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'عرض بصمات الموظفين',
             style: TextStyle(
               fontSize: 22,
@@ -206,7 +206,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'ابحث بالاسم أو الرقم الوظيفي، ثم اختر أي فترة زمنية (ليست مقيّدة بالشهر الحالي) واعرض السجل.',
             style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
@@ -215,7 +215,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
+                Text(
                   'الموظف',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
@@ -278,7 +278,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                           ),
                           child: Text(
                             _selectedEmployee!.fullName.characters.first,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.goldDeep,
                               fontWeight: FontWeight.w800,
                             ),
@@ -291,14 +291,14 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                             children: [
                               Text(
                                 _selectedEmployee!.fullName,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.charcoal,
                                 ),
                               ),
                               Text(
                                 '${_selectedEmployee!.employeeNumber} · ${_selectedEmployee!.department}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12.5,
                                   color: AppColors.slate,
                                 ),
@@ -309,7 +309,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                         IconButton(
                           tooltip: 'تغيير',
                           onPressed: _clearSearch,
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.edit_outlined,
                             size: 20,
                             color: AppColors.goldDeep,
@@ -322,8 +322,8 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                 if (showList) ...[
                   const SizedBox(height: 8),
                   if (matches.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Text(
                         'لا يوجد موظف بهذا الاسم أو الرقم',
                         textAlign: TextAlign.center,
@@ -337,7 +337,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                         shrinkWrap: true,
                         itemCount: matches.length,
                         separatorBuilder: (_, _) =>
-                            const Divider(height: 1, color: AppColors.line),
+                            Divider(height: 1, color: AppColors.line),
                         itemBuilder: (context, index) {
                           final e = matches[index];
                           return ListTile(
@@ -350,7 +350,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                               ),
                               child: Text(
                                 e.fullName.characters.first,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.goldDeep,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -358,19 +358,19 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                             ),
                             title: Text(
                               e.fullName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.charcoal,
                               ),
                             ),
                             subtitle: Text(
                               '${e.employeeNumber} · ${e.department}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12.5,
                                 color: AppColors.slate,
                               ),
                             ),
-                            trailing: const Icon(
+                            trailing: Icon(
                               Icons.chevron_left_rounded,
                               color: AppColors.slate,
                             ),
@@ -426,7 +426,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                   const SizedBox(height: 10),
                   Text(
                     _error!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.danger,
                       fontWeight: FontWeight.w600,
                     ),
@@ -440,7 +440,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
             Text(
               'سجل الحضور والغياب'
               '${_selectedEmployee == null ? '' : ' — ${_selectedEmployee!.fullName}'}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 color: AppColors.charcoal,
@@ -476,7 +476,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
             ),
             const SizedBox(height: 12),
             if (results.isEmpty)
-              const AppSurface(
+              AppSurface(
                 child: Text(
                   'لا توجد بيانات لعرضها',
                   textAlign: TextAlign.center,
@@ -486,7 +486,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
             else ...[
               Text(
                 'عرض ${results.take(_visibleCount).length} من ${results.length} يوم',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
                   color: AppColors.slate,
@@ -517,7 +517,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                             children: [
                               Text(
                                 '${row.weekdayLabel} — ${_dateFormat.format(row.date)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: AppColors.charcoal,
                                 ),
@@ -525,7 +525,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 row.dayKindLabel,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.slate,
                                   fontSize: 12.5,
                                 ),
@@ -535,7 +535,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                                 Text(
                                   'دخول ${row.checkIn}'
                                   '${row.checkOut != null ? ' · خروج ${row.checkOut}' : ''}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.charcoal,
@@ -583,7 +583,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     foregroundColor: AppColors.goldDeep,
-                    side: const BorderSide(color: AppColors.gold),
+                    side: BorderSide(color: AppColors.gold),
                   ),
                 ),
             ],
@@ -612,7 +612,7 @@ class _DateField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w700,
             color: AppColors.charcoal,
           ),
@@ -643,7 +643,7 @@ class _DateField extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.calendar_month_outlined,
                     color: AppColors.goldDeep,
                     size: 20,
@@ -685,7 +685,7 @@ class _SummaryChip extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               color: AppColors.slate,
               fontWeight: FontWeight.w600,

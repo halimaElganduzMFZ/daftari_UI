@@ -179,9 +179,9 @@ class _OnBehalfWorkspaceState extends State<_OnBehalfWorkspace> {
           child: AppSurface(
             child: Column(
               children: [
-                Text(
+                const Text(
                   'تُسجّل الطلبات باسم الموظف، ويُسجّل حسابك كمدخل للطلب.',
-                  style: const TextStyle(height: 1.6),
+                  style: TextStyle(height: 1.6),
                 ),
                 if (widget.resolved['structure'] is Map)
                   ManagerInfo(

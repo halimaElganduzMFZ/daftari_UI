@@ -61,8 +61,7 @@ class _EmployeeAssetsScreenState extends State<EmployeeAssetsScreen> {
           ApiException(isNetwork: true) =>
             'لا يوجد اتصال بالخادم. تحقق من الشبكة وحاول مجدداً.',
           ApiException(statusCode: 401) => 'انتهت الجلسة، أعد تسجيل الدخول.',
-          ApiException(statusCode: 403) =>
-            'هذه الصفحة متاحة لحساب الموظف فقط.',
+          ApiException(statusCode: 403) => 'هذه الصفحة متاحة لحساب الموظف فقط.',
           ApiException(:final message) => message,
           _ => 'حدث خطأ غير متوقع. حاول مرة أخرى.',
         };
@@ -92,7 +91,7 @@ class _EmployeeAssetsScreenState extends State<EmployeeAssetsScreen> {
   Widget build(BuildContext context) {
     final employee = AppSession.currentEmployee;
     final result = _result;
-    final assets = result?.assets ?? const <EmployeeAsset>[];
+    final assets = result?.assets ?? <EmployeeAsset>[];
     final theme = Theme.of(context);
 
     final name = employee?.fullName ?? 'موظف';
@@ -132,115 +131,113 @@ class _EmployeeAssetsScreenState extends State<EmployeeAssetsScreen> {
         color: AppColors.goldDeep,
         onRefresh: _load,
         child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          Text(
-            'عرض أصولك المسجّلة لديك وطباعتها عند الحاجة.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.slate,
-              height: 1.5,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          children: [
+            Text(
+              'عرض أصولك المسجّلة لديك وطباعتها عند الحاجة.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: AppColors.slate,
+                height: 1.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          _EmployeeBanner(
-            name: name,
-            employeeNumber: employeeNumber,
-            department: department,
-          ),
-          const SizedBox(height: 20),
-          if (_loading)
-            const _AssetsSkeleton()
-          else if (_error != null)
-            _StatusCard(
-              icon: Icons.cloud_off_rounded,
-              title: 'تعذّر تحميل الأصول',
-              message: _error!,
-              onRetry: _load,
-            )
-          else if (result != null && !result.available)
-            _StatusCard(
-              icon: Icons.inventory_outlined,
-              title: 'سجل الأصول غير متاح حالياً',
-              message:
-                  'خادم سجل الأصول مطفأ أو لا يمكن الوصول إليه من الـ API. حاول لاحقاً أو راجع قسم الأصول.',
-              onRetry: _load,
-            )
-          else if (assets.isEmpty)
-            const _EmptyAssets()
-          else ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
+            const SizedBox(height: 16),
+            _EmployeeBanner(
+              name: name,
+              employeeNumber: employeeNumber,
+              department: department,
+            ),
+            const SizedBox(height: 20),
+            if (_loading)
+              const _AssetsSkeleton()
+            else if (_error != null)
+              _StatusCard(
+                icon: Icons.cloud_off_rounded,
+                title: 'تعذّر تحميل الأصول',
+                message: _error!,
+                onRetry: _load,
+              )
+            else if (result != null && !result.available)
+              _StatusCard(
+                icon: Icons.inventory_outlined,
+                title: 'سجل الأصول غير متاح حالياً',
+                message: 'خادم سجل الأصول مطفأ أو لا يمكن الوصول إليه من الـ API. حاول لاحقاً أو راجع قسم الأصول.',
+                onRetry: _load,
+              )
+            else if (assets.isEmpty)
+              const _EmptyAssets()
+            else ...[
+              Row(
+                children: [
+                  Text(
                     'قائمة الأصول',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: AppColors.charcoal,
                     ),
                   ),
-                ),
-                Text(
-                  assets.length > _pageSize
-                      ? 'عرض ${visible.length} من ${assets.length}'
-                      : '${assets.length} عنصر',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: AppColors.slate,
+                  const Spacer(),
+                  Text(
+                    assets.length > _pageSize
+                        ? 'عرض ${visible.length} من ${assets.length}'
+                        : '${assets.length} عنصر',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: AppColors.slate,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const _TableHeader(),
+              const SizedBox(height: 4),
+              for (var i = 0; i < visible.length; i++) ...[
+                _AssetRow(asset: visible[i]),
+                if (i != visible.length - 1)
+                  Divider(height: 1, color: AppColors.line),
+              ],
+              if (hasMore) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () => setState(() {
+                    _visibleCount = (_visibleCount + _pageSize).clamp(
+                      0,
+                      assets.length,
+                    );
+                  }),
+                  icon: const Icon(Icons.expand_more_rounded),
+                  label: Text('عرض المزيد (${assets.length - visible.length})'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                    foregroundColor: AppColors.goldDeep,
+                    side: BorderSide(color: AppColors.gold),
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-            const _TableHeader(),
-            const SizedBox(height: 4),
-            for (var i = 0; i < visible.length; i++) ...[
-              _AssetRow(asset: visible[i]),
-              if (i != visible.length - 1)
-                const Divider(height: 1, color: AppColors.line),
-            ],
-            if (hasMore) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 28),
               OutlinedButton.icon(
-                onPressed: () => setState(() {
-                  _visibleCount =
-                      (_visibleCount + _pageSize).clamp(0, assets.length);
-                }),
-                icon: const Icon(Icons.expand_more_rounded),
-                label: Text(
-                  'عرض المزيد (${assets.length - visible.length})',
+                onPressed: () => _openPrintPreview(
+                  assets: assets,
+                  name: name,
+                  employeeNumber: employeeNumber,
+                  department: department,
                 ),
+                icon: const Icon(Icons.print_outlined),
+                label: const Text('معاينة وطباعة القائمة'),
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                  foregroundColor: AppColors.goldDeep,
-                  side: const BorderSide(color: AppColors.gold),
+                  minimumSize: const Size.fromHeight(50),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'ستفتح معاينة ثم أمر الطباعة للجهاز المتصل (أو حفظ كملف PDF).',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.slate,
+                  height: 1.45,
                 ),
               ),
             ],
-            const SizedBox(height: 28),
-            OutlinedButton.icon(
-              onPressed: () => _openPrintPreview(
-                assets: assets,
-                name: name,
-                employeeNumber: employeeNumber,
-                department: department,
-              ),
-              icon: const Icon(Icons.print_outlined),
-              label: const Text('معاينة وطباعة القائمة'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'ستفتح معاينة ثم أمر الطباعة للجهاز المتصل (أو حفظ كملف PDF).',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.slate,
-                height: 1.45,
-              ),
-            ),
           ],
-        ],
         ),
       ),
     );
@@ -253,13 +250,13 @@ class _AssetsSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double width) => Container(
-          width: width,
-          height: 12,
-          decoration: BoxDecoration(
-            color: AppColors.line,
-            borderRadius: BorderRadius.circular(6),
-          ),
-        );
+      width: width,
+      height: 12,
+      decoration: BoxDecoration(
+        color: AppColors.line,
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -276,7 +273,7 @@ class _AssetsSkeleton extends StatelessWidget {
               ],
             ),
           ),
-          if (i != 4) const Divider(height: 1, color: AppColors.line),
+          if (i != 4) Divider(height: 1, color: AppColors.line),
         ],
       ],
     );
@@ -337,7 +334,7 @@ class _StatusCard extends StatelessWidget {
               label: const Text('إعادة المحاولة'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.goldDeep,
-                side: const BorderSide(color: AppColors.gold),
+                side: BorderSide(color: AppColors.gold),
               ),
             ),
           ],
@@ -382,16 +379,12 @@ class _EmployeeBanner extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'الرقم الوظيفي: $employeeNumber',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.slate,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate),
           ),
           const SizedBox(height: 2),
           Text(
             department,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.slate,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.slate),
           ),
         ],
       ),
@@ -404,12 +397,8 @@ class _TableHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: AppColors.slate,
-          fontWeight: FontWeight.w700,
-        );
-    final number = Text('الرقم المالي', style: style);
-    final name = Text('الأصل', style: style);
+    final style = Theme.of(context).textTheme.labelMedium
+        ?.copyWith(color: AppColors.slate, fontWeight: FontWeight.w700);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
@@ -538,8 +527,7 @@ class _AssetsPrintPreviewPage extends StatelessWidget {
   final List<EmployeeAsset> assets;
 
   Future<Uint8List> _buildPdf(PdfPageFormat format) async {
-    final regularData =
-        await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
+    final regularData = await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
     final boldData = await rootBundle.load('assets/fonts/Cairo-Bold.ttf');
     final regular = pw.Font.ttf(regularData);
     final bold = pw.Font.ttf(boldData);
@@ -647,14 +635,8 @@ class _AssetsPrintPreviewPage extends StatelessWidget {
                 pw.TableRow(
                   children: [
                     cell(a.name),
-                    cell(
-                      a.financialNumber,
-                      align: pw.TextAlign.center,
-                    ),
-                    cell(
-                      '${a.serial}',
-                      align: pw.TextAlign.center,
-                    ),
+                    cell(a.financialNumber, align: pw.TextAlign.center),
+                    cell('${a.serial}', align: pw.TextAlign.center),
                   ],
                 ),
             ],
@@ -680,10 +662,7 @@ class _AssetsPrintPreviewPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('معاينة الطباعة'),
-      ),
-      bottomNavigationBar: const BottomInsetSpacer(),
+      appBar: AppBar(title: const Text('معاينة الطباعة')),
       body: PdfPreview(
         build: _buildPdf,
         canChangeOrientation: false,

@@ -70,25 +70,26 @@ class _ManagerAwolActionScreenState extends State<ManagerAwolActionScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-                  decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(18),
+                    ),
                     gradient: LinearGradient(
                       begin: Alignment.topRight,
                       end: Alignment.bottomLeft,
-                      colors: [
-                        Color(0xFFF6EFE4),
-                        AppColors.surface,
-                      ],
+                      colors: [const Color(0xFFF6EFE4), AppColors.surface],
                     ),
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: AppColors.danger.withValues(alpha: 0.12),
+                        backgroundColor: AppColors.danger.withValues(
+                          alpha: 0.12,
+                        ),
                         child: Text(
                           e.fullName.characters.first,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.danger,
                             fontWeight: FontWeight.w800,
                             fontSize: 22,
@@ -102,7 +103,7 @@ class _ManagerAwolActionScreenState extends State<ManagerAwolActionScreen> {
                           children: [
                             Text(
                               e.fullName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.charcoal,
@@ -111,7 +112,7 @@ class _ManagerAwolActionScreenState extends State<ManagerAwolActionScreen> {
                             const SizedBox(height: 4),
                             Text(
                               e.employeeNumber,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.goldDeep,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -145,7 +146,7 @@ class _ManagerAwolActionScreenState extends State<ManagerAwolActionScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'ملاحظة المدير',
             style: TextStyle(
               fontWeight: FontWeight.w800,
@@ -154,7 +155,7 @@ class _ManagerAwolActionScreenState extends State<ManagerAwolActionScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'تُحفظ مع تأكيد الإجراء وتظهر لشؤون الموظفين لاحقاً.',
             style: TextStyle(color: AppColors.slate, fontSize: 13, height: 1.4),
           ),
@@ -164,7 +165,7 @@ class _ManagerAwolActionScreenState extends State<ManagerAwolActionScreen> {
             maxLines: 5,
             maxLength: 500,
             textAlign: TextAlign.right,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: 'اكتب ملاحظة الإجراء...',
               filled: true,
               fillColor: AppColors.surface,
@@ -221,7 +222,7 @@ class _MetaRow extends StatelessWidget {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.slate,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,

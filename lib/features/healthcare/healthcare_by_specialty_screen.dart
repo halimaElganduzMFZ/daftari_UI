@@ -222,7 +222,7 @@ class _HealthcareBySpecialtyScreenState
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Column(
                   children: [
-                    const FaIcon(
+                    FaIcon(
                       FontAwesomeIcons.magnifyingGlass,
                       size: 30,
                       color: AppColors.slate,
@@ -233,7 +233,7 @@ class _HealthcareBySpecialtyScreenState
                           ? 'لا توجد مؤسسات مسجّلة في هذا التصنيف'
                           : 'لا توجد مؤسسات تطابق «$q»',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.slate),
+                      style: TextStyle(color: AppColors.slate),
                     ),
                   ],
                 ),
@@ -243,7 +243,7 @@ class _HealthcareBySpecialtyScreenState
                 _total == null
                     ? 'عرض ${_items.length}'
                     : 'عرض ${_items.length} من $_total',
-                style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
+                style: TextStyle(color: AppColors.slate, fontSize: 12.5),
               ),
               const SizedBox(height: 10),
               for (final p in _items) ...[
@@ -267,7 +267,8 @@ class _HealthcareBySpecialtyScreenState
                 ),
                 const SizedBox(height: 12),
               ],
-              if (_error != null) _ErrorCard(error: _error!, onRetry: _loadMore),
+              if (_error != null)
+                _ErrorCard(error: _error!, onRetry: _loadMore),
               if (_loading)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -291,7 +292,7 @@ class _HealthcareBySpecialtyScreenState
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     foregroundColor: AppColors.goldDeep,
-                    side: const BorderSide(color: AppColors.gold),
+                    side: BorderSide(color: AppColors.gold),
                   ),
                 ),
             ],
@@ -372,7 +373,10 @@ class _ProviderCard extends StatelessWidget {
                         Positioned(
                           left: 14,
                           top: 14,
-                          child: ProviderLogo(url: provider.imageUrl!, size: 44),
+                          child: ProviderLogo(
+                            url: provider.imageUrl!,
+                            size: 44,
+                          ),
                         ),
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -420,7 +424,7 @@ class _ProviderCard extends StatelessWidget {
                     ],
                     Row(
                       children: [
-                        const FaIcon(
+                        FaIcon(
                           FontAwesomeIcons.locationDot,
                           size: 12,
                           color: AppColors.goldDeep,
@@ -431,7 +435,7 @@ class _ProviderCard extends StatelessWidget {
                             subtitle.isEmpty ? provider.details : subtitle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12.5,
                               height: 1.4,
                               color: AppColors.charcoal,
@@ -440,15 +444,15 @@ class _ProviderCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         if (provider.hasMap)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 6),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6),
                             child: FaIcon(
                               FontAwesomeIcons.mapLocationDot,
                               size: 13,
                               color: AppColors.slate,
                             ),
                           ),
-                        const FaIcon(
+                        FaIcon(
                           FontAwesomeIcons.chevronLeft,
                           size: 12,
                           color: AppColors.slate,
@@ -479,7 +483,7 @@ class ProviderLogo extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(size * 0.25),
       ),
       clipBehavior: Clip.antiAlias,
@@ -487,11 +491,8 @@ class ProviderLogo extends StatelessWidget {
       child: Image.network(
         url,
         fit: BoxFit.contain,
-        errorBuilder: (_, _, _) => const FaIcon(
-          FontAwesomeIcons.building,
-          size: 18,
-          color: AppColors.slate,
-        ),
+        errorBuilder: (_, _, _) =>
+            FaIcon(FontAwesomeIcons.building, size: 18, color: AppColors.slate),
       ),
     );
   }
@@ -508,8 +509,8 @@ class _ErrorCard extends StatelessWidget {
     final e = error;
     final message = e is ApiException
         ? (e.isNetwork
-            ? 'تعذر الوصول إلى الخادم. تأكد من الشبكة ثم أعد المحاولة.'
-            : e.message)
+              ? 'تعذر الوصول إلى الخادم. تأكد من الشبكة ثم أعد المحاولة.'
+              : e.message)
         : 'حدث خطأ غير متوقع.';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -524,7 +525,7 @@ class _ErrorCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.triangleExclamation,
                 size: 15,
                 color: AppColors.danger,
@@ -540,7 +541,10 @@ class _ErrorCard extends StatelessWidget {
           ),
           Align(
             alignment: AlignmentDirectional.centerEnd,
-            child: TextButton(onPressed: onRetry, child: const Text('إعادة المحاولة')),
+            child: TextButton(
+              onPressed: onRetry,
+              child: const Text('إعادة المحاولة'),
+            ),
           ),
         ],
       ),
@@ -566,9 +570,11 @@ class _ProviderSkeleton extends StatelessWidget {
         children: [
           Container(
             height: 110,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.line,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(19)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(19),
+              ),
             ),
           ),
           Padding(

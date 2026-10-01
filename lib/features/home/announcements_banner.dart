@@ -224,7 +224,7 @@ class _AnnouncementSlide extends StatelessWidget {
                       Row(
                         children: [
                           if (item.pinned)
-                            _Chip(
+                            const _Chip(
                               label: 'مثبّت',
                               icon: FontAwesomeIcons.thumbtack,
                             ),
@@ -369,7 +369,7 @@ class _Chip extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w800,
             color: AppColors.goldDeep,
