@@ -24,6 +24,17 @@ void main() {
     expect(insecure('', remote: false), isFalse);
   });
 
+  test('web calls the proxy on the same host the page was opened from', () {
+    expect(
+      ApiConfig.lanWebApiBase(host: '10.10.17.147', port: 43124),
+      'http://10.10.17.147:43124/api/v1',
+    );
+    expect(
+      ApiConfig.lanWebApiBase(host: '', port: 43124),
+      'http://127.0.0.1:43124/api/v1',
+    );
+  });
+
   test('test runs use a development build, so the app starts normally', () {
     expect(ApiConfig.hasInsecureReleaseConfig, isFalse);
   });
