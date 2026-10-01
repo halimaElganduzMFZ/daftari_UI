@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import '../../core/config/api_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_exception.dart';
 import '../models/employee_clip.dart';
@@ -11,13 +10,10 @@ import '../static/static_employee_clips.dart';
 ///
 /// - `list()`       → `GET /me/documents?month=YYYY-MM&page=&limit=`
 /// - `fetchFile()`  → `GET /me/documents/:id/file?mode=view` (بالتوكن، يعيد الملف)
-/// - `signedLink()` → `GET /me/documents/:id/link?mode=` (رابط مؤقت بلا توكن للعارض الخارجي)
 abstract class DocumentsRepository {
   Future<EmployeeClipsPage> list({String? month, int page = 1, int limit = 6});
 
   Future<EmployeeClipFile> fetchFile(EmployeeClip clip);
-
-  Future<EmployeeClipLink> signedLink(EmployeeClip clip, {bool download = false});
 }
 
 class ApiDocumentsRepository implements DocumentsRepository {
@@ -53,18 +49,6 @@ class ApiDocumentsRepository implements DocumentsRepository {
       contentType: binary.contentType ?? clip.contentType,
       fileName: binary.fileName ?? clip.fileName,
     );
-  }
-
-  @override
-  Future<EmployeeClipLink> signedLink(
-    EmployeeClip clip, {
-    bool download = false,
-  }) async {
-    final json = await _client.getJson(
-      clip.linkPath,
-      query: {'mode': download ? 'download' : 'view'},
-    );
-    return EmployeeClipLink.fromApi(json);
   }
 }
 
@@ -116,21 +100,6 @@ class StaticDocumentsRepository implements DocumentsRepository {
       bytes: Uint8List.fromList(DemoPdfBytes.studyAcceptance),
       contentType: 'application/pdf',
       fileName: clip.fileName,
-    );
-  }
-
-  @override
-  Future<EmployeeClipLink> signedLink(
-    EmployeeClip clip, {
-    bool download = false,
-  }) async {
-    await Future<void>.delayed(latency ~/ 2);
-    final exp = DateTime.now().add(const Duration(hours: 2));
-    return EmployeeClipLink(
-      url: Uri.parse(
-        '${ApiConfig.baseUrl}/documents/${clip.id}/file?eid=1&exp=${exp.millisecondsSinceEpoch ~/ 1000}&mode=${download ? 'download' : 'view'}&sig=demo',
-      ),
-      expiresAt: exp,
     );
   }
 }
