@@ -90,7 +90,7 @@ class _RemoteManagerAwolScreenState extends State<RemoteManagerAwolScreen> {
                 item['confirmed'] == true || item['managerStatus'] == 3
                     ? 'انقطاع فعّال — تم تأكيد المسؤول'
                     : 'انقطاع فعّال — بانتظار تأكيد المسؤول',
-                style: const TextStyle(color: AppColors.goldDeep),
+                style: TextStyle(color: AppColors.goldDeep),
               ),
             ],
           ),

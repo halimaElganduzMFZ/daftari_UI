@@ -93,15 +93,13 @@ class _SplashScreenState extends State<SplashScreen>
         curve: const Interval(0.32, 0.78, curve: Curves.easeOut),
       ),
     );
-    _titleSlide = Tween<Offset>(
-      begin: const Offset(0, 0.18),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _enter,
-        curve: const Interval(0.32, 0.82, curve: Curves.easeOutCubic),
-      ),
-    );
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.18), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _enter,
+            curve: const Interval(0.32, 0.82, curve: Curves.easeOutCubic),
+          ),
+        );
     _subFade = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _enter,
@@ -156,13 +154,15 @@ class _SplashScreenState extends State<SplashScreen>
   Future<bool> _restoreSession() async {
     if (!ApiConfig.useRemoteApi) return false;
     try {
-      final hasToken = await AppServices.auth
-          .hasStoredSession()
-          .timeout(_storageTimeout, onTimeout: () => false);
+      final hasToken = await AppServices.auth.hasStoredSession().timeout(
+        _storageTimeout,
+        onTimeout: () => false,
+      );
       if (!hasToken) return false;
-      final user = await AppServices.auth
-          .restoreSession()
-          .timeout(_restoreTimeout, onTimeout: () => null);
+      final user = await AppServices.auth.restoreSession().timeout(
+        _restoreTimeout,
+        onTimeout: () => null,
+      );
       return user != null;
     } catch (_) {
       // خادم غير متاح / توكن غير صالح: نعرض شاشة الدخول العادية.
@@ -214,15 +214,15 @@ class _SplashScreenState extends State<SplashScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const DecoratedBox(
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
                 colors: [
-                  Color(0xFFE9E6DF),
-                  Color(0xFFF3F3F1),
-                  Color(0xFFE4E1DA),
+                  AppColors.backdropStart,
+                  AppColors.backdropMid,
+                  AppColors.backdropEnd,
                 ],
               ),
             ),
@@ -238,7 +238,7 @@ class _SplashScreenState extends State<SplashScreen>
                     left: -size.width * 0.16 + math.cos(t * 0.8) * 12,
                     child: _SoftOrb(
                       diameter: size.width * 0.7,
-                      color: const Color(0x33B08D57),
+                      color: AppColors.glowA,
                     ),
                   ),
                   Positioned(
@@ -246,7 +246,7 @@ class _SplashScreenState extends State<SplashScreen>
                     right: -size.width * 0.18 + math.sin(t * 0.7) * 10,
                     child: _SoftOrb(
                       diameter: size.width * 0.78,
-                      color: const Color(0x22A18F6A),
+                      color: AppColors.glowB,
                     ),
                   ),
                 ],
@@ -279,7 +279,7 @@ class _SplashScreenState extends State<SplashScreen>
                       opacity: _titleFade,
                       child: SlideTransition(
                         position: _titleSlide,
-                        child: const Text(
+                        child: Text(
                           AppStrings.appName,
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -319,8 +319,9 @@ class _SplashScreenState extends State<SplashScreen>
                               child: LinearProgressIndicator(
                                 value: _bar.value,
                                 minHeight: 3.5,
-                                backgroundColor:
-                                    AppColors.gold.withValues(alpha: 0.16),
+                                backgroundColor: AppColors.gold.withValues(
+                                  alpha: 0.16,
+                                ),
                                 color: AppColors.gold,
                               ),
                             );
@@ -365,12 +366,7 @@ class _SoftOrb extends StatelessWidget {
         height: diameter,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color,
-              color.withValues(alpha: 0),
-            ],
-          ),
+          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
         ),
       ),
     );

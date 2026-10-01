@@ -128,9 +128,10 @@ class _LeavesScreenState extends State<LeavesScreen> {
   // ─── فلاتر ──────────────────────────────────────────────────────────────
 
   List<EmployeeRequest> get _visible => [
-        for (final r in _items)
-          if (DateRangeFilterBar.inRange(r.fromDate ?? r.requestedAt, _from, _to)) r,
-      ];
+    for (final r in _items)
+      if (DateRangeFilterBar.inRange(r.fromDate ?? r.requestedAt, _from, _to))
+        r,
+  ];
 
   bool get _hasDateFilter => _from != null || _to != null;
 
@@ -236,7 +237,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
             parent: BouncingScrollPhysics(),
           ),
           children: [
-            const Text(
+            Text(
               'طلباتي',
               style: TextStyle(
                 fontSize: 24,
@@ -245,7 +246,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'تصفّح سجلك حسب الحالة والنوع والفترة',
               style: TextStyle(color: AppColors.slate),
             ),
@@ -258,8 +259,8 @@ class _LeavesScreenState extends State<LeavesScreen> {
                     value: data == null
                         ? '…'
                         : data.annualBalanceAvailable
-                            ? '${data.annualBalance}'
-                            : '—',
+                        ? '${data.annualBalance}'
+                        : '—',
                     icon: FontAwesomeIcons.calendarCheck,
                   ),
                 ),
@@ -284,7 +285,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            const Text(
+            Text(
               'الحالة',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -301,8 +302,8 @@ class _LeavesScreenState extends State<LeavesScreen> {
                   count: data?.counts == null
                       ? null
                       : data!.counts!.pending +
-                          data.counts!.approved +
-                          data.counts!.rejected,
+                            data.counts!.approved +
+                            data.counts!.rejected,
                   selected: _status == null,
                   onTap: () => _setStatus(null),
                 ),
@@ -316,7 +317,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'نوع الطلب',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -354,7 +355,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
             const SizedBox(height: 12),
             Text(
               _resultsLabel(visible.length, hiddenByDate),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
                 color: AppColors.slate,
@@ -382,7 +383,8 @@ class _LeavesScreenState extends State<LeavesScreen> {
                         : null,
                   ),
                 ),
-              if (_error != null) _ErrorCard(error: _error!, onRetry: _loadMore),
+              if (_error != null)
+                _ErrorCard(error: _error!, onRetry: _loadMore),
               if (_loading)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -406,7 +408,7 @@ class _LeavesScreenState extends State<LeavesScreen> {
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     foregroundColor: AppColors.goldDeep,
-                    side: const BorderSide(color: AppColors.gold),
+                    side: BorderSide(color: AppColors.gold),
                   ),
                 ),
             ],
@@ -424,15 +426,17 @@ class _LeavesScreenState extends State<LeavesScreen> {
           ? 'عرض $visibleCount طلب'
           : 'عرض $visibleCount من $_total طلب',
     );
-    if (hiddenByDate > 0) parts.add('$hiddenByDate خارج الفترة المحددة');
+    if (hiddenByDate > 0) {
+      parts.add('$hiddenByDate خارج الفترة المحددة');
+    }
     return parts.join(' · ');
   }
 
   static String _statusLabel(RequestStatus status) => switch (status) {
-        RequestStatus.pending => 'معلّقة',
-        RequestStatus.approved => 'مقبولة',
-        RequestStatus.rejected => 'مرفوضة',
-      };
+    RequestStatus.pending => 'معلّقة',
+    RequestStatus.approved => 'مقبولة',
+    RequestStatus.rejected => 'مرفوضة',
+  };
 }
 
 // ─── بطاقة الطلب ─────────────────────────────────────────────────────────────
@@ -452,43 +456,44 @@ class _RequestCard extends StatelessWidget {
       RequestKind.annualLeave => FontAwesomeIcons.calendarCheck,
       RequestKind.studyLeave => FontAwesomeIcons.graduationCap,
       RequestKind.other => switch (code) {
-          'MARRIAGE_LEAVE' => FontAwesomeIcons.ring,
-          'HAJJ_LEAVE' => FontAwesomeIcons.kaaba,
-          'MATERNITY_LEAVE' || 'IDDAH_LEAVE' => FontAwesomeIcons.personDress,
-          'GATE_EXEMPTION' => FontAwesomeIcons.carSide,
-          _ => r.toDate != null
+        'MARRIAGE_LEAVE' => FontAwesomeIcons.ring,
+        'HAJJ_LEAVE' => FontAwesomeIcons.kaaba,
+        'MATERNITY_LEAVE' || 'IDDAH_LEAVE' => FontAwesomeIcons.personDress,
+        'GATE_EXEMPTION' => FontAwesomeIcons.carSide,
+        _ =>
+          r.toDate != null
               ? FontAwesomeIcons.umbrellaBeach
               : FontAwesomeIcons.idBadge,
-        },
+      },
     };
   }
 
   static bool _isLeave(EmployeeRequest r) => switch (r.kind) {
-        RequestKind.annualLeave ||
-        RequestKind.emergencyLeave ||
-        RequestKind.studyLeave =>
-          true,
-        RequestKind.delayPermission || RequestKind.earlyLeavePermission => false,
-        RequestKind.other => r.toDate != null ||
-            const {
-              'MARRIAGE_LEAVE',
-              'HAJJ_LEAVE',
-              'MATERNITY_LEAVE',
-              'IDDAH_LEAVE',
-            }.contains(r.code),
-      };
+    RequestKind.annualLeave ||
+    RequestKind.emergencyLeave ||
+    RequestKind.studyLeave => true,
+    RequestKind.delayPermission || RequestKind.earlyLeavePermission => false,
+    RequestKind.other =>
+      r.toDate != null ||
+          {
+            'MARRIAGE_LEAVE',
+            'HAJJ_LEAVE',
+            'MATERNITY_LEAVE',
+            'IDDAH_LEAVE',
+          }.contains(r.code),
+  };
 
   static String _statusLabel(RequestStatus status) => switch (status) {
-        RequestStatus.pending => 'قيد المراجعة',
-        RequestStatus.approved => 'مقبولة',
-        RequestStatus.rejected => 'مرفوضة',
-      };
+    RequestStatus.pending => 'قيد المراجعة',
+    RequestStatus.approved => 'مقبولة',
+    RequestStatus.rejected => 'مرفوضة',
+  };
 
   static StatusTone _statusTone(RequestStatus status) => switch (status) {
-        RequestStatus.pending => StatusTone.warning,
-        RequestStatus.approved => StatusTone.success,
-        RequestStatus.rejected => StatusTone.danger,
-      };
+    RequestStatus.pending => StatusTone.warning,
+    RequestStatus.approved => StatusTone.success,
+    RequestStatus.rejected => StatusTone.danger,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -498,8 +503,8 @@ class _RequestCard extends StatelessWidget {
     final period = from == null
         ? null
         : to == null || to == from
-            ? fmt.format(from)
-            : '${fmt.format(from)} – ${fmt.format(to)}';
+        ? fmt.format(from)
+        : '${fmt.format(from)} – ${fmt.format(to)}';
     final days = request.days;
 
     return AppSurface(
@@ -529,7 +534,7 @@ class _RequestCard extends StatelessWidget {
                   children: [
                     Text(
                       request.displayTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         color: AppColors.charcoal,
                       ),
@@ -537,10 +542,7 @@ class _RequestCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       'قُدّم ${fmt.format(request.requestedAt)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.slate,
-                      ),
+                      style: TextStyle(fontSize: 12, color: AppColors.slate),
                     ),
                   ],
                 ),
@@ -579,11 +581,13 @@ class _RequestCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.danger.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.danger.withValues(alpha: 0.3),
+                ),
               ),
               child: Text(
                 'سبب الرفض: ${request.rejectReason}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
                   height: 1.4,
                   color: AppColors.charcoal,
@@ -634,7 +638,7 @@ class _MetaChip extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: AppColors.charcoal,
@@ -649,7 +653,7 @@ class _MetaChip extends StatelessWidget {
 // ─── اختيار النوع ────────────────────────────────────────────────────────────
 
 class _TypeChoice {
-  const _TypeChoice(this.type);
+  _TypeChoice(this.type);
   final RequestPanelType? type;
 }
 
@@ -691,8 +695,8 @@ class _TypeSelector extends StatelessWidget {
                 : FaIcon(
                     has
                         ? (type!.isLeave
-                            ? FontAwesomeIcons.umbrellaBeach
-                            : FontAwesomeIcons.clockRotateLeft)
+                              ? FontAwesomeIcons.umbrellaBeach
+                              : FontAwesomeIcons.clockRotateLeft)
                         : FontAwesomeIcons.layerGroup,
                     size: 14,
                     color: AppColors.goldDeep,
@@ -715,9 +719,9 @@ class _TypeSelector extends StatelessWidget {
                   has
                       ? type!.group
                       : loading
-                          ? 'جاري تحميل الأنواع…'
-                          : 'اضغط للبحث حسب النوع (أذونات / إجازات)',
-                  style: const TextStyle(fontSize: 11.5, color: AppColors.slate),
+                      ? 'جاري تحميل الأنواع…'
+                      : 'اضغط للبحث حسب النوع (أذونات / إجازات)',
+                  style: TextStyle(fontSize: 11.5, color: AppColors.slate),
                 ),
               ],
             ),
@@ -726,14 +730,14 @@ class _TypeSelector extends StatelessWidget {
             IconButton(
               tooltip: 'إزالة فلتر النوع',
               onPressed: onClear,
-              icon: const FaIcon(
+              icon: FaIcon(
                 FontAwesomeIcons.circleXmark,
                 size: 16,
                 color: AppColors.slate,
               ),
             )
           else
-            const FaIcon(
+            FaIcon(
               FontAwesomeIcons.chevronDown,
               size: 12,
               color: AppColors.slate,
@@ -761,9 +765,9 @@ class _TypePickerSheet extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.78,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -777,8 +781,8 @@ class _TypePickerSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(99),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 14, 20, 6),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
             child: Row(
               children: [
                 FaIcon(
@@ -786,7 +790,7 @@ class _TypePickerSheet extends StatelessWidget {
                   size: 16,
                   color: AppColors.goldDeep,
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'بحث حسب النوع',
@@ -808,11 +812,11 @@ class _TypePickerSheet extends StatelessWidget {
                   label: 'كل الأنواع',
                   icon: FontAwesomeIcons.layerGroup,
                   selected: selectedCode == null,
-                  onTap: () => Navigator.pop(context, const _TypeChoice(null)),
+                  onTap: () => Navigator.pop(context, _TypeChoice(null)),
                 ),
                 if (types.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(20),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
                     child: Text(
                       'تعذر تحميل قائمة الأنواع',
                       textAlign: TextAlign.center,
@@ -824,7 +828,7 @@ class _TypePickerSheet extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(4, 14, 4, 6),
                     child: Text(
                       entry.key,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w800,
                         color: AppColors.slate,
@@ -890,7 +894,7 @@ class _TypeRow extends StatelessWidget {
                   ),
                 ),
                 if (selected)
-                  const FaIcon(
+                  FaIcon(
                     FontAwesomeIcons.circleCheck,
                     size: 15,
                     color: AppColors.goldDeep,
@@ -924,9 +928,9 @@ class _EmptyCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 18),
         child: Column(
           children: [
-            const FaIcon(FontAwesomeIcons.inbox, size: 28, color: AppColors.slate),
+            FaIcon(FontAwesomeIcons.inbox, size: 28, color: AppColors.slate),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'لا توجد طلبات في هذا التصنيف',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
@@ -939,11 +943,14 @@ class _EmptyCard extends StatelessWidget {
                   ? 'لم تُحمَّل كل الصفحات بعد — حمّل المزيد أو وسّع الفترة'
                   : 'جرّب حالة أو نوعاً أو فترة أخرى',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.slate, fontSize: 13),
+              style: TextStyle(color: AppColors.slate, fontSize: 13),
             ),
             if (hasDateFilter && canLoadMore && onLoadMore != null) ...[
               const SizedBox(height: 10),
-              TextButton(onPressed: onLoadMore, child: const Text('تحميل المزيد')),
+              TextButton(
+                onPressed: onLoadMore,
+                child: const Text('تحميل المزيد'),
+              ),
             ],
           ],
         ),
@@ -963,10 +970,10 @@ class _ErrorCard extends StatelessWidget {
     final e = error;
     final message = e is ApiException
         ? e.isNetwork
-            ? 'تعذر الوصول إلى الخادم. تأكد من الشبكة ثم أعد المحاولة.'
-            : e.isUnauthorized
-                ? 'انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.'
-                : e.message
+              ? 'تعذر الوصول إلى الخادم. تأكد من الشبكة ثم أعد المحاولة.'
+              : e.isUnauthorized
+              ? 'انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى.'
+              : e.message
         : 'حدث خطأ غير متوقع.';
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -981,7 +988,7 @@ class _ErrorCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.triangleExclamation,
                 size: 15,
                 color: AppColors.danger,
@@ -990,7 +997,7 @@ class _ErrorCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     height: 1.45,
                     color: AppColors.charcoal,
@@ -1001,7 +1008,10 @@ class _ErrorCard extends StatelessWidget {
           ),
           Align(
             alignment: AlignmentDirectional.centerEnd,
-            child: TextButton(onPressed: onRetry, child: const Text('إعادة المحاولة')),
+            child: TextButton(
+              onPressed: onRetry,
+              child: const Text('إعادة المحاولة'),
+            ),
           ),
         ],
       ),
@@ -1015,13 +1025,13 @@ class _RequestSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double w, [double h = 12]) => Container(
-          width: w,
-          height: h,
-          decoration: BoxDecoration(
-            color: AppColors.line,
-            borderRadius: BorderRadius.circular(6),
-          ),
-        );
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: AppColors.line,
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: AppSurface(
@@ -1032,11 +1042,7 @@ class _RequestSkeleton extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  bar(140),
-                  const SizedBox(height: 8),
-                  bar(90, 10),
-                ],
+                children: [bar(140), const SizedBox(height: 8), bar(90, 10)],
               ),
             ),
             bar(64, 24),
@@ -1068,16 +1074,13 @@ class _SummaryChip extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 16,
               color: AppColors.charcoal,
             ),
           ),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11.5, color: AppColors.slate),
-          ),
+          Text(label, style: TextStyle(fontSize: 11.5, color: AppColors.slate)),
         ],
       ),
     );

@@ -67,14 +67,14 @@ Future<void> showRegulationDetailSheet(
                           children: [
                             Text(
                               '$title — اللائحة الكاملة',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.charcoal,
                               ),
                             ),
                             const SizedBox(height: 2),
-                            const Text(
+                            Text(
                               'المواد والضوابط المتعلقة بهذا النوع',
                               style: TextStyle(
                                 color: AppColors.slate,
@@ -91,7 +91,7 @@ Future<void> showRegulationDetailSheet(
                     ],
                   ),
                 ),
-                const Divider(height: 1, color: AppColors.line),
+                Divider(height: 1, color: AppColors.line),
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 14, 20, 12),
@@ -120,7 +120,7 @@ Future<void> showRegulationDetailSheet(
                                 ),
                                 child: Text(
                                   point.article,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.goldDeep,
                                     fontWeight: FontWeight.w800,
                                     fontSize: 11.5,
@@ -131,7 +131,7 @@ Future<void> showRegulationDetailSheet(
                               Expanded(
                                 child: Text(
                                   point.text,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color: AppColors.charcoal,
                                     height: 1.5,
                                     fontSize: 13.5,
@@ -148,7 +148,7 @@ Future<void> showRegulationDetailSheet(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'تفاصيل إضافية',
                               style: TextStyle(
                                 color: AppColors.goldDeep,
@@ -159,7 +159,7 @@ Future<void> showRegulationDetailSheet(
                             const SizedBox(height: 8),
                             Text(
                               fullText,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 height: 1.65,
                                 color: AppColors.charcoal,
                                 fontSize: 14,
@@ -186,7 +186,7 @@ Future<void> showRegulationDetailSheet(
                           },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppColors.goldDeep,
-                            side: const BorderSide(color: AppColors.gold),
+                            side: BorderSide(color: AppColors.gold),
                             minimumSize: const Size.fromHeight(48),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14),

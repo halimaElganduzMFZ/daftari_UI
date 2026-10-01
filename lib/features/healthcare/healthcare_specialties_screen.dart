@@ -135,14 +135,11 @@ class _HealthcareSpecialtiesScreenState
                     ),
                     const SizedBox(height: 14),
                     _SearchAllTile(
-                      onSubmitted: (q) => _open(
-                        null,
-                        'كل المؤسسات',
-                        initialQuery: q,
-                      ),
+                      onSubmitted: (q) =>
+                          _open(null, 'كل المؤسسات', initialQuery: q),
                     ),
                     const SizedBox(height: 18),
-                    const Text(
+                    Text(
                       'حسب التخصص',
                       style: TextStyle(
                         fontSize: 18,
@@ -151,7 +148,7 @@ class _HealthcareSpecialtiesScreenState
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'كل تخصص يفتح قائمة المؤسسات المرتبطة به',
                       style: TextStyle(color: AppColors.slate, fontSize: 13),
                     ),
@@ -207,9 +204,9 @@ class _HealthcareSpecialtiesScreenState
                 ),
               ),
             if (!_loading && categories != null && categories.isEmpty)
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.all(30),
+                  padding: const EdgeInsets.all(30),
                   child: Text(
                     'لا توجد تصنيفات مسجّلة حالياً',
                     textAlign: TextAlign.center,
@@ -279,8 +276,8 @@ class _ErrorCard extends StatelessWidget {
     final e = error;
     final message = e is ApiException
         ? (e.isNetwork
-            ? 'تعذر الوصول إلى الخادم. تأكد من الشبكة ثم أعد المحاولة.'
-            : e.message)
+              ? 'تعذر الوصول إلى الخادم. تأكد من الشبكة ثم أعد المحاولة.'
+              : e.message)
         : 'حدث خطأ غير متوقع.';
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
@@ -294,7 +291,7 @@ class _ErrorCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.triangleExclamation,
                 size: 15,
                 color: AppColors.danger,
@@ -310,7 +307,10 @@ class _ErrorCard extends StatelessWidget {
           ),
           Align(
             alignment: AlignmentDirectional.centerEnd,
-            child: TextButton(onPressed: onRetry, child: const Text('إعادة المحاولة')),
+            child: TextButton(
+              onPressed: onRetry,
+              child: const Text('إعادة المحاولة'),
+            ),
           ),
         ],
       ),
@@ -335,9 +335,11 @@ class _CategorySkeleton extends StatelessWidget {
           Expanded(
             flex: 5,
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.line,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(19)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(19),
+                ),
               ),
             ),
           ),
@@ -490,7 +492,7 @@ class _SpecialtyCardState extends State<_SpecialtyCard> {
                           widget.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 13.5,
                             height: 1.25,
@@ -502,7 +504,7 @@ class _SpecialtyCardState extends State<_SpecialtyCard> {
                           widget.subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.slate,
                             fontSize: 11.5,
                           ),

@@ -4,14 +4,18 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/constants/app_strings.dart';
 import 'core/di/app_services.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
 import 'features/auth/login_screen.dart';
 import 'features/splash/splash_screen.dart';
 
 /// مفتاح الملاحة العام — للعودة إلى شاشة الدخول عند انتهاء الجلسة من أي مكان.
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // استعادة وضع المظهر المحفوظ قبل رسم أول إطار.
+  await ThemeController.instance.load();
 
   // عند فشل تجديد التوكن نهائياً (انتهت الجلسة أو أُلغيت من الخادم).
   AppServices.onSessionExpired = () {
@@ -37,25 +41,32 @@ class DaftariApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: rootNavigatorKey,
-      title: AppStrings.appName,
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      locale: const Locale('ar'),
-      supportedLocales: const [Locale('ar'), Locale('en')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
-      home: const SplashScreen(),
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) => MaterialApp(
+        navigatorKey: rootNavigatorKey,
+        title: AppStrings.appName,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: ThemeController.instance.mode,
+        themeAnimationDuration: const Duration(milliseconds: 380),
+        themeAnimationCurve: Curves.easeInOutCubic,
+        locale: const Locale('ar'),
+        supportedLocales: const [Locale('ar'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        builder: (context, child) {
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
+        home: const SplashScreen(),
+      ),
     );
   }
 }

@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class StatusPill extends StatelessWidget {
-  const StatusPill({
-    super.key,
-    required this.label,
-    required this.tone,
-  });
+  const StatusPill({super.key, required this.label, required this.tone});
 
   final String label;
   final StatusTone tone;

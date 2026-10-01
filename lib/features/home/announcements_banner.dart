@@ -214,7 +214,7 @@ class _AnnouncementSlide extends StatelessWidget {
                       Row(
                         children: [
                           if (item.pinned)
-                            _Chip(
+                            const _Chip(
                               label: 'مثبّت',
                               icon: FontAwesomeIcons.thumbtack,
                             ),
@@ -281,14 +281,14 @@ class _AnnouncementSlide extends StatelessWidget {
                                 color: AppColors.goldSoft.withValues(alpha: .2),
                                 shape: BoxShape.circle,
                               ),
-                              child: const FaIcon(
+                              child: FaIcon(
                                 FontAwesomeIcons.arrowUpRightFromSquare,
                                 size: 10,
                                 color: AppColors.goldSoft,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Text(
+                            Text(
                               'اضغط للفتح',
                               style: TextStyle(
                                 color: AppColors.goldSoft,
@@ -329,7 +329,7 @@ class _Chip extends StatelessWidget {
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w800,
             color: AppColors.goldDeep,

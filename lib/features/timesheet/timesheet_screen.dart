@@ -116,7 +116,7 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
     final result = _result;
     final ready =
         !_loading && _error == null && result != null && result.available;
-    final days = ready ? result.daysNewestFirst : const <TimesheetDay>[];
+    final days = ready ? result.daysNewestFirst : <TimesheetDay>[];
     final visible = days.take(_visible).toList();
     final hasMore = _visible < days.length;
     final stats = ready ? _Stats.of(result.summary) : null;
@@ -165,9 +165,9 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
             else if (result != null && !result.available)
               const _UnavailableCard()
             else if (days.isEmpty)
-              const AppSurface(
+              AppSurface(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
                   child: Text(
                     'لا توجد أيام مؤرشفة ضمن الفترة المحددة',
                     textAlign: TextAlign.center,
@@ -178,7 +178,7 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
             else ...[
               Text(
                 'عرض ${visible.length} من ${days.length} يوماً',
-                style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
+                style: TextStyle(color: AppColors.slate, fontSize: 12.5),
               ),
               const SizedBox(height: 10),
               for (final day in visible) ...[
@@ -195,7 +195,7 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     foregroundColor: AppColors.goldDeep,
-                    side: const BorderSide(color: AppColors.gold),
+                    side: BorderSide(color: AppColors.gold),
                   ),
                 ),
             ],
@@ -219,7 +219,7 @@ DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
 /// إحصائيات الفترة كما يحسبها الخادم، دون استنتاج الغياب من النصوص.
 class _Stats {
-  const _Stats({
+  _Stats({
     required this.workDays,
     required this.present,
     required this.leave,
@@ -540,10 +540,7 @@ class _LastSyncBanner extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'آخر تحديث للبيانات',
-                        style: const TextStyle(
-                          color: AppColors.slate,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: AppColors.slate, fontSize: 12),
                       ),
                     ),
                     if (relative != null)
@@ -640,7 +637,7 @@ class _DayCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   dateFmt.format(day.date),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     color: AppColors.charcoal,
                   ),
@@ -656,13 +653,13 @@ class _DayCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
+              style: TextStyle(color: AppColors.slate, fontSize: 12.5),
             ),
           ],
           if (day.actualAbsence)
-            const Text('غياب فعلي', style: TextStyle(color: AppColors.danger)),
+            Text('غياب فعلي', style: TextStyle(color: AppColors.danger)),
           if (day.gateAbsence)
-            const Text(
+            Text(
               'غياب بسبب مخالفة البوابة',
               style: TextStyle(color: AppColors.danger),
             ),
@@ -744,7 +741,7 @@ class _GateStrip extends StatelessWidget {
             children: [
               FaIcon(FontAwesomeIcons.carSide, size: 14, color: iconColor),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'البوابة',
                   style: TextStyle(
@@ -783,7 +780,7 @@ class _GateStrip extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.slate,
                 fontSize: 12,
                 height: 1.4,
@@ -792,7 +789,7 @@ class _GateStrip extends StatelessWidget {
           ],
           if (car.isViolation && car.inGracePeriod) ...[
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'ضمن فترة السماح قبل بدء احتساب المخالفات — لا يُحتسب.',
               style: TextStyle(color: AppColors.slate, fontSize: 11.5),
             ),
@@ -815,10 +812,7 @@ class _Meta extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, color: AppColors.slate),
-        ),
+        Text(label, style: TextStyle(fontSize: 11, color: AppColors.slate)),
         Text(
           value,
           style: TextStyle(
@@ -832,18 +826,17 @@ class _Meta extends StatelessWidget {
 }
 
 class _Stamp extends StatelessWidget {
-  const _Stamp({
-    required this.label,
-    required this.value,
-    this.color = AppColors.slate,
-  });
+  const _Stamp({required this.label, required this.value, this.color});
 
   final String label;
   final String value;
-  final Color color;
+
+  /// يُستخدم `AppColors.slate` من اللوحة الحالية عند عدم تمرير لون.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final color = this.color ?? AppColors.slate;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -858,7 +851,7 @@ class _Stamp extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 12.5,
                 color: AppColors.charcoal,
@@ -892,7 +885,7 @@ class _NoteRow extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.slate,
                 fontSize: 12,
                 height: 1.4,
@@ -926,8 +919,8 @@ class _ErrorCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 2),
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
                 child: FaIcon(
                   FontAwesomeIcons.triangleExclamation,
                   size: 15,
@@ -941,7 +934,7 @@ class _ErrorCard extends StatelessWidget {
                   children: [
                     Text(
                       error.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         color: AppColors.charcoal,
                       ),
@@ -949,7 +942,7 @@ class _ErrorCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       error.message,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         height: 1.45,
                         color: AppColors.charcoal,
@@ -959,10 +952,7 @@ class _ErrorCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       SelectableText(
                         cause,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.slate,
-                        ),
+                        style: TextStyle(fontSize: 11, color: AppColors.slate),
                       ),
                     ],
                   ],
@@ -988,11 +978,11 @@ class _UnavailableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const AppSurface(
+    return AppSurface(
       child: Column(
         children: [
           FaIcon(FontAwesomeIcons.database, size: 26, color: AppColors.slate),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
             'التايم شيت غير متاح',
             textAlign: TextAlign.center,
@@ -1002,7 +992,7 @@ class _UnavailableCard extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             'قاعدة أرشيف الحضور غير متاحة حالياً. حاول لاحقاً.',
             textAlign: TextAlign.center,

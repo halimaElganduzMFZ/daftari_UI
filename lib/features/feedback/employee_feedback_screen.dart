@@ -110,9 +110,8 @@ class _EmployeeFeedbackScreenState extends State<EmployeeFeedbackScreen> {
     } catch (e) {
       if (!mounted || seq != _requestSeq) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_describe(e))),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_describe(e))));
     }
   }
 
@@ -125,9 +124,8 @@ class _EmployeeFeedbackScreenState extends State<EmployeeFeedbackScreen> {
   Future<void> _submit() async {
     final text = _controller.text.trim();
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('اكتب نص الرسالة أولاً')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('اكتب نص الرسالة أولاً')));
       return;
     }
     // الجدول القديم بلا حقل «نوع»، فنُسبق النص بالتصنيف ليراه قسم الموارد البشرية.
@@ -192,17 +190,26 @@ class _EmployeeFeedbackScreenState extends State<EmployeeFeedbackScreen> {
   }
 
   bool _isDuplicate(Object e) =>
-      e is ApiException && (e.statusCode == 409 || e.code == 'DUPLICATE_MESSAGE');
+      e is ApiException &&
+      (e.statusCode == 409 || e.code == 'DUPLICATE_MESSAGE');
 
   String _describe(Object e) {
     if (e is ApiException) {
       if (_isDuplicate(e)) {
         return 'أرسلت نفس النص اليوم من قبل. عدّل الرسالة أو انتظر حتى الغد.';
       }
-      if (e.statusCode == 400) return 'نص الرسالة مطلوب ولا يتجاوز 1500 حرف.';
-      if (e.statusCode == 401) return 'انتهت الجلسة، أعد تسجيل الدخول.';
-      if (e.statusCode == 403) return 'هذه الميزة متاحة لحساب الموظف فقط.';
-      if (e.isNetwork) return 'لا يوجد اتصال بالخادم. تحقق من الشبكة وحاول مجدداً.';
+      if (e.statusCode == 400) {
+        return 'نص الرسالة مطلوب ولا يتجاوز 1500 حرف.';
+      }
+      if (e.statusCode == 401) {
+        return 'انتهت الجلسة، أعد تسجيل الدخول.';
+      }
+      if (e.statusCode == 403) {
+        return 'هذه الميزة متاحة لحساب الموظف فقط.';
+      }
+      if (e.isNetwork) {
+        return 'لا يوجد اتصال بالخادم. تحقق من الشبكة وحاول مجدداً.';
+      }
       return e.message;
     }
     return 'حدث خطأ غير متوقع. حاول مرة أخرى.';
@@ -287,7 +294,7 @@ class _EmployeeFeedbackScreenState extends State<EmployeeFeedbackScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'بياناتك',
             style: TextStyle(
               fontWeight: FontWeight.w800,
@@ -295,14 +302,14 @@ class _EmployeeFeedbackScreenState extends State<EmployeeFeedbackScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Text('الاسم: $name', style: const TextStyle(color: AppColors.slate)),
+          Text('الاسم: $name', style: TextStyle(color: AppColors.slate)),
           const SizedBox(height: 4),
           Text(
             'الرقم الوظيفي: $number',
-            style: const TextStyle(color: AppColors.slate),
+            style: TextStyle(color: AppColors.slate),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'نوع الرسالة',
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -332,7 +339,7 @@ class _EmployeeFeedbackScreenState extends State<EmployeeFeedbackScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'نص الرسالة',
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -414,17 +421,13 @@ class _EmployeeFeedbackScreenState extends State<EmployeeFeedbackScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 26),
           child: Column(
             children: [
-              const FaIcon(
-                FontAwesomeIcons.inbox,
-                size: 26,
-                color: AppColors.slate,
-              ),
+              FaIcon(FontAwesomeIcons.inbox, size: 26, color: AppColors.slate),
               const SizedBox(height: 10),
               Text(
                 _filter == null
                     ? 'لا توجد رسائل بعد'
                     : 'لا توجد رسائل بهذه الحالة',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
                   color: AppColors.charcoal,
                 ),
@@ -588,11 +591,11 @@ class _MessageCard extends StatelessWidget {
   final EmployeeMessage message;
 
   StatusTone get _tone => switch (message.status) {
-        MessageStatus.replied => StatusTone.success,
-        MessageStatus.read => StatusTone.info,
-        MessageStatus.sent => StatusTone.warning,
-        MessageStatus.unknown => StatusTone.neutral,
-      };
+    MessageStatus.replied => StatusTone.success,
+    MessageStatus.read => StatusTone.info,
+    MessageStatus.sent => StatusTone.warning,
+    MessageStatus.unknown => StatusTone.neutral,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -606,7 +609,7 @@ class _MessageCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   message.body,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.charcoal,
                     height: 1.5,
                     fontWeight: FontWeight.w600,
@@ -641,14 +644,14 @@ class _MessageCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
                       FaIcon(
                         FontAwesomeIcons.reply,
                         size: 12,
                         color: AppColors.success,
                       ),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
                         'رد الموارد البشرية',
                         style: TextStyle(
@@ -662,10 +665,7 @@ class _MessageCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     message.reply!.trim(),
-                    style: const TextStyle(
-                      color: AppColors.charcoal,
-                      height: 1.5,
-                    ),
+                    style: TextStyle(color: AppColors.charcoal, height: 1.5),
                   ),
                 ],
               ),
@@ -683,24 +683,18 @@ class _MessageSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double width, {double height = 12}) => Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: AppColors.line,
-            borderRadius: BorderRadius.circular(6),
-          ),
-        );
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColors.line,
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
     return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              bar(80),
-              const Spacer(),
-              bar(70, height: 20),
-            ],
-          ),
+          Row(children: [bar(80), const Spacer(), bar(70, height: 20)]),
           const SizedBox(height: 14),
           bar(double.infinity),
           const SizedBox(height: 8),
@@ -723,13 +717,13 @@ class _ErrorCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
       child: Column(
         children: [
-          const FaIcon(
+          FaIcon(
             FontAwesomeIcons.plugCircleXmark,
             size: 26,
             color: AppColors.danger,
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'تعذّر تحميل الرسائل',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -742,7 +736,7 @@ class _ErrorCard extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.slate, height: 1.45),
+            style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
           if (onRetry != null) ...[
             const SizedBox(height: 14),
@@ -752,7 +746,7 @@ class _ErrorCard extends StatelessWidget {
               label: const Text('إعادة المحاولة'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.goldDeep,
-                side: const BorderSide(color: AppColors.gold),
+                side: BorderSide(color: AppColors.gold),
               ),
             ),
           ],

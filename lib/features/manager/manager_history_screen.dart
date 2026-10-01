@@ -90,10 +90,8 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => _RequestDetailsSheet(
-        request: request,
-        dateFormat: _dateFormat,
-      ),
+      builder: (context) =>
+          _RequestDetailsSheet(request: request, dateFormat: _dateFormat),
     );
   }
 
@@ -104,10 +102,12 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
     final visible = filtered.take(_visibleCount).toList();
     final hasMore = _visibleCount < filtered.length;
     final grouped = _groupByMonth(visible);
-    final approvedCount =
-        filtered.where((r) => r.decision == ManagerDecision.approved).length;
-    final rejectedCount =
-        filtered.where((r) => r.decision == ManagerDecision.rejected).length;
+    final approvedCount = filtered
+        .where((r) => r.decision == ManagerDecision.approved)
+        .length;
+    final rejectedCount = filtered
+        .where((r) => r.decision == ManagerDecision.rejected)
+        .length;
 
     return SafeArea(
       child: ListView(
@@ -115,14 +115,14 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
         children: [
           Text(
             structure,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.goldDeep,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'مراجعة الطلبات',
             style: TextStyle(
               fontSize: 22,
@@ -131,7 +131,7 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+          Text(
             'تفاصيل ما وافقت عليه أو رفضته — صفِّ بالنوع والتاريخ',
             style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
@@ -139,12 +139,12 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
           AppSurface(
             padding: EdgeInsets.zero,
             child: Container(
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.all(Radius.circular(18)),
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(18)),
                 gradient: LinearGradient(
                   begin: Alignment.centerRight,
                   end: Alignment.centerLeft,
-                  colors: [Color(0xFFF6EFE4), AppColors.surface],
+                  colors: [const Color(0xFFF6EFE4), AppColors.surface],
                 ),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -218,7 +218,7 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
             }),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'نوع الطلب',
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -257,7 +257,7 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'نتيجة القرار',
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -300,7 +300,7 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
             filtered.isEmpty
                 ? 'لا نتائج لهذا الفلتر'
                 : 'عرض ${visible.length} من ${filtered.length} — مقسّمة بالشهر',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
               color: AppColors.slate,
@@ -308,11 +308,11 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
           ),
           const SizedBox(height: 12),
           if (filtered.isEmpty)
-            const AppSurface(
+            AppSurface(
               child: Column(
                 children: [
                   Icon(Icons.inbox_outlined, size: 36, color: AppColors.gold),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Text(
                     'لا توجد قرارات مطابقة',
                     textAlign: TextAlign.center,
@@ -321,7 +321,7 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
                       color: AppColors.charcoal,
                     ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
                     'غيّر الفترة أو نوع الطلب أو كلمة البحث',
                     textAlign: TextAlign.center,
@@ -339,7 +339,7 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.goldDeep,
                         shape: BoxShape.circle,
                       ),
@@ -347,7 +347,7 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
                     const SizedBox(width: 8),
                     Text(
                       entry.key,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         color: AppColors.charcoal,
                         fontSize: 14,
@@ -356,7 +356,7 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
                     const SizedBox(width: 8),
                     Text(
                       '(${entry.value.length})',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.slate,
                         fontWeight: FontWeight.w600,
                         fontSize: 12.5,
@@ -378,17 +378,17 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
             if (hasMore)
               OutlinedButton.icon(
                 onPressed: () => setState(() {
-                  _visibleCount =
-                      (_visibleCount + _pageSize).clamp(0, filtered.length);
+                  _visibleCount = (_visibleCount + _pageSize).clamp(
+                    0,
+                    filtered.length,
+                  );
                 }),
                 icon: const Icon(Icons.expand_more_rounded),
-                label: Text(
-                  'عرض المزيد (${filtered.length - visible.length})',
-                ),
+                label: Text('عرض المزيد (${filtered.length - visible.length})'),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   foregroundColor: AppColors.goldDeep,
-                  side: const BorderSide(color: AppColors.gold),
+                  side: BorderSide(color: AppColors.gold),
                 ),
               ),
           ],
@@ -398,11 +398,11 @@ class _ManagerHistoryScreenState extends State<ManagerHistoryScreen> {
   }
 
   Widget _divider() => Container(
-        width: 1,
-        height: 36,
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        color: AppColors.line,
-      );
+    width: 1,
+    height: 36,
+    margin: const EdgeInsets.symmetric(horizontal: 8),
+    color: AppColors.line,
+  );
 }
 
 class _StatBlock extends StatelessWidget {
@@ -432,7 +432,7 @@ class _StatBlock extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: AppColors.slate,
@@ -531,7 +531,7 @@ class _HistoryCard extends StatelessWidget {
                   children: [
                     Text(
                       request.employeeName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         color: AppColors.charcoal,
                       ),
@@ -539,10 +539,7 @@ class _HistoryCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${request.employeeNumber} · ${request.typeLabel}',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.slate,
-                      ),
+                      style: TextStyle(fontSize: 12.5, color: AppColors.slate),
                     ),
                   ],
                 ),
@@ -556,20 +553,16 @@ class _HistoryCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(
-                Icons.schedule_rounded,
-                size: 14,
-                color: AppColors.slate,
-              ),
+              Icon(Icons.schedule_rounded, size: 14, color: AppColors.slate),
               const SizedBox(width: 6),
               Text(
                 dateFormat.format(request.submittedAt),
-                style: const TextStyle(fontSize: 12.5, color: AppColors.slate),
+                style: TextStyle(fontSize: 12.5, color: AppColors.slate),
               ),
               const Spacer(),
               Text(
                 request.kind == ManagerRequestKind.leave ? 'إجازة' : 'إذن',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: AppColors.goldDeep,
@@ -583,7 +576,7 @@ class _HistoryCard extends StatelessWidget {
               request.notes!,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 height: 1.4,
                 color: AppColors.charcoal,
@@ -591,7 +584,7 @@ class _HistoryCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 8),
-          const Row(
+          Row(
             children: [
               Text(
                 'عرض التفاصيل',
@@ -601,7 +594,7 @@ class _HistoryCard extends StatelessWidget {
                   fontSize: 12.5,
                 ),
               ),
-              SizedBox(width: 4),
+              const SizedBox(width: 4),
               Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 12,
@@ -616,10 +609,7 @@ class _HistoryCard extends StatelessWidget {
 }
 
 class _RequestDetailsSheet extends StatelessWidget {
-  const _RequestDetailsSheet({
-    required this.request,
-    required this.dateFormat,
-  });
+  const _RequestDetailsSheet({required this.request, required this.dateFormat});
 
   final PendingManagerRequest request;
   final DateFormat dateFormat;
@@ -654,7 +644,7 @@ class _RequestDetailsSheet extends StatelessWidget {
                 Expanded(
                   child: Text(
                     request.employeeName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: AppColors.charcoal,
@@ -670,7 +660,7 @@ class _RequestDetailsSheet extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               request.employeeNumber,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.goldDeep,
                 fontWeight: FontWeight.w700,
               ),
@@ -690,10 +680,7 @@ class _RequestDetailsSheet extends StatelessWidget {
                     label: 'تاريخ التقديم',
                     value: dateFormat.format(request.submittedAt),
                   ),
-                  _DetailRow(
-                    label: 'حالة العرض',
-                    value: request.statusLabel,
-                  ),
+                  _DetailRow(label: 'حالة العرض', value: request.statusLabel),
                   if (request.notes != null)
                     _DetailRow(label: 'ملاحظة الموظف', value: request.notes!),
                   if (request.rejectReason != null)
@@ -750,7 +737,7 @@ class _DetailRow extends StatelessWidget {
             width: 110,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.slate,
                 fontWeight: FontWeight.w600,
                 fontSize: 13,

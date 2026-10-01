@@ -55,7 +55,7 @@ class _ManagerAbsenteesScreenState extends State<ManagerAbsenteesScreen> {
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.person_off_outlined,
                     color: AppColors.danger,
                   ),
@@ -69,14 +69,14 @@ class _ManagerAbsenteesScreenState extends State<ManagerAbsenteesScreen> {
                         open.isEmpty
                             ? 'لا يوجد منقطعون بانتظار إجراء'
                             : '${open.length} موظف بحاجة لإجراء',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: AppColors.charcoal,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'اضغط على الموظف لتأكيد الإجراء وإرسال الملاحظة — كما في updateState.php',
                         style: TextStyle(
                           color: AppColors.slate,
@@ -92,11 +92,15 @@ class _ManagerAbsenteesScreenState extends State<ManagerAbsenteesScreen> {
           ),
           const SizedBox(height: 18),
           if (open.isEmpty)
-            const AppSurface(
+            AppSurface(
               child: Column(
                 children: [
-                  Icon(Icons.verified_outlined, size: 36, color: AppColors.success),
-                  SizedBox(height: 10),
+                  Icon(
+                    Icons.verified_outlined,
+                    size: 36,
+                    color: AppColors.success,
+                  ),
+                  const SizedBox(height: 10),
                   Text(
                     'تم التعامل مع كل حالات الانقطاع الحالية',
                     textAlign: TextAlign.center,
@@ -109,7 +113,7 @@ class _ManagerAbsenteesScreenState extends State<ManagerAbsenteesScreen> {
               ),
             )
           else ...[
-            const Text(
+            Text(
               'بانتظار إجراءك',
               style: TextStyle(
                 fontWeight: FontWeight.w800,
@@ -130,7 +134,7 @@ class _ManagerAbsenteesScreenState extends State<ManagerAbsenteesScreen> {
           ],
           if (handled.isNotEmpty) ...[
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'تم اتخاذ إجراء',
               style: TextStyle(
                 fontWeight: FontWeight.w800,
@@ -188,7 +192,10 @@ class _AwolCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: (muted ? AppColors.success : AppColors.danger)
                       .withValues(alpha: 0.12),
@@ -208,12 +215,12 @@ class _AwolCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             item.employeeNumber,
-            style: const TextStyle(color: AppColors.slate, fontSize: 13),
+            style: TextStyle(color: AppColors.slate, fontSize: 13),
           ),
           const SizedBox(height: 8),
           Text(
             item.department,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
               color: AppColors.charcoal,
             ),
@@ -221,13 +228,13 @@ class _AwolCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'أول يوم انقطاع: ${dateFormat.format(item.firstAbsentDate)}',
-            style: const TextStyle(color: AppColors.slate, fontSize: 13),
+            style: TextStyle(color: AppColors.slate, fontSize: 13),
           ),
           if (item.note != null) ...[
             const SizedBox(height: 8),
             Text(
               item.note!,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.slate,
                 fontSize: 13,
                 height: 1.4,
@@ -238,7 +245,7 @@ class _AwolCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'ملاحظة المدير: ${item.managerNote}',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.goldDeep,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -256,7 +263,7 @@ class _AwolCard extends StatelessWidget {
                   color: AppColors.goldDeep.withValues(alpha: 0.9),
                 ),
                 const SizedBox(width: 6),
-                const Text(
+                Text(
                   'اتخاذ إجراء',
                   style: TextStyle(
                     color: AppColors.goldDeep,

@@ -75,8 +75,11 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
     final seq = _seq;
     setState(() => _loadingMore = true);
     try {
-      final page =
-          await _repo.list(month: _month, page: _page + 1, limit: _kPageSize);
+      final page = await _repo.list(
+        month: _month,
+        page: _page + 1,
+        limit: _kPageSize,
+      );
       if (!mounted || seq != _seq) return;
       final known = _items.map((c) => c.id).toSet();
       setState(() {
@@ -88,9 +91,8 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
     } catch (e) {
       if (!mounted || seq != _seq) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeDocumentError(e))),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeDocumentError(e))));
     }
   }
 
@@ -98,8 +100,10 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
     final now = DateTime.now();
     final initial = _month == null
         ? now
-        : DateTime(int.parse(_month!.substring(0, 4)),
-            int.parse(_month!.substring(5, 7)));
+        : DateTime(
+            int.parse(_month!.substring(0, 4)),
+            int.parse(_month!.substring(5, 7)),
+          );
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -199,7 +203,7 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
         Expanded(
           child: Text(
             _monthLabel,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.charcoal,
               fontWeight: FontWeight.w800,
             ),
@@ -218,7 +222,7 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
           label: Text(_month == null ? 'بحث بالشهر' : 'تغيير الشهر'),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppColors.goldDeep,
-            side: const BorderSide(color: AppColors.gold),
+            side: BorderSide(color: AppColors.gold),
             visualDensity: VisualDensity.compact,
           ),
         ),
@@ -250,8 +254,7 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
         _StatusCard(
           icon: FontAwesomeIcons.database,
           title: 'فهرس المستندات غير متاح حالياً',
-          message:
-              'قاعدة فهرس القسائم مطفأة أو لا يمكن الوصول إليها من الـ API. حاول لاحقاً.',
+          message: 'قاعدة فهرس القسائم مطفأة أو لا يمكن الوصول إليها من الـ API. حاول لاحقاً.',
           onRetry: _reload,
         ),
       ];
@@ -260,7 +263,9 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
       return [
         _StatusCard(
           icon: FontAwesomeIcons.folderOpen,
-          title: _month == null ? 'لا توجد ملفات بعد' : 'لا توجد ملفات في هذا الشهر',
+          title: _month == null
+              ? 'لا توجد ملفات بعد'
+              : 'لا توجد ملفات في هذا الشهر',
           message: _month == null
               ? 'عند تجهيز قسيمة أو بطاقة زمنية باسمك ستظهر هنا.'
               : 'جرّب شهراً آخر أو أزل الفلتر لعرض أحدث الملفات.',
@@ -271,8 +276,11 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
       for (final clip in _items) ...[
         _ClipTile(
           clip: clip,
-          onOpen: () =>
-              DocumentViewerScreen.open(context, clip, repository: widget.repository),
+          onOpen: () => DocumentViewerScreen.open(
+            context,
+            clip,
+            repository: widget.repository,
+          ),
         ),
         const SizedBox(height: 10),
       ],
@@ -295,7 +303,7 @@ class _EmployeeClipsScreenState extends State<EmployeeClipsScreen> {
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   foregroundColor: AppColors.goldDeep,
-                  side: const BorderSide(color: AppColors.gold),
+                  side: BorderSide(color: AppColors.gold),
                 ),
               ),
     ];
@@ -336,7 +344,7 @@ class _ClipTile extends StatelessWidget {
               children: [
                 Text(
                   clip.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     color: AppColors.charcoal,
                   ),
@@ -344,18 +352,12 @@ class _ClipTile extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   '$date · ${clip.extension.toUpperCase()}',
-                  style: const TextStyle(
-                    color: AppColors.slate,
-                    fontSize: 12.5,
-                  ),
+                  style: TextStyle(color: AppColors.slate, fontSize: 12.5),
                 ),
               ],
             ),
           ),
-          FilledButton.tonal(
-            onPressed: onOpen,
-            child: const Text('عرض'),
-          ),
+          FilledButton.tonal(onPressed: onOpen, child: const Text('عرض')),
         ],
       ),
     );
@@ -368,13 +370,13 @@ class _ClipSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget bar(double width, {double height = 12}) => Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: AppColors.line,
-            borderRadius: BorderRadius.circular(6),
-          ),
-        );
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColors.line,
+        borderRadius: BorderRadius.circular(6),
+      ),
+    );
     return AppSurface(
       padding: const EdgeInsets.all(14),
       child: Row(
@@ -417,12 +419,16 @@ class _StatusCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 24, 18, 18),
       child: Column(
         children: [
-          FaIcon(icon, size: 28, color: AppColors.slate.withValues(alpha: 0.85)),
+          FaIcon(
+            icon,
+            size: 28,
+            color: AppColors.slate.withValues(alpha: 0.85),
+          ),
           const SizedBox(height: 12),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 15,
               color: AppColors.charcoal,
@@ -432,7 +438,7 @@ class _StatusCard extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.slate, height: 1.45),
+            style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
           if (onRetry != null) ...[
             const SizedBox(height: 14),
@@ -442,7 +448,7 @@ class _StatusCard extends StatelessWidget {
               label: const Text('إعادة المحاولة'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.goldDeep,
-                side: const BorderSide(color: AppColors.gold),
+                side: BorderSide(color: AppColors.gold),
               ),
             ),
           ],

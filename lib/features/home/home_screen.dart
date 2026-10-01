@@ -282,9 +282,8 @@ class _HomeScreenState extends State<HomeScreen> {
       await _load();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_errorMessage(error))),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(_errorMessage(error))));
     }
   }
 
@@ -365,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: AppSurface(
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.campaign_outlined,
                           color: AppColors.goldDeep,
                         ),
@@ -375,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             _announcementsError is ApiException
                                 ? (_announcementsError as ApiException).message
                                 : 'تعذّر تحميل الإعلانات من الخادم.',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.slate,
                               fontSize: 12.5,
                               height: 1.4,
@@ -417,8 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(20, 12, 20, 0),
                   child: _InfoBanner(
-                    text:
-                        'بعض الأقسام غير متاحة مؤقتاً (قاعدة البصمة أو الأرصدة). اسحب للتحديث.',
+                    text: 'بعض الأقسام غير متاحة مؤقتاً (قاعدة البصمة أو الأرصدة). اسحب للتحديث.',
                   ),
                 ),
               ),
@@ -589,17 +587,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                       selected: {_filter},
-                      onSelectionChanged: (value) =>
-                          _changeFilter(value.first),
+                      onSelectionChanged: (value) => _changeFilter(value.first),
                     ),
                   ],
                 ),
               ),
             ),
             if (initialLoading || (feed.loading && feed.items.isEmpty))
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(20, 24, 20, 40),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
                   child: Center(
                     child: SizedBox(
                       width: 26,
@@ -643,10 +640,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                     child: Text(
                       'عرض ${visible.length} من $totalForStatus',
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.slate,
-                      ),
+                      style: TextStyle(fontSize: 12.5, color: AppColors.slate),
                     ),
                   ),
                 ),
@@ -682,10 +676,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       _errorMessage(feed.error!),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppColors.danger,
-                        fontSize: 12.5,
-                      ),
+                      style: TextStyle(color: AppColors.danger, fontSize: 12.5),
                     ),
                   ),
                 ),
@@ -710,7 +701,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size.fromHeight(48),
                         foregroundColor: AppColors.goldDeep,
-                        side: const BorderSide(color: AppColors.gold),
+                        side: BorderSide(color: AppColors.gold),
                       ),
                     ),
                   ),
@@ -745,13 +736,13 @@ class _WelcomeHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
           colors: [
-            Color(0xFFF7F1E6),
-            Color(0xFFEFEFEA),
-            Color(0xFFE8E8E4),
+            AppColors.headerStart,
+            AppColors.headerMid,
+            AppColors.headerEnd,
           ],
         ),
         border: Border.all(color: AppColors.line),
@@ -761,13 +752,13 @@ class _WelcomeHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              const FaIcon(
+              FaIcon(
                 FontAwesomeIcons.handSparkles,
                 size: 14,
                 color: AppColors.goldDeep,
               ),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
                   'أهلاً بك',
                   style: TextStyle(
@@ -785,12 +776,10 @@ class _WelcomeHeader extends StatelessWidget {
                   icon: Badge(
                     isLabelVisible: unreadNotifications > 0,
                     label: Text(
-                      unreadNotifications > 99
-                          ? '99+'
-                          : '$unreadNotifications',
+                      unreadNotifications > 99 ? '99+' : '$unreadNotifications',
                       style: const TextStyle(fontSize: 10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.notifications_none_rounded,
                       color: AppColors.goldDeep,
                     ),
@@ -801,7 +790,7 @@ class _WelcomeHeader extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             name,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w800,
               color: AppColors.charcoal,
@@ -811,7 +800,7 @@ class _WelcomeHeader extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '$jobTitle • $department',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.goldDeep,
               fontWeight: FontWeight.w700,
             ),
@@ -849,7 +838,7 @@ class _BalanceCard extends StatelessWidget {
               title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.slate,
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
@@ -866,7 +855,7 @@ class _BalanceCard extends StatelessWidget {
                 child: Text(
                   value,
                   key: ValueKey(value),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: AppColors.charcoal,
@@ -882,10 +871,7 @@ class _BalanceCard extends StatelessWidget {
                     unit,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.slate,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: AppColors.slate, fontSize: 11),
                   ),
                 ),
               ),
@@ -939,14 +925,14 @@ class _FeedbackInviteCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
-                  child: const FaIcon(
+                  child: FaIcon(
                     FontAwesomeIcons.envelopeOpenText,
                     size: 16,
                     color: AppColors.goldDeep,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -957,7 +943,7 @@ class _FeedbackInviteCard extends StatelessWidget {
                           color: AppColors.charcoal,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         'مساحة هادئة لملاحظاتك — اختيارية وغير ملحّة',
                         style: TextStyle(
@@ -969,7 +955,7 @@ class _FeedbackInviteCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const FaIcon(
+                FaIcon(
                   FontAwesomeIcons.chevronLeft,
                   size: 12,
                   color: AppColors.goldDeep,
@@ -985,11 +971,7 @@ class _FeedbackInviteCard extends StatelessWidget {
 
 /// روابط الخدمات — بطاقات Font Awesome أنيقة، جاهزة للنقر لاحقاً.
 class _ServiceTile extends StatelessWidget {
-  const _ServiceTile({
-    required this.title,
-    required this.icon,
-    this.onTap,
-  });
+  const _ServiceTile({required this.title, required this.icon, this.onTap});
 
   final String title;
   final FaIconData icon;
@@ -998,7 +980,8 @@ class _ServiceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppSurface(
-      onTap: onTap ??
+      onTap:
+          onTap ??
           () {
             // سيتم ربط الصفحات لاحقاً (تايم شيت، قصاصات، مستشفيات).
           },
@@ -1021,7 +1004,7 @@ class _ServiceTile extends StatelessWidget {
             title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 13.5,
               height: 1.3,
@@ -1051,16 +1034,12 @@ class _EmptyHint extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 28, 18, 24),
       child: Column(
         children: [
-          const FaIcon(
-            FontAwesomeIcons.inbox,
-            size: 30,
-            color: AppColors.goldDeep,
-          ),
+          FaIcon(FontAwesomeIcons.inbox, size: 30, color: AppColors.goldDeep),
           const SizedBox(height: 12),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 16,
               color: AppColors.charcoal,
@@ -1070,7 +1049,7 @@ class _EmptyHint extends StatelessWidget {
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.slate, height: 1.45),
+            style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
           if (onAction != null) ...[
             const SizedBox(height: 16),
@@ -1098,13 +1077,13 @@ class _ErrorCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
       child: Column(
         children: [
-          const FaIcon(
+          FaIcon(
             FontAwesomeIcons.plugCircleXmark,
             size: 26,
             color: AppColors.danger,
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'تعذّر تحميل البيانات',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -1117,7 +1096,7 @@ class _ErrorCard extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.slate, height: 1.45),
+            style: TextStyle(color: AppColors.slate, height: 1.45),
           ),
           if (onRetry != null) ...[
             const SizedBox(height: 14),
@@ -1127,7 +1106,7 @@ class _ErrorCard extends StatelessWidget {
               label: const Text('إعادة المحاولة'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.goldDeep,
-                side: const BorderSide(color: AppColors.gold),
+                side: BorderSide(color: AppColors.gold),
               ),
             ),
           ],
@@ -1154,13 +1133,12 @@ class _InfoBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded,
-              size: 18, color: AppColors.info),
+          Icon(Icons.info_outline_rounded, size: 18, color: AppColors.info),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.charcoal,
                 fontSize: 12.5,
                 height: 1.4,
@@ -1174,11 +1152,7 @@ class _InfoBanner extends StatelessWidget {
 }
 
 class _RequestTile extends StatelessWidget {
-  const _RequestTile({
-    super.key,
-    required this.request,
-    this.onWithdraw,
-  });
+  const _RequestTile({super.key, required this.request, this.onWithdraw});
 
   final EmployeeRequest request;
   final VoidCallback? onWithdraw;
@@ -1203,10 +1177,7 @@ class _RequestTile extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topRight,
                     end: Alignment.bottomLeft,
-                    colors: [
-                      accent.withValues(alpha: .18),
-                      AppColors.goldSoft,
-                    ],
+                    colors: [accent.withValues(alpha: .18), AppColors.goldSoft],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: accent.withValues(alpha: .28)),
@@ -1221,7 +1192,7 @@ class _RequestTile extends StatelessWidget {
                   children: [
                     Text(
                       request.displayTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 15.5,
                         color: AppColors.charcoal,
@@ -1233,7 +1204,7 @@ class _RequestTile extends StatelessWidget {
                         request.note,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.slate,
                           fontSize: 13,
                           height: 1.35,
@@ -1252,7 +1223,7 @@ class _RequestTile extends StatelessWidget {
                         Expanded(
                           child: Text(
                             date,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.slate,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -1356,16 +1327,16 @@ class _RequestTile extends StatelessWidget {
   }
 
   static String _statusLabel(RequestStatus status) => switch (status) {
-        RequestStatus.pending => 'معلّقة',
-        RequestStatus.approved => 'مقبولة',
-        RequestStatus.rejected => 'مرفوضة',
-      };
+    RequestStatus.pending => 'معلّقة',
+    RequestStatus.approved => 'مقبولة',
+    RequestStatus.rejected => 'مرفوضة',
+  };
 
   static StatusTone _statusTone(RequestStatus status) => switch (status) {
-        RequestStatus.pending => StatusTone.warning,
-        RequestStatus.approved => StatusTone.success,
-        RequestStatus.rejected => StatusTone.danger,
-      };
+    RequestStatus.pending => StatusTone.warning,
+    RequestStatus.approved => StatusTone.success,
+    RequestStatus.rejected => StatusTone.danger,
+  };
 }
 
 class _ImpersonationBanner extends StatelessWidget {
@@ -1396,12 +1367,12 @@ class _ImpersonationBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.switch_account_rounded, color: AppColors.goldDeep),
+          Icon(Icons.switch_account_rounded, color: AppColors.goldDeep),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'أنت تدخل نيابة عن $employeeName — المدير: $managerName',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.charcoal,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,

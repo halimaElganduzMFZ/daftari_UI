@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/config/api_config.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/theme_controller.dart';
 import '../../data/session/app_session.dart';
 import '../manager/manager_approvals_screen.dart';
 import '../manager/manager_attendance_screen.dart';
@@ -23,7 +24,12 @@ class _ManagerShellState extends State<ManagerShell> {
   int _revision = 0;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: ThemeController.instance,
+    builder: (context, _) => _buildShell(context),
+  );
+
+  Widget _buildShell(BuildContext context) {
     final structureName = AppSession.activeStructure?.name ?? 'الهيكل';
 
     final pages = <Widget>[

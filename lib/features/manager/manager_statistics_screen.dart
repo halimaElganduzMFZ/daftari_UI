@@ -39,10 +39,10 @@ class ManagerStatisticsEntry extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
-              colors: [AppColors.charcoal, Color(0xFF514637)],
+              colors: [AppColors.charcoal, const Color(0xFF514637)],
             ),
           ),
           child: Padding(
@@ -56,7 +56,7 @@ class ManagerStatisticsEntry extends StatelessWidget {
                     color: AppColors.goldSoft.withValues(alpha: .2),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.insights_rounded,
                     color: AppColors.goldSoft,
                   ),
@@ -82,7 +82,7 @@ class ManagerStatisticsEntry extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.arrow_back_ios_new_rounded,
                   color: AppColors.goldSoft,
                   size: 18,
@@ -241,10 +241,10 @@ class _ManagerStatisticsPanelState extends State<ManagerStatisticsPanel> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
-                colors: [AppColors.charcoal, Color(0xFF514637)],
+                colors: [AppColors.charcoal, const Color(0xFF514637)],
               ),
             ),
             child: Column(
@@ -252,10 +252,7 @@ class _ManagerStatisticsPanelState extends State<ManagerStatisticsPanel> {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.insights_rounded,
-                      color: AppColors.goldSoft,
-                    ),
+                    Icon(Icons.insights_rounded, color: AppColors.goldSoft),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
@@ -284,7 +281,7 @@ class _ManagerStatisticsPanelState extends State<ManagerStatisticsPanel> {
                   children: [
                     Text(
                       ready ? '$total' : '—',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.goldSoft,
                         fontSize: 48,
                         fontWeight: FontWeight.w800,
@@ -366,10 +363,7 @@ class _ManagerStatisticsPanelState extends State<ManagerStatisticsPanel> {
                     ),
                     Text(
                       '${group.value.fold<num>(0, (sum, e) => sum + (e['count'] as num? ?? 0))} موافقة',
-                      style: const TextStyle(
-                        color: AppColors.goldDeep,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: AppColors.goldDeep, fontSize: 12),
                     ),
                   ],
                 ),
@@ -396,8 +390,8 @@ class _ManagerStatisticsPanelState extends State<ManagerStatisticsPanel> {
                 textAlign: TextAlign.center,
               ),
             if (monthly['historicalApprovalsIncluded'] == false)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   'لا يشمل الموافقات القديمة قبل بدء تسجيل حركات الموافقة.',
                   style: TextStyle(color: AppColors.slate, fontSize: 11),
@@ -410,11 +404,11 @@ class _ManagerStatisticsPanelState extends State<ManagerStatisticsPanel> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
                     Icon(Icons.event_busy_outlined, color: AppColors.goldDeep),
-                    SizedBox(width: 8),
-                    Expanded(
+                    const SizedBox(width: 8),
+                    const Expanded(
                       child: Text(
                         'غياب الموظفين',
                         style: TextStyle(
@@ -426,7 +420,7 @@ class _ManagerStatisticsPanelState extends State<ManagerStatisticsPanel> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'ضمن جميع الهياكل المخوّلة لك',
                   style: TextStyle(color: AppColors.slate, fontSize: 12),
                 ),
@@ -454,10 +448,7 @@ class _ManagerStatisticsPanelState extends State<ManagerStatisticsPanel> {
                   if (totals['affectedEmployees'] != null)
                     Text(
                       'الموظفون المتأثرون: ${totals['affectedEmployees']}',
-                      style: const TextStyle(
-                        color: AppColors.slate,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: AppColors.slate, fontSize: 12),
                     ),
                 ],
                 if (!_loading && totals == null)
@@ -548,11 +539,7 @@ class _ApprovalTile extends StatelessWidget {
                 children: [
                   Icon(icon, size: 20, color: AppColors.goldDeep),
                   const Spacer(),
-                  const Icon(
-                    Icons.chevron_left,
-                    size: 18,
-                    color: AppColors.slate,
-                  ),
+                  Icon(Icons.chevron_left, size: 18, color: AppColors.slate),
                 ],
               ),
               const SizedBox(height: 10),
@@ -576,7 +563,7 @@ class _ApprovalTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 5),
-                  const Text(
+                  Text(
                     'موافقة',
                     style: TextStyle(color: AppColors.slate, fontSize: 11),
                   ),
@@ -593,7 +580,7 @@ class _ApprovalTile extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 '${(ratio * 100).toStringAsFixed(0)}٪ من الإجمالي · التفاصيل',
-                style: const TextStyle(color: AppColors.slate, fontSize: 10),
+                style: TextStyle(color: AppColors.slate, fontSize: 10),
               ),
             ],
           ),
@@ -628,10 +615,7 @@ class _AbsenceMetric extends StatelessWidget {
           managerText(value),
           style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
         ),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: AppColors.slate),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: AppColors.slate)),
       ],
     ),
   );
@@ -772,7 +756,7 @@ class _MonthlyApprovalCard extends StatelessWidget {
                 ),
                 child: Text(
                   initial,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.goldDeep,
                     fontWeight: FontWeight.w800,
                     fontSize: 20,
@@ -786,7 +770,7 @@ class _MonthlyApprovalCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
                         color: AppColors.charcoal,
@@ -795,10 +779,7 @@ class _MonthlyApprovalCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       'الرقم الوظيفي: ${managerText(row['employeeNumber'])}',
-                      style: const TextStyle(
-                        color: AppColors.slate,
-                        fontSize: 12.5,
-                      ),
+                      style: TextStyle(color: AppColors.slate, fontSize: 12.5),
                     ),
                   ],
                 ),
@@ -860,7 +841,7 @@ class _MonthlyApprovalCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.event_available_outlined,
                 size: 16,
                 color: AppColors.slate,
@@ -869,7 +850,7 @@ class _MonthlyApprovalCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'تاريخ الموافقة: ${managerText(row['approvedAt'])}',
-                  style: const TextStyle(color: AppColors.slate, fontSize: 12.5),
+                  style: TextStyle(color: AppColors.slate, fontSize: 12.5),
                 ),
               ),
               TextButton(
@@ -897,7 +878,7 @@ class AbsenceTotals extends StatelessWidget {
     spacing: 16,
     runSpacing: 8,
     children: [
-      for (final entry in const {
+      for (final entry in {
         'actualAbsenceDays': 'غياب فعلي',
         'gateAbsenceDays': 'غياب بسبب البوابة',
         'totalAbsenceDays': 'إجمالي أيام الغياب',

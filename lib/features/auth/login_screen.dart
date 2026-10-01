@@ -146,8 +146,8 @@ class _LoginScreenState extends State<LoginScreen>
         title: error.isTooManyRequests
             ? AppStrings.loginRateLimitedTitle
             : error.isNetwork
-                ? 'لا يوجد اتصال'
-                : AppStrings.loginFailedTitle,
+            ? 'لا يوجد اتصال'
+            : AppStrings.loginFailedTitle,
         message: message,
         // السبب التقني يظهر بخط صغير لتشخيص مشاكل الشبكة من لقطة الشاشة.
         detail: error.isNetwork ? error.cause : null,
@@ -196,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen>
               SelectableText(
                 detail,
                 textDirection: TextDirection.ltr,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11.5,
                   color: AppColors.slate,
                   height: 1.4,
@@ -227,14 +227,14 @@ class _LoginScreenState extends State<LoginScreen>
           Container(
             width: double.infinity,
             height: double.infinity,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
                 colors: [
-                  Color(0xFFE9E6DF),
-                  Color(0xFFF3F3F1),
-                  Color(0xFFE4E1DA),
+                  AppColors.backdropStart,
+                  AppColors.backdropMid,
+                  AppColors.backdropEnd,
                 ],
               ),
             ),
@@ -244,16 +244,13 @@ class _LoginScreenState extends State<LoginScreen>
             left: -size.width * 0.18,
             child: _GlowOrb(
               diameter: size.width * 0.72,
-              color: const Color(0x33B08D57),
+              color: AppColors.glowA,
             ),
           ),
           Positioned(
             bottom: -size.height * 0.18,
             right: -size.width * 0.2,
-            child: _GlowOrb(
-              diameter: size.width * 0.8,
-              color: const Color(0x22A18F6A),
-            ),
+            child: _GlowOrb(diameter: size.width * 0.8, color: AppColors.glowB),
           ),
           Positioned(
             top: size.height * 0.28,
@@ -276,8 +273,10 @@ class _LoginScreenState extends State<LoginScreen>
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 18,
+                ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 430),
                   child: FadeTransition(
@@ -289,7 +288,7 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 8),
                           const BrandMark(size: 78),
                           const SizedBox(height: 18),
-                          const Text(
+                          Text(
                             AppStrings.orgName,
                             textAlign: TextAlign.center,
                             style: TextStyle(
@@ -313,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 color: AppColors.gold.withValues(alpha: 0.35),
                               ),
                             ),
-                            child: const Text(
+                            child: Text(
                               AppStrings.permissionsAppTitle,
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -326,19 +325,20 @@ class _LoginScreenState extends State<LoginScreen>
                           const SizedBox(height: 28),
                           Container(
                             width: double.infinity,
-                            padding:
-                                const EdgeInsets.fromLTRB(22, 28, 22, 22),
+                            padding: const EdgeInsets.fromLTRB(22, 28, 22, 22),
                             decoration: BoxDecoration(
                               color: AppColors.surface.withValues(alpha: 0.94),
                               borderRadius: BorderRadius.circular(26),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.7),
+                                color: AppColors.isDark
+                                    ? AppColors.line
+                                    : Colors.white.withValues(alpha: 0.7),
                               ),
-                              boxShadow: const [
+                              boxShadow: [
                                 BoxShadow(
-                                  color: Color(0x18000000),
+                                  color: AppColors.shadow,
                                   blurRadius: 34,
-                                  offset: Offset(0, 16),
+                                  offset: const Offset(0, 16),
                                 ),
                               ],
                             ),
@@ -347,7 +347,7 @@ class _LoginScreenState extends State<LoginScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  const Text(
+                                  Text(
                                     AppStrings.welcomeEmployee,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
@@ -358,7 +358,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     ),
                                   ),
                                   const SizedBox(height: 26),
-                                  const Align(
+                                  Align(
                                     alignment: Alignment.centerRight,
                                     child: Text(
                                       AppStrings.username,
@@ -389,7 +389,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     },
                                   ),
                                   const SizedBox(height: 16),
-                                  const Align(
+                                  Align(
                                     alignment: Alignment.centerRight,
                                     child: Text(
                                       AppStrings.password,
@@ -409,8 +409,9 @@ class _LoginScreenState extends State<LoginScreen>
                                     onFieldSubmitted: (_) => _submit(),
                                     decoration: InputDecoration(
                                       hintText: '********',
-                                      prefixIcon:
-                                          const Icon(Icons.lock_outline),
+                                      prefixIcon: const Icon(
+                                        Icons.lock_outline,
+                                      ),
                                       suffixIcon: IconButton(
                                         onPressed: () => setState(
                                           () => _obscure = !_obscure,
@@ -430,24 +431,30 @@ class _LoginScreenState extends State<LoginScreen>
                                     },
                                   ),
                                   const SizedBox(height: 8),
-                                  CheckboxListTile(
-                                    value: _rememberMe,
-                                    onChanged: _submitting
-                                        ? null
-                                        : (value) => setState(
-                                              () => _rememberMe = value ?? false,
+                                  // Material شفاف حتى يرسم ListTile تأثير اللمس
+                                  // فوق البطاقة الملوّنة بدل أن يُخفى تحتها.
+                                  Material(
+                                    type: MaterialType.transparency,
+                                    child: CheckboxListTile(
+                                      value: _rememberMe,
+                                      onChanged: _submitting
+                                          ? null
+                                          : (value) => setState(
+                                              () =>
+                                                  _rememberMe = value ?? false,
                                             ),
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                    contentPadding: EdgeInsets.zero,
-                                    dense: true,
-                                    activeColor: AppColors.goldDeep,
-                                    title: const Text(
-                                      AppStrings.rememberMe,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.charcoal,
-                                        fontSize: 14,
+                                      controlAffinity:
+                                          ListTileControlAffinity.leading,
+                                      contentPadding: EdgeInsets.zero,
+                                      dense: true,
+                                      activeColor: AppColors.goldDeep,
+                                      title: Text(
+                                        AppStrings.rememberMe,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.charcoal,
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -455,14 +462,12 @@ class _LoginScreenState extends State<LoginScreen>
                                   SizedBox(
                                     height: 54,
                                     child: FilledButton(
-                                      onPressed:
-                                          _submitting ? null : _submit,
+                                      onPressed: _submitting ? null : _submit,
                                       child: _submitting
                                           ? const SizedBox(
                                               width: 22,
                                               height: 22,
-                                              child:
-                                                  CircularProgressIndicator(
+                                              child: CircularProgressIndicator(
                                                 strokeWidth: 2.4,
                                                 color: Colors.white,
                                               ),
@@ -478,13 +483,13 @@ class _LoginScreenState extends State<LoginScreen>
                           Text(
                             '${AppStrings.footerRights} © $year',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.slate,
                               fontSize: 12,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
+                          Text(
                             AppStrings.footerOrg,
                             textAlign: TextAlign.center,
                             style: TextStyle(
@@ -521,12 +526,7 @@ class _GlowOrb extends StatelessWidget {
         height: diameter,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color,
-              color.withValues(alpha: 0),
-            ],
-          ),
+          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
         ),
       ),
     );

@@ -36,9 +36,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     });
     try {
       // الصندوق يتبع portal الجلسة على الخادم — بلا معامل audience.
-      final page = await _repo.list(
-        unread: _unreadOnly ? true : null,
-      );
+      final page = await _repo.list(unread: _unreadOnly ? true : null);
       if (!mounted) return;
       setState(() {
         _items
@@ -207,7 +205,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               const SizedBox(height: 4),
                               Text(
                                 item.body,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.slate,
                                   height: 1.4,
                                   fontSize: 13,
@@ -218,7 +216,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               const SizedBox(height: 6),
                               Text(
                                 item.createdAt!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.slate,
                                   fontSize: 11,
                                 ),
@@ -228,8 +226,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                       ),
                       if (!item.isRead)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
                           child: FaIcon(
                             FontAwesomeIcons.circle,
                             size: 8,

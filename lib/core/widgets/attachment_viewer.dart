@@ -59,7 +59,11 @@ class AttachmentChip extends StatelessWidget {
                   ],
                 ),
                 alignment: Alignment.center,
-                child: FaIcon(style.icon, size: dense ? 14 : 16, color: Colors.white),
+                child: FaIcon(
+                  style.icon,
+                  size: dense ? 14 : 16,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -109,19 +113,14 @@ abstract final class AttachmentViewer {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: const Color(0x99000000),
-      builder: (context) => _AttachmentViewerSheet(
-        attachment: attachment,
-        subtitle: subtitle,
-      ),
+      builder: (context) =>
+          _AttachmentViewerSheet(attachment: attachment, subtitle: subtitle),
     );
   }
 }
 
 class _AttachmentViewerSheet extends StatefulWidget {
-  const _AttachmentViewerSheet({
-    required this.attachment,
-    this.subtitle,
-  });
+  const _AttachmentViewerSheet({required this.attachment, this.subtitle});
 
   final RequestAttachment attachment;
   final String? subtitle;
@@ -162,7 +161,8 @@ class _AttachmentViewerSheetState extends State<_AttachmentViewerSheet>
   @override
   Widget build(BuildContext context) {
     final style = _AttachmentStyle.of(attachment.kind);
-    final height = MediaQuery.sizeOf(context).height * (_immersive ? 0.96 : 0.88);
+    final height =
+        MediaQuery.sizeOf(context).height * (_immersive ? 0.96 : 0.88);
 
     return FadeTransition(
       opacity: _fade,
@@ -172,9 +172,11 @@ class _AttachmentViewerSheetState extends State<_AttachmentViewerSheet>
           alignment: Alignment.bottomCenter,
           child: Container(
             height: height,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.background,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
             ),
             clipBehavior: Clip.antiAlias,
             child: Column(
@@ -246,11 +248,7 @@ class _Header extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            style.strong,
-            style.mid,
-            const Color(0xFF2A2A28),
-          ],
+          colors: [style.strong, style.mid, const Color(0xFF2A2A28)],
         ),
       ),
       child: SafeArea(
@@ -354,10 +352,12 @@ class _Header extends StatelessWidget {
                 if (attachment.uploadedAt != null)
                   _MetaBadge(
                     icon: Icons.schedule_rounded,
-                    label: DateFormat('yyyy/MM/dd HH:mm', 'ar')
-                        .format(attachment.uploadedAt!),
+                    label: DateFormat(
+                      'yyyy/MM/dd HH:mm',
+                      'ar',
+                    ).format(attachment.uploadedAt!),
                   ),
-                _MetaBadge(
+                const _MetaBadge(
                   icon: Icons.verified_outlined,
                   label: 'مرفق رسمي',
                 ),
@@ -428,7 +428,7 @@ class _StudioPreview extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'افتح المستند للتحقق قبل الاعتماد — تجربة عرض واضحة ورسمية.',
           style: TextStyle(color: AppColors.slate, height: 1.45),
         ),
@@ -441,10 +441,7 @@ class _StudioPreview extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFFE8E6E1),
-                  AppColors.surface,
-                ],
+                colors: [const Color(0xFFE8E6E1), AppColors.surface],
               ),
               border: Border.all(color: AppColors.line),
               boxShadow: [
@@ -517,10 +514,10 @@ class _StudioPreview extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
           ),
-          child: const Row(
+          child: Row(
             children: [
               Icon(Icons.info_outline_rounded, color: AppColors.goldDeep),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'بعد ربط الخادم يُجلب الملف من التخزين (مرفق/URL) أو يُفك Base64 عند الحاجة للمعاينة.',
@@ -559,32 +556,30 @@ class _ImmersivePreview extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 520),
           child: Padding(
             padding: const EdgeInsets.all(18),
-            child: attachment.kind == AttachmentKind.image &&
+            child:
+                attachment.kind == AttachmentKind.image &&
                     attachment.bytes != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.memory(
-                      attachment.bytes!,
-                      fit: BoxFit.contain,
-                    ),
+                    child: Image.memory(attachment.bytes!, fit: BoxFit.contain),
                   )
                 : attachment.kind == AttachmentKind.pdf &&
-                        attachment.hasPreviewBytes
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: buildPdfFrame(
-                          bytes: attachment.bytes!,
-                          viewType:
-                              'pdf-immersive-${attachment.fileName}-${attachment.bytes!.length}',
-                        ),
-                      )
-                    : attachment.kind == AttachmentKind.pdf
-                        ? const _PdfPagesMock(dark: true)
-                        : _GenericDocMock(
-                            style: style,
-                            attachment: attachment,
-                            dark: true,
-                          ),
+                      attachment.hasPreviewBytes
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: buildPdfFrame(
+                      bytes: attachment.bytes!,
+                      viewType:
+                          'pdf-immersive-${attachment.fileName}-${attachment.bytes!.length}',
+                    ),
+                  )
+                : attachment.kind == AttachmentKind.pdf
+                ? const _PdfPagesMock(dark: true)
+                : _GenericDocMock(
+                    style: style,
+                    attachment: attachment,
+                    dark: true,
+                  ),
           ),
         ),
       ),
@@ -714,10 +709,7 @@ class _ImageMock extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'معاينة صورة المستند',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: style.strong,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w800, color: style.strong),
           ),
         ],
       ),
@@ -824,7 +816,7 @@ class _FooterActions extends StatelessWidget {
                 onPressed: onDone,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.charcoal,
-                  side: const BorderSide(color: AppColors.line),
+                  side: BorderSide(color: AppColors.line),
                 ),
                 child: const Text('إغلاق'),
               ),
@@ -856,7 +848,7 @@ class _PaperGrainPainter extends CustomPainter {
 }
 
 class _AttachmentStyle {
-  const _AttachmentStyle({
+  _AttachmentStyle({
     required this.icon,
     required this.strong,
     required this.mid,
@@ -869,29 +861,29 @@ class _AttachmentStyle {
   final Color soft;
 
   static _AttachmentStyle of(AttachmentKind kind) => switch (kind) {
-        AttachmentKind.pdf => const _AttachmentStyle(
-            icon: FontAwesomeIcons.filePdf,
-            strong: Color(0xFF9B3B3B),
-            mid: Color(0xFFC45C5C),
-            soft: Color(0xFFF6E8E8),
-          ),
-        AttachmentKind.word => const _AttachmentStyle(
-            icon: FontAwesomeIcons.fileWord,
-            strong: Color(0xFF2F5F8F),
-            mid: Color(0xFF4F7AA8),
-            soft: Color(0xFFE8EEF5),
-          ),
-        AttachmentKind.image => const _AttachmentStyle(
-            icon: FontAwesomeIcons.fileImage,
-            strong: Color(0xFF8F7043),
-            mid: Color(0xFFB08D57),
-            soft: Color(0xFFF3EADA),
-          ),
-        AttachmentKind.other => const _AttachmentStyle(
-            icon: FontAwesomeIcons.fileLines,
-            strong: Color(0xFF5C738A),
-            mid: Color(0xFF7A8FA3),
-            soft: Color(0xFFE8EEF3),
-          ),
-      };
+    AttachmentKind.pdf => _AttachmentStyle(
+      icon: FontAwesomeIcons.filePdf,
+      strong: const Color(0xFF9B3B3B),
+      mid: const Color(0xFFC45C5C),
+      soft: const Color(0xFFF6E8E8),
+    ),
+    AttachmentKind.word => _AttachmentStyle(
+      icon: FontAwesomeIcons.fileWord,
+      strong: const Color(0xFF2F5F8F),
+      mid: const Color(0xFF4F7AA8),
+      soft: const Color(0xFFE8EEF5),
+    ),
+    AttachmentKind.image => _AttachmentStyle(
+      icon: FontAwesomeIcons.fileImage,
+      strong: const Color(0xFF8F7043),
+      mid: const Color(0xFFB08D57),
+      soft: const Color(0xFFF3EADA),
+    ),
+    AttachmentKind.other => _AttachmentStyle(
+      icon: FontAwesomeIcons.fileLines,
+      strong: const Color(0xFF5C738A),
+      mid: const Color(0xFF7A8FA3),
+      soft: const Color(0xFFE8EEF3),
+    ),
+  };
 }

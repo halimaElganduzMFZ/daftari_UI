@@ -77,7 +77,7 @@ class _RemoteManagerAttendanceScreenState
         ),
         child: ListTile(
           contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.fingerprint, color: AppColors.goldDeep),
+          leading: Icon(Icons.fingerprint, color: AppColors.goldDeep),
           title: Text(managerText(employee['name'])),
           subtitle: Text(
             '${managerText(employee['number'])} · ${managerText((employee['workplace'] as Map?)?['name'])}',
@@ -273,7 +273,7 @@ class _ManagerEmployeeAttendanceScreenState
                     spacing: 20,
                     runSpacing: 8,
                     children: [
-                      for (final entry in const {
+                      for (final entry in {
                         'days': 'الأيام',
                         'present': 'حضور',
                         'absent': 'غياب',
