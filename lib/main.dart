@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'core/config/api_config.dart';
 import 'core/constants/app_strings.dart';
 import 'core/di/app_services.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
+import 'features/splash/insecure_build_screen.dart';
 import 'features/splash/splash_screen.dart';
 
 /// مفتاح الملاحة العام — للعودة إلى شاشة الدخول عند انتهاء الجلسة من أي مكان.
@@ -55,7 +57,9 @@ class DaftariApp extends StatelessWidget {
           child: child ?? const SizedBox.shrink(),
         );
       },
-      home: const SplashScreen(),
+      home: ApiConfig.hasInsecureReleaseConfig
+          ? const InsecureBuildScreen()
+          : const SplashScreen(),
     );
   }
 }

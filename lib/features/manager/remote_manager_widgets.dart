@@ -64,11 +64,17 @@ class ManagerPagedList extends StatefulWidget {
     required this.itemBuilder,
     this.header = const [],
     this.onRefresh,
+    this.quietRefresh,
   });
   final Future<ManagerPage> Function(int page) load;
   final Widget Function(ManagerJson item) itemBuilder;
   final List<Widget> header;
   final Future<void> Function()? onRefresh;
+
+  /// Each notification reloads the pages already shown and swaps them in at
+  /// once, so the rows and the scroll position stay while it runs. A failure
+  /// keeps the current rows.
+  final Listenable? quietRefresh;
   @override
   State<ManagerPagedList> createState() => ManagerPagedListState();
 }
@@ -84,7 +90,57 @@ class ManagerPagedListState extends State<ManagerPagedList> {
   @override
   void initState() {
     super.initState();
+    widget.quietRefresh?.addListener(_refreshQuietly);
     refresh();
+  }
+
+  @override
+  void didUpdateWidget(ManagerPagedList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.quietRefresh != widget.quietRefresh) {
+      oldWidget.quietRefresh?.removeListener(_refreshQuietly);
+      widget.quietRefresh?.addListener(_refreshQuietly);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.quietRefresh?.removeListener(_refreshQuietly);
+    super.dispose();
+  }
+
+  Future<void> _refreshQuietly() async {
+    if (_loading) return;
+    if (_page == 0) return refresh();
+    final generation = ++_generation;
+    await Future.wait([
+      _reloadShownPages(generation, _page),
+      if (widget.onRefresh != null) widget.onRefresh!(),
+    ]);
+  }
+
+  Future<void> _reloadShownPages(int generation, int pages) async {
+    final items = <ManagerJson>[];
+    final ids = <Object?>{};
+    try {
+      for (var page = 1; page <= pages; page++) {
+        final result = await widget.load(page);
+        // A refresh or «عرض المزيد» that finished meanwhile wins.
+        if (!mounted || generation != _generation || _page != pages) return;
+        items.addAll(result.items.where((e) => ids.add(e['id'])));
+        if (page < pages && result.hasNext) continue;
+        setState(() {
+          _items = items;
+          _page = page;
+          _hasNext = result.hasNext;
+          _total = result.total;
+          _error = null;
+        });
+        return;
+      }
+    } catch (_) {
+      // The rows on screen stay; pulling to refresh shows the error.
+    }
   }
 
   Future<void> refresh() async {

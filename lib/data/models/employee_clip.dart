@@ -33,9 +33,8 @@ class EmployeeClip {
   bool get isPdf => extension.toLowerCase() == 'pdf' || contentType == 'application/pdf';
   bool get isImage => contentType.startsWith('image/');
 
-  /// مسارات نسبية لقاعدة الـ API (`ApiConfig.baseUrl`).
+  /// مسار نسبي لقاعدة الـ API (`ApiConfig.baseUrl`).
   String get filePath => '/me/documents/$id/file';
-  String get linkPath => '/me/documents/$id/link';
 
   static EmployeeClipKind kindFromApi(String? raw) => switch (raw) {
         'TIMESHEET' => EmployeeClipKind.timesheetCard,
@@ -110,20 +109,4 @@ class EmployeeClipFile {
 
   bool get isPdf => contentType == 'application/pdf';
   bool get isImage => contentType.startsWith('image/');
-}
-
-/// رابط موقّع مؤقت لعرض المستند دون توكن (`SignedLinkDto`).
-class EmployeeClipLink {
-  const EmployeeClipLink({required this.url, this.expiresAt});
-
-  final Uri url;
-  final DateTime? expiresAt;
-
-  factory EmployeeClipLink.fromApi(Map<String, dynamic> json) {
-    final exp = json['expiresAt'];
-    return EmployeeClipLink(
-      url: Uri.parse((json['url'] as String?) ?? ''),
-      expiresAt: exp is String ? DateTime.tryParse(exp) : null,
-    );
-  }
 }
