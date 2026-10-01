@@ -13,14 +13,14 @@ void main() {
 
   test('release builds accept only https server addresses', () {
     expect(insecure('https://api.example.org/api/v1'), isFalse);
-    expect(insecure('http://10.10.17.70:3000/api/v1'), isTrue);
+    expect(insecure('http://10.10.10.97:3000/api/v1'), isTrue);
     expect(insecure(''), isTrue);
     expect(insecure('https://'), isTrue);
     expect(insecure('api.example.org/api/v1'), isTrue);
   });
 
   test('debug builds and the offline demo mode are not restricted', () {
-    expect(insecure('http://10.10.17.70:3000/api/v1', release: false), isFalse);
+    expect(insecure('http://10.10.10.97:3000/api/v1', release: false), isFalse);
     expect(insecure('', remote: false), isFalse);
   });
 
