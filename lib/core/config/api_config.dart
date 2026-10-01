@@ -24,14 +24,15 @@ abstract final class ApiConfig {
     defaultValue: true,
   );
 
-  /// خادم المكتب. الجوال وسطح المكتب يتصلان به مباشرة.
-  static const officeApiBaseUrl = 'http://10.10.10.97:3000/api/v1';
-
-  /// منفذ وسيط الويب على هذا الجهاز (`tool/web_api_proxy.dart`).
-  /// المتصفح يستدعي `http://<عنوان-الصفحة>:<هذا-المنفذ>/api/v1`.
-  static const webProxyPort = int.fromEnvironment(
-    'WEB_API_PROXY_PORT',
-    defaultValue: 43124,
+  /// عنوان الـ API الأساسي.
+  /// نسخ التطوير (debug / profile) تتصل افتراضياً بخادم التجربة على شبكة المكتب
+  /// http://10.10.10.97:3000/api/v1
+  /// (لا تستخدم 127.0.0.1 على الجوال — يشير إلى الهاتف نفسه لا إلى الحاسوب).
+  /// نسخة الإصدار بلا عنوان افتراضي: بدون `API_BASE_URL` بصيغة https تعرض
+  /// شاشة خطأ ولا ترسل أي طلب ([hasInsecureReleaseConfig]).
+  static const baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: kReleaseMode ? '' : 'http://10.10.10.97:3000/api/v1',
   );
 
   static const _envBaseUrl = String.fromEnvironment('API_BASE_URL');
