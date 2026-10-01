@@ -1,20 +1,24 @@
+import 'dart:math' as math;
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart' show PdfPageFormat;
 import 'package:printing/printing.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/di/app_services.dart';
 import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/bottom_inset_spacer.dart';
 import '../../core/widgets/pdf_frame.dart';
+import '../../core/widgets/zoomable_view.dart';
 import '../../data/models/employee_clip.dart';
 import '../../data/repositories/documents_repository.dart';
 
-/// عارض مستند واحد: يحمّل الملف بالتوكن (`/me/documents/:id/file`) ويعرضه،
-/// مع فتحه خارجياً عبر رابط موقّع مؤقت (`/me/documents/:id/link`) ومشاركته.
+/// عارض مستند واحد: يحمّل الملف بالتوكن (`/me/documents/:id/file`) ويعرضه
+/// مع التكبير والتصغير، ويتيح حفظه على الجهاز ومشاركته.
 class DocumentViewerScreen extends StatefulWidget {
   const DocumentViewerScreen({
     super.key,
@@ -44,7 +48,7 @@ class DocumentViewerScreen extends StatefulWidget {
 class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
   EmployeeClipFile? _file;
   bool _loading = true;
-  bool _linking = false;
+  bool _saving = false;
   String? _error;
 
   DocumentsRepository get _repo => widget.repository ?? AppServices.documents;
@@ -77,25 +81,52 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
     }
   }
 
-  Future<void> _openExternally({bool download = false}) async {
-    if (_linking) return;
-    setState(() => _linking = true);
+  Future<void> _download() async {
+    final file = _file;
+    if (file == null || _saving) return;
+    setState(() => _saving = true);
     try {
-      final link = await _repo.signedLink(clip, download: download);
-      final ok = await launchUrl(link.url, mode: LaunchMode.externalApplication);
-      if (!ok && mounted) {
+      final saved = await FilePicker.saveFile(
+        dialogTitle: 'حفظ المستند',
+        fileName: _safeFileName(file.fileName),
+        bytes: file.bytes,
+        mimeType: file.contentType,
+      );
+      if (saved != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذّر فتح الرابط على هذا الجهاز')),
+          const SnackBar(content: Text('تم حفظ المستند على الجهاز')),
         );
       }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(describeDocumentError(e))),
-      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذّر حفظ المستند على هذا الجهاز')),
+        );
+      }
     } finally {
-      if (mounted) setState(() => _linking = false);
+      if (mounted) setState(() => _saving = false);
     }
+  }
+
+  static String _safeFileName(String name) {
+    final cleaned = name.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
+    return cleaned.isEmpty ? 'مستند' : cleaned;
+  }
+
+  // دالة ثابتة لا دالة جديدة في كل بناء: PdfPreview يعيد تصيير الصفحات
+  // كلما تغيّرت دالة build.
+  Future<Uint8List> _pdfBytes(PdfPageFormat _) async => _file!.bytes;
+
+  // ضعف دقة ملء عرض الشاشة لتبقى الكتابة حادة عند التكبير، وبحد أعلى
+  // يحدّ من ذاكرة الصفحات.
+  double _pdfDpi() {
+    final widthPx =
+        MediaQuery.sizeOf(context).width *
+        MediaQuery.devicePixelRatioOf(context);
+    return math.min(
+      2 * widthPx / PdfPageFormat.a4.width * PdfPageFormat.inch,
+      300.0,
+    );
   }
 
   Future<void> _share() async {
@@ -140,23 +171,24 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'فتح في تطبيق خارجي',
-            onPressed: _linking ? null : () => _openExternally(),
-            icon: _linking
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.open_in_new_rounded),
-          ),
+          if (_file != null)
+            IconButton(
+              tooltip: 'تحميل',
+              onPressed: _saving ? null : _download,
+              icon: _saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.download_rounded),
+            ),
           if (_file != null && _file!.isPdf)
             IconButton(
-              tooltip: 'مشاركة / حفظ',
+              tooltip: 'مشاركة',
               onPressed: _share,
               icon: const Icon(Icons.ios_share_rounded),
             ),
@@ -211,27 +243,11 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
                 style: const TextStyle(color: Colors.white70, height: 1.5),
               ),
               const SizedBox(height: 20),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                alignment: WrapAlignment.center,
-                children: [
-                  FilledButton.icon(
-                    onPressed: _load,
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('إعادة المحاولة'),
-                    style: FilledButton.styleFrom(backgroundColor: style.color),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _linking ? null : () => _openExternally(),
-                    icon: const Icon(Icons.open_in_new_rounded),
-                    label: const Text('فتح عبر رابط مؤقت'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      side: const BorderSide(color: Colors.white38),
-                    ),
-                  ),
-                ],
+              FilledButton.icon(
+                onPressed: _load,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('إعادة المحاولة'),
+                style: FilledButton.styleFrom(backgroundColor: style.color),
               ),
             ],
           ),
@@ -241,9 +257,12 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
 
     final file = _file!;
     if (file.isImage) {
-      return InteractiveViewer(
+      return ZoomableView(
         maxScale: 5,
-        child: Center(child: Image.memory(file.bytes, fit: BoxFit.contain)),
+        builder: (context, viewport) => SizedBox.fromSize(
+          size: viewport,
+          child: Image.memory(file.bytes, fit: BoxFit.contain),
+        ),
       );
     }
     if (file.isPdf) {
@@ -253,28 +272,58 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
           viewType: 'doc-${clip.id}-${file.bytes.length}',
         );
       }
-      return PdfPreview(
-        build: (_) async => file.bytes,
+      return PdfPreview.builder(
+        build: _pdfBytes,
         pdfFileName: file.fileName,
         useActions: false,
         canChangeOrientation: false,
         canChangePageFormat: false,
         canDebug: false,
+        dpi: _pdfDpi(),
         scrollViewDecoration: const BoxDecoration(color: Color(0xFF1C1C1A)),
         loadingWidget: const Center(
           child: CircularProgressIndicator(color: Colors.white70),
         ),
         onError: (context, error) => _UnsupportedFile(
           fileName: file.fileName,
-          onOpen: () => _openExternally(),
-          message: 'تعذّر تصيير الـ PDF على هذا الجهاز؛ افتحه في تطبيق خارجي.',
+          onDownload: _saving ? null : _download,
+          message:
+              'تعذّر عرض هذا الـ PDF داخل التطبيق؛ يمكنك تحميله إلى جهازك.',
+        ),
+        pagesBuilder: (context, pages) => ZoomableView(
+          builder: (context, viewport) => SizedBox(
+            width: viewport.width,
+            child: Column(
+              children: [
+                for (var i = 0; i < pages.length; i++)
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(offset: Offset(0, 3), blurRadius: 5),
+                      ],
+                    ),
+                    child: AspectRatio(
+                      aspectRatio: pages[i].aspectRatio,
+                      child: Image(
+                        image: pages[i].image,
+                        fit: BoxFit.cover,
+                        semanticLabel: 'صفحة ${i + 1} من ${pages.length}',
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       );
     }
     return _UnsupportedFile(
       fileName: file.fileName,
-      onOpen: () => _openExternally(download: true),
-      message: 'نوع الملف (${file.contentType}) لا يُعرض داخل التطبيق.',
+      onDownload: _saving ? null : _download,
+      message:
+          'نوع الملف (${file.contentType}) لا يُعرض داخل التطبيق؛ يمكنك تحميله إلى جهازك.',
     );
   }
 }
@@ -282,12 +331,12 @@ class _DocumentViewerScreenState extends State<DocumentViewerScreen> {
 class _UnsupportedFile extends StatelessWidget {
   const _UnsupportedFile({
     required this.fileName,
-    required this.onOpen,
+    required this.onDownload,
     required this.message,
   });
 
   final String fileName;
-  final VoidCallback onOpen;
+  final VoidCallback? onDownload;
   final String message;
 
   @override
@@ -313,9 +362,9 @@ class _UnsupportedFile extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
-              onPressed: onOpen,
-              icon: const Icon(Icons.open_in_new_rounded),
-              label: const Text('فتح / تحميل خارجياً'),
+              onPressed: onDownload,
+              icon: const Icon(Icons.download_rounded),
+              label: const Text('تحميل الملف'),
             ),
           ],
         ),
